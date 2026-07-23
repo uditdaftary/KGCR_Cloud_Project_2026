@@ -1,6 +1,6 @@
 # FD-01 — Unified Flow Specification
 
-**Project:** Knowledge Graph-Based Cloud Configuration Recommendation Framework for Financial Enterprises using Explainable AI
+**Project:** Knowledge Graph-Based Cloud Configuration Recommendation Framework for Financial Enterprises using Explainable AI and Agentic Subsystems. 
 **Document ID:** FD-01
 **Status:** Baseline — supersedes the two-condition flowcharts
 **Depends on:** FD-02 (Advisor Iteration Policy), FD-03 (Feedback Capture)
