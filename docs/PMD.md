@@ -36,7 +36,7 @@ Five claims, ordered by strength. Each maps to a specific evaluation.
 
 | # | Contribution | Evidence | Document |
 |---|---|---|---|
-| **C1** | **Relational defect detection.** A graph representation identifies multi-hop compliance violations that single-resource policy engines cannot reach by construction. | Comparative recall on the D7 test set against Checkov / tfsec / Prowler, which score zero by construction | FD-05 §5, FD-04 §12 |
+| **C1** | **Relational defect detection.** A graph representation identifies multi-hop compliance violations that single-resource policy engines cannot reach by construction. | Comparative recall on the DF-7 test set against Checkov / tfsec / Prowler, which score zero by construction | FD-05 §5, FD-04 §12 |
 | **C2** | **Intent reconstruction.** Configuration review reframed as design with recovered intent, enabling context-sensitive review rather than checklist matching. | Round-trip fidelity on intent-first synthetic corpus | FD-01 §7, FD-05 §8 |
 | **C3** | **Explanation as reasoning path, not narration.** Because compliance logic is curated rather than learned, explanations are exact for the majority of elements rather than approximate. | Fidelity / sparsity metrics; symbolic path coverage rate | FD-06 §5 |
 | **C4** | **Audience-relative explanation with invariant content.** Explanation sufficiency is audience-relative; adequacy is not. | Cross-audience invariance test; human study on comprehension and appropriate reliance | FD-06 §8–9 |
@@ -57,8 +57,8 @@ C1 and C3 are the strongest. Lead with them.
 | **FD-04** | Advisor Persona Specification | Reviewer role, grounding rule, calibration, evaluation |
 | **FD-05** | Data Strategy and Corpus Construction | Corpus sources, defect taxonomy, weak supervision, circularity defences |
 | **FD-06** | Explainer Specification | Subgraph extraction, counterfactuals, audience modes, XAI evaluation |
-| *FD-07* | *Ontology Specification* | *Not yet written — L1 encoding schema, FIBO/OSCAL integration* |
-| *FD-08* | *Environment Build* | *Not yet written — three-account topology, IAM, cost controls* |
+| **FD-07** | Ontology Specification | L1 node/edge schema, control-to-config crosswalk, severity derivation, FIBO/OSCAL integration |
+| **FD-08** | Environment Build | Three-account topology, cross-account IAM, cost controls, Phase 0 exit |
 
 ---
 
@@ -67,24 +67,24 @@ C1 and C3 are the strongest. Lead with them.
 | ID | Decision | Status | Resolution |
 |---|---|---|---|
 | D1 | Who is the user? | **Resolved** | All personas; one pipeline, three explanation renderings (FD-06 §8) |
-| D2 | Scope breadth | **Proposed** | 3 archetypes, 2 enforced frameworks (FD-05 §3) — *needs confirmation* |
+| D2 | Scope breadth | **Resolved** | 3 archetypes, 2 enforced frameworks (FD-05 §3) — accepted |
 | D3 | Training data provenance | **Resolved** | Four-source corpus, weak supervision (FD-05) |
 | D4 | Product form | **Resolved** | CLI |
-| D5 | Deployment artifact format | Open | Terraform recommended — plan/apply semantics already assumed by INV-3 |
-| D6 | Explanation export format | **Proposed** | OSCAL assessment-results (FD-06 §10) |
-| D7 | Three-account topology mapping | Open | Blocks environment build |
-| D8 | Advisor base model | **Proposed** | Different model from Recommender (FD-04 §11) |
-| D9 | Path expansion hop bound *k* | Open | Requires ablation; default 3 |
-| D10 | ADVISORY finding rate limit | Open | Low priority |
-| D11 | Cost data source | **Proposed** | Static price snapshot — reproducibility over currency |
-| D12 | OSCAL internal vs export-only | Open | Linked to D16 |
-| D13 | Gold-set expert review protocol | Open | Blocks a validity mitigation |
-| D14 | Sparsity operating point per audience | Open | Requires curve |
-| D15 | `learner` mode in human study | Open | — |
-| D16 | *(merged with D12)* | — | — |
-| D17 | Human study recruitment | Open | Practitioner access is the constraint |
+| D5 | Deployment artifact format | **Resolved** | Terraform — accepted; plan/apply already assumed by INV-3 (FD-08 §5) |
+| D6 | Explanation export format | **Resolved** | OSCAL assessment-results — accepted (FD-06 §10) |
+| D7 | Three-account topology mapping | **Resolved** | Standalone accounts + cross-account roles, **no AWS Organizations dependency** (FD-08 §3) — accepted |
+| D8 | Advisor base model | **Resolved** | Different model from Recommender — accepted (FD-04 §11) |
+| D9 | Path expansion hop bound *k* | **Resolved** | Default *k* = 3 — accepted; ablation reports the trade-off (FD-04 §7) |
+| D10 | ADVISORY finding rate limit | **Resolved** | Capped at 5/run, ranked by control-node specificity; overflow logged (FD-04 §6) — accepted |
+| D11 | Cost data source | **Resolved** | Static price snapshot — accepted; reproducibility over currency |
+| D12 | OSCAL internal vs export-only | **Resolved** | Export-only; OSCAL for import/export, native graph internal (FD-07 §9). Absorbs D16. |
+| D13 | Gold-set expert review protocol | **Resolved** | Instructor (+ any external practitioner) reviews the crosswalk; spreadsheet instrument (FD-05 §11) — accepted |
+| D14 | Sparsity operating point per audience | **Resolved** | Curve then read off: auditor = max evidence, architect = knee, learner = knee + expansion (FD-06 §5) — accepted |
+| D15 | `learner` mode in human study | **Resolved** | Held as a demonstration feature, not a study arm; new-data ingestion kept low-friction via the FD-03 enrichment loop — accepted |
+| D16 | *(merged into D12)* | **Resolved** | See D12 / FD-07 §9 |
+| D17 | Human study recruitment | **Resolved** | Available pool is 3 students + 1 instructor (n ≈ 4); run as a **pilot**, external practitioners as upside (FD-06 §9.3) |
 
-**Critical path:** D2 → corpus generation → everything downstream. Confirm D2 first.
+**Critical path:** D2 → corpus generation → everything downstream. **D2 is now confirmed; corpus generation is unblocked.** All register decisions are resolved.
 
 ---
 
@@ -114,15 +114,15 @@ The project must demonstrate depth in two courses. This section is the checklist
 |---|---|
 | Multi-account landing zone, AWS Organizations | Three-account topology (§6) |
 | IAM, cross-account roles, least privilege, separation of duties | INV-5 (Agent 2 read-only, Agent 1 write-only) |
-| VPC, subnet, security group, routing design | Dependency graph (FD-01 S4); relational findings (D7) |
-| High availability, multi-AZ, fault domains | Resilience defect class D5; availability targets in WorkloadIntent |
+| VPC, subnet, security group, routing design | Dependency graph (FD-01 S4); relational findings (DF-7) |
+| High availability, multi-AZ, fault domains | Resilience defect class DF-5; availability targets in WorkloadIntent |
 | Infrastructure as Code, declarative provisioning | Terraform corpus generation; Agent 1 artifact |
 | Plan/apply, change control, blast radius | INV-3, stages S9–S10 |
 | Well-Architected pillars | Gold set source; joint optimisation objective |
 | Cloud security posture management, drift detection | Review mode; post-apply drift (FD-03 C4) |
-| FinOps, cost optimisation, right-sizing | Cost defect class D6; counterfactual cost deltas |
+| FinOps, cost optimisation, right-sizing | Cost defect class DF-6; counterfactual cost deltas |
 | Shared responsibility model, defence in depth | Framing of control coverage |
-| Observability, audit logging, evidence retention | Defect class D4; FD-03 §9 |
+| Observability, audit logging, evidence retention | Defect class DF-4; FD-03 §9 |
 | Compliance frameworks in cloud context | L1 encoding; PCI-DSS / CIS |
 
 ### Artificial Intelligence
@@ -188,7 +188,7 @@ Phase-based rather than date-based; anchor to your actual term calendar. Sequenc
 | **2 — Gold set** | Hand-build and label 50–100 reference configurations | Gold set frozen; validates L1 encoding |
 | **3 — Generator** | Intent-first Terraform generator; corpus A without defects | 500 estates generated, parsed into graph |
 | **4 — Labelling** | Checkov/tfsec/Prowler pipeline; weak-supervision label model | Labels produced with agreement statistics |
-| **5 — Defects** | Defect taxonomy injection, D7 built deliberately | D7 test set exists and Checkov scores zero on it |
+| **5 — Defects** | Defect taxonomy injection, DF-7 built deliberately | DF-7 test set exists and Checkov scores zero on it |
 | **6 — Advisor** | Advisor with grounding rule; iteration loop per FD-02 | Seeded-defect recall measured; **sycophancy test passes** |
 | **7 — Recommender** | GNN ranker + baselines; constraint mask | Precision@k, NDCG vs baselines reported |
 | **8 — Reconstruction** | Intent reconstruction + calibration | Round-trip fidelity and reliability diagram reported |
@@ -212,8 +212,8 @@ Phase-based rather than date-based; anchor to your actual term calendar. Sequenc
 | Circularity criticism at examination | Medium | High | Four defences pre-built into evaluation (FD-05 §7); lead with C1 and C2 |
 | AWS credit exhaustion | Medium | Medium | Plan-only corpus; budget alarms day one; no Neptune; demo-window-only Config/GuardDuty |
 | Advisor is vacuous (agrees with everything) | Medium | **Critical** | Phase 6 gate; adversarial corpus in CI; different base model (D8) |
-| Human study recruitment fails | Medium | Medium | n≈10 is sufficient; students count for the learner stratum; report as pilot if under-recruited |
-| Relational findings prove rare or contrived | Low | **High** | D7 generated deliberately and in quantity; C1 is the headline claim and must not rest on a handful of cases |
+| Human study recruitment fails | Medium | Medium | Internal pool is 3 students + 1 instructor (n ≈ 4); run as a **pilot** at that scale, external practitioners as upside; the appropriate-reliance result stays meaningful at pilot size (FD-06 §9.3) |
+| Relational findings prove rare or contrived | Low | **High** | DF-7 generated deliberately and in quantity; C1 is the headline claim and must not rest on a handful of cases |
 | Team member unavailability | Medium | Medium | Phase-based plan allows resequencing of 7/8/9 |
 | Over-claiming feedback learning with small N | Medium | Medium | FD-03 §7 scoping statement already drafted — use it |
 

@@ -4,7 +4,7 @@
 **Document ID:** FD-02
 **Status:** Baseline
 **Governs:** Stage S3 of FD-01
-**Depends on:** FD-01 (Unified Flow), FD-03 (Feedback Capture)
+**Depends on:** FD-01 (Unified Flow), FD-03 (Feedback Loop)
 
 ---
 
@@ -98,6 +98,8 @@ P7 creates the only route to more than three total passes. This is intentional: 
 ```
 
 ### 5.4 Reference implementation
+
+Here `advisor` is the Advisor (FD-04) and `generator` is the Recommender operating in patch mode — the patcher, per the FD-01 §3 patcher note. It is not a separate actor.
 
 ```python
 MAX_PASSES = 3

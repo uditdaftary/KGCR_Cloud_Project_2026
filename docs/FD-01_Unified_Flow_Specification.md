@@ -1,9 +1,9 @@
 # FD-01 — Unified Flow Specification
 
-**Project:** Knowledge Graph-Based Cloud Configuration Recommendation Framework for Financial Enterprises using Explainable AI and Agentic Subsystems. 
+**Project:** Knowledge Graph-Based Cloud Configuration Recommendation Framework for Financial Enterprises using Explainable AI
 **Document ID:** FD-01
 **Status:** Baseline — supersedes the two-condition flowcharts
-**Depends on:** FD-02 (Advisor Iteration Policy), FD-03 (Feedback Capture)
+**Depends on:** FD-02 (Advisor Iteration Policy), FD-03 (Feedback Loop)
 **Open decisions referenced:** D2 (scope breadth), D5 (deployment artifact format)
 
 ---
@@ -41,6 +41,8 @@ This reframing produces the central architectural claim of the project — that 
 | **Knowledge Graph** | Store | Normative controls, service topology, cost facts, observed estates, behavioural feedback | Internal |
 
 **Separation-of-duties note.** The Advisor must not be the same component as the Recommender, and must not be given the Recommender's reasoning trace as input. If the reviewer inherits the proposer's rationale, review collapses into self-agreement — the failure mode documented for single-model self-critique. The Advisor sees only the *artifact*, never the *argument*. This mirrors the three-lines-of-defence model used in financial institutions and should be presented as such.
+
+**Patcher note.** The component that applies advisor findings inside the S3 loop — written `generator.patch(...)` in FD-02 §5.4 and called "the patcher" in FD-04 A7 — is the **Recommender operating in patch mode**: it re-synthesises the affected part of the specification under the constraint of the findings. It is not a separate actor and is not listed above as one. Unlike the Advisor, the patcher legitimately consumes findings; INV-7 restricts only what the *Advisor* may see, so a finding-aware patcher does not breach it.
 
 ---
 
@@ -235,12 +237,14 @@ CLI was chosen over a web UI deliberately: human-in-the-loop gates become natura
 
 ## 10. Open items
 
-| Ref | Item | Blocking |
-|---|---|---|
-| D2 | Scope breadth — number of workload archetypes and compliance frameworks | Corpus generation (FD-05) |
-| D5 | Deployment artifact format — Terraform vs CloudFormation vs SDK | S9/S10 implementation |
-| D6 | Explanation export format for audit systems (OSCAL assessment-results is the candidate) | S5 |
-| D7 | Multi-account topology mapping onto the three available student accounts | Environment build |
+All items below are now resolved in the decision register (PMD §5).
+
+| Ref | Resolution |
+|---|---|
+| D2 | 3 archetypes, PCI-DSS + CIS (FD-05 §3) — accepted |
+| D5 | Terraform (FD-08 §5) — accepted |
+| D6 | OSCAL `assessment-results` (FD-06 §10) — accepted |
+| D7 | Standalone accounts + cross-account roles, no AWS Organizations (FD-08 §3) — accepted |
 
 ---
 

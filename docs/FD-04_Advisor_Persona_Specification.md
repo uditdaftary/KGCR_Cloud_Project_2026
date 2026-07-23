@@ -14,7 +14,7 @@
 
 A vague advisor is the most likely single point of failure in this design. It sits at the only gate between a generated specification and a live financial-sector deployment, and it is the component most easily reduced to an LLM that agrees with whatever it is shown. This document exists to make that failure detectable.
 
-**Out of scope.** The Advisor does not render explanations for users. That is the Explainer at S5, which carries the three audience modes (`architect` / `auditor` / `learner`) resolved under D1. The two are frequently conflated and must not be: the Advisor produces *findings*, the Explainer produces *justifications*. A separate FD-06 should specify the Explainer.
+**Out of scope.** The Advisor does not render explanations for users. That is the Explainer at S5, which carries the three audience modes (`architect` / `auditor` / `learner`) resolved under D1. The two are frequently conflated and must not be: the Advisor produces *findings*, the Explainer produces *justifications*. FD-06 specifies the Explainer.
 
 ---
 
@@ -57,6 +57,8 @@ PriorFindings      — findings from earlier passes in this cycle, with resoluti
 ```
 
 **Explicitly withheld:** recommender scores, candidate rankings, model rationale, prior-run acceptance rates, and anything from L3 (behavioural). The last exclusion matters: if the Advisor could see that a pattern is usually accepted, organisational habit would leak into the compliance gate — the exact laundering FD-03 §5 prohibits.
+
+**Read scope versus grounding authority.** These are two different things and must not be conflated. The Advisor *reads* L1 and L2: it has to traverse L2 — the observed estate, in review mode — to establish the multi-hop reachability paths of §7. But every finding must *ground* in an L1 control node (§4); L2 supplies evidence paths, never authority. This is why §9 records the Advisor as grounded in "L1 only" while its `KGHandle` grants L1+L2 read access — the two statements describe grounding authority and read scope respectively, and are not in tension.
 
 **Output:** a `FindingSet`, possibly empty. An empty set is a valid and expected result; it triggers early exit under P2.
 
@@ -141,7 +143,7 @@ The calibration target is therefore **high recall on regulatory findings, high p
 | Regulatory (CRITICAL) | Recall-favouring. Flag on reasonable grounds; T3 escalation is an acceptable cost. |
 | Hardening (HIGH) | Balanced. Waivable, so a false positive costs a justification, not a halt. |
 | Resilience / cost (MEDIUM) | Precision-favouring. Non-blocking, so noise here purely dilutes the report. |
-| Advisory | Precision-favouring, and rate-limited per run. |
+| Advisory | Precision-favouring; capped at **5 per run**, ranked by control-node specificity, overflow logged not rendered (D10). |
 
 **Anti-inflation control.** Because only CRITICAL and unwaived HIGH block progress, an Advisor that inflates severity effectively seizes control of the pipeline. The grounding rule prevents this structurally — severity is read from the control node, not chosen — but the metric must still be watched: *severity distribution drift* across model versions is a monitored signal.
 
@@ -206,7 +208,7 @@ Frequently conflated; keep them separate in code, in the writeup, and in the viv
 | **Sees rationale of others** | — | No (INV-7) | Yes — both |
 | **Audience-aware** | No | **No** | Yes (three modes) |
 | **Can block deployment** | No | Yes | No |
-| **Grounded in** | L1 + L2 + L3 | **L1 only** | L1 + findings + graph |
+| **Grounded in** | L1 + L2 + L3 | **L1 only** | L1 + findings + graph + L3 (counterfactual ranking only) |
 
 The Advisor being audience-neutral is deliberate. If the reviewer softened for a learner or hardened for an auditor, the compliance gate would depend on who was watching — which would invalidate INV-2 and, with it, the framework's central claim.
 
@@ -262,14 +264,15 @@ F-002 is the finding that no single-resource policy engine produces. Each elemen
 
 ---
 
-## 13. Open items
+## 13. Resolved items
 
-| Ref | Item |
+All previously-open items for this component are now resolved in the decision register (PMD §5):
+
+| Ref | Resolution |
 |---|---|
-| D8 | Advisor base model — recommend a different model from the Recommender (§11) |
-| D9 | Default hop bound k for path expansion; requires ablation |
-| D10 | Whether ADVISORY findings are rate-limited per run, and at what threshold |
-| — | FD-06 (Explainer Specification) not yet written; audience-rendering rules live there |
+| D8 | Advisor uses a **different base model** from the Recommender (§11) |
+| D9 | Path-expansion hop bound defaults to **k = 3**; the ablation reports the trade-off (§7) |
+| D10 | ADVISORY findings **capped at 5 per run**, ranked by control-node specificity, overflow logged not rendered (§6) |
 
 ---
 

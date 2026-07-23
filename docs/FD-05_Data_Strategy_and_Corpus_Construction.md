@@ -97,19 +97,19 @@ CloudGoat, TerraGoat, flaws.cloud, and comparable deliberately-vulnerable enviro
 
 ## 5. Defect taxonomy
 
-Injected defects must be enumerated, classed, and mapped to controls in advance. Ad-hoc injection produces an unmeasurable corpus.
+Injected defects must be enumerated, classed, and mapped to controls in advance. Ad-hoc injection produces an unmeasurable corpus. Defect classes are prefixed `DF-` to keep them distinct from the decision-register IDs (`D1`…`D17`) in the PMD, which are a separate namespace.
 
 | Class | Example defects | Typical severity | Single-resource detectable? |
 |---|---|---|---|
-| **D1 Exposure** | Public subnet placement, open security group, public S3 ACL, public RDS endpoint | CRITICAL | Yes |
-| **D2 Encryption** | Unencrypted volume, unencrypted snapshot, TLS not enforced in transit, no field-level encryption on PAN | CRITICAL | Yes |
-| **D3 Identity** | Wildcard IAM policy, cross-account trust to unknown principal, long-lived access keys, missing MFA on privileged roles | CRITICAL / HIGH | Yes |
-| **D4 Observability** | CloudTrail disabled, log retention below requirement, no VPC flow logs, unlogged data access | HIGH | Yes |
-| **D5 Resilience** | Single-AZ deployment against a multi-AZ target, no backup policy, no cross-region replication where required | HIGH / MEDIUM | Partly |
-| **D6 Cost** | Oversized instances, unattached volumes, idle NAT gateways, no lifecycle policy | MEDIUM | Partly |
-| **D7 Relational** | Multi-hop exfiltration paths, transitive trust chains, indirect internet reachability, privilege escalation paths | CRITICAL | **No** |
+| **DF-1 Exposure** | Public subnet placement, open security group, public S3 ACL, public RDS endpoint | CRITICAL | Yes |
+| **DF-2 Encryption** | Unencrypted volume, unencrypted snapshot, TLS not enforced in transit, no field-level encryption on PAN | CRITICAL | Yes |
+| **DF-3 Identity** | Wildcard IAM policy, cross-account trust to unknown principal, long-lived access keys, missing MFA on privileged roles | CRITICAL / HIGH | Yes |
+| **DF-4 Observability** | CloudTrail disabled, log retention below requirement, no VPC flow logs, unlogged data access | HIGH | Yes |
+| **DF-5 Resilience** | Single-AZ deployment against a multi-AZ target, no backup policy, no cross-region replication where required | HIGH / MEDIUM | Partly |
+| **DF-6 Cost** | Oversized instances, unattached volumes, idle NAT gateways, no lifecycle policy | MEDIUM | Partly |
+| **DF-7 Relational** | Multi-hop exfiltration paths, transitive trust chains, indirect internet reachability, privilege escalation paths | CRITICAL | **No** |
 
-**Class D7 is the one that matters most.** It exists to demonstrate the central architectural claim: that a graph representation detects a defect class that single-resource policy engines cannot reach by construction. Comparative results on D7 are the framework's strongest empirical evidence, and D7 estates should be generated deliberately and in quantity, not left as an emergent by-product.
+**Class DF-7 is the one that matters most.** It exists to demonstrate the central architectural claim: that a graph representation detects a defect class that single-resource policy engines cannot reach by construction. Comparative results on DF-7 are the framework's strongest empirical evidence, and DF-7 estates should be generated deliberately and in quantity, not left as an emergent by-product.
 
 Each defect instance is recorded with its class, injection site, the control it breaches, and the expected finding — giving per-defect ground truth for the seeded-recall metric in FD-04 §10.
 
@@ -139,7 +139,7 @@ Four defences, all of which should be built into the evaluation design from the 
 
 **Defence 3 — Joint objective.** No policy engine trades compliance against cost against resilience. Report **Pareto frontiers**: configurations that are simultaneously compliant *and* cheaper than the naive rule-satisfying baseline. Joint optimisation is a capability rule engines structurally lack.
 
-**Defence 4 — Relational findings (D7).** Single-resource engines score zero on D7 by construction. A comparative table on this class is the cleanest possible demonstration that the graph is load-bearing.
+**Defence 4 — Relational findings (DF-7).** Single-resource engines score zero on DF-7 by construction. A comparative table on this class is the cleanest possible demonstration that the graph is load-bearing.
 
 Defences 2 and 4 are the strong ones. Lead with them.
 
@@ -170,7 +170,7 @@ This is a self-contained, reportable experiment requiring no external data, and 
 | Test | 15% of A + B | Held-out performance |
 | **Gold** | All of C | Regression gate, false-positive baseline. Never trained on. |
 | **Adversarial** | All of D | Detection recall. Never trained on. |
-| **Relational** | D7 subset of A | Comparative claim against policy engines |
+| **Relational** | DF-7 subset of A | Comparative claim against policy engines |
 
 **Split at estate level, never at resource level.** Resource-level splitting leaks: two resources from the same generated estate share topology, tagging conventions, and generator seed, so a model can recognise the estate rather than learn the pattern. Estate-level splitting is the correct unit and should be stated explicitly — reviewers do check this, and it is a common and quietly fatal error.
 
@@ -205,11 +205,11 @@ State these in the dissertation. A project that names its own weaknesses reads a
 | Weak-supervision labels inherit policy-engine blind spots | **High** | Rule holdout (Defence 1); gap analysis reported |
 | Gold set is small (50–100) | Medium | Reported with confidence intervals; used as a gate, not as a performance headline |
 | Three archetypes may not generalise to the wider AWS surface | Medium | Scoped claim: the framework is demonstrated for three archetypes, not claimed universal |
-| No real financial-sector validation | **High** | Acknowledged as the principal limitation; expert review (n≈3–5 practitioners) on the gold set is the affordable partial mitigation |
+| No real financial-sector validation | **High** | Acknowledged as the principal limitation; expert review of the gold set by the instructor (n = 1, plus any external practitioner) is the affordable partial mitigation |
 | Cost data is list-price, not negotiated enterprise rates | Low | Stated; relative comparisons remain valid |
 | Mined IaC quality is unverified | Low | Used as input diversity, not as ground truth |
 
-The fifth row is the honest headline limitation. The right posture is to state it in the abstract, not bury it — and to note that expert review of the gold set, even at n=3, converts an unvalidated artifact into a partially validated one at almost no cost.
+The fifth row is the honest headline limitation. The right posture is to state it in the abstract, not bury it — and to note that expert review of the gold set, even by a single qualified practitioner (the instructor), converts an unvalidated artifact into a partially validated one at almost no cost.
 
 ---
 
@@ -223,7 +223,7 @@ Dependency-ordered. Do not parallelise past a broken step.
 4. **Build the generator** — intent-first, parameterised
 5. **Generate corpus A**, without defect injection initially
 6. **Wire the labelling pipeline** — Checkov, tfsec, Prowler over plan output
-7. **Implement defect injection** per §5, including D7 deliberately
+7. **Implement defect injection** per §5, including DF-7 deliberately
 8. **Mine corpus B**, with licence tracking
 9. **Import corpus D**
 10. **Fix splits** at estate level, freeze the test set
@@ -236,10 +236,10 @@ Step 2 is where projects of this type most often stall. It is tedious, it produc
 
 | Ref | Item |
 |---|---|
-| D2 | Scope — recommendation in §3, requires confirmation |
-| D11 | Cost data source: AWS Price List API vs static snapshot (snapshot is reproducible, and reproducibility matters more here than currency) |
-| D12 | Whether OSCAL is used as the internal control encoding or only as an export format |
-| D13 | Expert-review protocol for the gold set — recruitment, instrument, ethics approval if required |
+| D2 | **Resolved** — scope per §3 accepted (3 archetypes, PCI-DSS + CIS) |
+| D11 | **Resolved** — static price snapshot accepted; reproducibility over currency |
+| D12 | **Resolved** — OSCAL export-only in FD-07 §9 |
+| D13 | **Resolved** — instructor reviews the gold-set crosswalk (spreadsheet instrument, §11); external practitioners as upside; ethics approval if the institution requires it |
 
 ---
 

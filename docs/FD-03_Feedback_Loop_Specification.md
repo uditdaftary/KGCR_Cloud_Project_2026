@@ -1,4 +1,6 @@
-# FD-03 — Feedback Capture and Graph Enrichment
+# FD-03 — Feedback Loop Specification
+
+*Feedback capture and graph enrichment.*
 
 **Project:** Knowledge Graph-Based Cloud Configuration Recommendation Framework for Financial Enterprises using Explainable AI
 **Document ID:** FD-03

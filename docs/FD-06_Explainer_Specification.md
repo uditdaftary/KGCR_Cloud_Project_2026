@@ -27,7 +27,7 @@ The Explainer runs on **both** paths (a change from the original flowcharts, FD-
 | Can block deployment | Yes | No |
 | Audience-aware | No | **Yes** — three modes |
 | Sees others' rationale | No (INV-7) | Yes — both |
-| Grounded in | L1 only | L1 + findings + dependency graph |
+| Grounded in | L1 only | L1 + findings + dependency graph + L3 (counterfactual ranking only, §6) |
 
 The Explainer is the only component permitted to see everything, precisely because it has no authority. It cannot block, cannot modify, and cannot influence the recommendation. It reports.
 
@@ -170,7 +170,7 @@ Extract the claim set from each of the three renderings of the same bundle; asse
 
 The XAI evaluation. Design:
 
-- **n ≈ 10–15**, stratified across expertise levels (practitioner / student).
+- **n ≈ 4 (pilot): 3 students + 1 instructor**, stratified across expertise levels (student / practitioner). This is the available internal pool (D17); external practitioner recruitment toward n ≈ 10–15 is upside, not a precondition. Report explicitly as a pilot — the appropriate-reliance measure below stays meaningful at this scale, and a pilot honestly labelled is more defensible than an over-claimed study.
 - **Within-subject on scenario, between-subject on audience mode.** Each participant sees several findings; audience mode is assigned rather than chosen, so the comparison is not confounded by self-selection.
 - **Measures:**
   - *Comprehension* — can the participant correctly restate the defect and its cause?
@@ -210,10 +210,10 @@ The reason is evidentiary. If an auditor requests the justification for a config
 
 | Ref | Item |
 |---|---|
-| D14 | Sparsity operating point per audience — auditors may want maximal evidence, architects minimal |
-| D15 | Whether `learner` mode is evaluated in the human study or held as a demonstration feature only |
-| D16 | OSCAL as internal encoding vs export-only (linked to D12 in FD-05) |
-| D17 | Recruitment plan for the human study — practitioner access is the constraint |
+| D14 | **Resolved** — sparsity–fidelity curve (§5), then: auditor = max evidence, architect = knee, learner = knee + definitional expansion |
+| D15 | **Resolved** — `learner` is a demonstration feature, not a human-study arm. Ingesting new data and having the models learn from it is the FD-03 enrichment loop's job (append-only L2/L3, batch retrain with the gold-set regression gate); that ingestion path is to be kept low-friction so learner demos can be fed new examples easily |
+| D12 | OSCAL as internal encoding vs export-only — **resolved export-only** in FD-07 §9 (previously tracked here as the duplicate D16) |
+| D17 | **Resolved** — internal pool is 3 students + 1 instructor (n ≈ 4); run as a pilot (§9.3), external practitioners as upside |
 
 ---
 
