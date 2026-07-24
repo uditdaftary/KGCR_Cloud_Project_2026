@@ -1,0 +1,48 @@
+{
+  "check_type": "terraform_json",
+  "results": {
+    "passed_checks": [
+      {
+        "check_id": "CKV_AWS_130",
+        "resource": "resource.private_0",
+        "check_name": "Ensure VPC subnets do not assign public IP by default"
+      },
+      {
+        "check_id": "CKV_AWS_130",
+        "resource": "resource.private_1",
+        "check_name": "Ensure VPC subnets do not assign public IP by default"
+      },
+      {
+        "check_id": "CKV_AWS_23",
+        "resource": "resource.app",
+        "check_name": "Ensure every security group and rule has a description"
+      }
+    ],
+    "failed_checks": [
+      {
+        "check_id": "CKV_AWS_130",
+        "resource": "resource.public_0",
+        "check_name": "Ensure VPC subnets do not assign public IP by default"
+      },
+      {
+        "check_id": "CKV_AWS_130",
+        "resource": "resource.public_1",
+        "check_name": "Ensure VPC subnets do not assign public IP by default"
+      },
+      {
+        "check_id": "CKV_AWS_252",
+        "resource": "resource.trail",
+        "check_name": "Ensure CloudTrail defines an SNS Topic"
+      }
+    ]
+  },
+  "summary": {
+    "passed": 36,
+    "failed": 29,
+    "skipped": 0,
+    "parsing_errors": 0,
+    "resource_count": 0,
+    "checkov_version": "3.3.8"
+  },
+  "url": "Add an api key '--bc-api-key <api-key>' to see more detailed insights via https://bridgecrew.cloud"
+}
