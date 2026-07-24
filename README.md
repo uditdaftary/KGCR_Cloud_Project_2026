@@ -4,7 +4,7 @@ Recommend a concrete AWS configuration from a workload stated in business terms,
 
 One-line framing: an experienced cloud architect who has read every compliance standard, never forgets one, and writes down their reasoning every single time.
 
-> **Status: design specification (baseline).** This repository currently holds the foundation documents only. No code has been written yet; the `docs/` set is the controlling reference the implementation will follow.
+> **Status: design specification (baseline), Phase 0 scaffolding underway.** The `docs/` set is the controlling reference the implementation follows. Phase 0 (FD-08) has begun: the reproducibility spine, CLI surface, CI, and the environment IaC skeleton are in place (see [Development](#development)). Subsystem logic is added by later phases.
 
 ## The gap this fills
 
@@ -71,6 +71,26 @@ The milestone plan (PMD §10) is dependency-ordered and phase-based. The near-te
 3. **Phase 2 — gold set** (FD-05 §4C): 50 to 100 hand-verified reference configurations that validate the L1 encoding.
 
 Later phases build the generator, labelling pipeline, Advisor, Recommender, intent reconstructor, and Explainer, then the evaluation suite and human study.
+
+## Development
+
+Phase 0 scaffolding (FD-08). Requires Python 3.11+.
+
+```bash
+pip install -e ".[dev]"     # install with dev tooling (pinned versions)
+PYTHONHASHSEED=0 pytest     # run the test suite
+ruff check . && mypy        # lint and type-check
+kgcr repro-info             # print the seed + version fingerprint for this env
+```
+
+- `kgcr/` — the package. Today it provides the reproducibility spine
+  (`repro`, `hashing`, `runrecord`, `versions`) that keys every result to
+  `(spec_hash, graph_version, model_version)`, plus the `kgcr` CLI whose
+  subcommands mirror the [planned interface](#planned-interface) (declared now,
+  implemented by the phases that own them).
+- `environment/` — the FD-08 §8 bootstrap Terraform: day-one budget alarms and
+  the cross-account read/write role split. Authored, not yet applied.
+- `.github/workflows/ci.yml` — ruff, mypy, and pytest on every push.
 
 ## Context
 

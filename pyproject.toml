@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kgcr"
+version = "0.0.0"
+description = "Knowledge Graph-Based Cloud Configuration Recommendation framework"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "UNLICENSED" }
+authors = [{ name = "KGCR project" }]
+
+# Runtime dependencies are pinned exactly for reproducibility (PMD reproducibility
+# track: every result must re-derive from a fixed environment). The scaffolding
+# itself only needs the standard library plus PyYAML for config; heavier
+# dependencies (torch, neo4j, GNN libraries) are added by the phases that need
+# them, each pinned when introduced.
+dependencies = [
+  "PyYAML==6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==8.3.4",
+  "ruff==0.8.4",
+  "mypy==1.13.0",
+  "types-PyYAML==6.0.12.20240917",
+]
+
+[project.scripts]
+kgcr = "kgcr.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["kgcr*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# A pragmatic, reproducibility-friendly rule set: pyflakes, pycodestyle,
+# isort, bugbear, comprehensions, pyupgrade.
+select = ["E", "F", "I", "B", "C4", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["kgcr"]
+strict = true
+warn_unused_configs = true
+
+# numpy/torch are optional, probed defensively in kgcr.repro; they are not
+# installed in the scaffolding environment, so their stubs are not required.
+[[tool.mypy.overrides]]
+module = ["numpy", "torch"]
+ignore_missing_imports = true
