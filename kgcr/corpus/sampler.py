@@ -77,7 +77,7 @@ class IntentSampler:
             az_spread=self._sample_az_spread(arch),
             network_layout=self._sample_network(arch),
             logging=self._sample_logging(arch),
-            iam_shape=self._choice(list(IAMShape)),
+            iam_shape=self._choice(list(IAMShape.__members__.values())),
             tagging=self._sample_tagging(arch),
             scale=self._sample_scale(arch),
         )
@@ -85,7 +85,7 @@ class IntentSampler:
     # --- archetype-conditioned axes ------------------------------------------
 
     def _sample_az_spread(self, arch: Archetype) -> AZSpread:
-        values = list(AZSpread)
+        values = list(AZSpread.__members__.values())
         if arch is Archetype.PAYMENTS_API:
             weights = [1.0, 3.0, 4.0]  # skew multi-AZ
         elif arch is Archetype.INTERNAL_REPORTING:
@@ -95,7 +95,7 @@ class IntentSampler:
         return self._weighted(values, weights)
 
     def _sample_network(self, arch: Archetype) -> NetworkLayout:
-        values = list(NetworkLayout)
+        values = list(NetworkLayout.__members__.values())
         if arch is Archetype.PAYMENTS_API:
             weights = [1.0, 3.0, 4.0]  # prefer private
         elif arch is Archetype.INTERNAL_REPORTING:
@@ -105,7 +105,7 @@ class IntentSampler:
         return self._weighted(values, weights)
 
     def _sample_logging(self, arch: Archetype) -> LoggingPosture:
-        values = list(LoggingPosture)
+        values = list(LoggingPosture.__members__.values())
         if arch is Archetype.INTERNAL_REPORTING:
             weights = [2.0, 3.0]  # more likely minimal
         else:
@@ -113,7 +113,7 @@ class IntentSampler:
         return self._weighted(values, weights)
 
     def _sample_tagging(self, arch: Archetype) -> TaggingDiscipline:
-        values = list(TaggingDiscipline)
+        values = list(TaggingDiscipline.__members__.values())
         if arch is Archetype.INTERNAL_REPORTING:
             weights = [1.0, 2.0, 2.0]  # laxer
         else:
@@ -121,7 +121,7 @@ class IntentSampler:
         return self._weighted(values, weights)
 
     def _sample_scale(self, arch: Archetype) -> Scale:
-        values = list(Scale)
+        values = list(Scale.__members__.values())
         if arch is Archetype.PAYMENTS_API:
             weights = [1.0, 3.0, 3.0]
         elif arch is Archetype.INTERNAL_REPORTING:
