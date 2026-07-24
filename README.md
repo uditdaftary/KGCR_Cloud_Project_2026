@@ -81,6 +81,7 @@ pip install -e ".[dev]"     # install with dev tooling (pinned versions)
 PYTHONHASHSEED=0 pytest     # run the test suite
 ruff check . && mypy        # lint and type-check
 kgcr repro-info             # print the seed + version fingerprint for this env
+kgcr corpus --count 500     # [dev] generate Corpus A and parse it into the graph
 ```
 
 - `kgcr/` — the package. Today it provides the reproducibility spine
@@ -88,6 +89,14 @@ kgcr repro-info             # print the seed + version fingerprint for this env
   `(spec_hash, graph_version, model_version)`, plus the `kgcr` CLI whose
   subcommands mirror the [planned interface](#planned-interface) (declared now,
   implemented by the phases that own them).
+- `kgcr/corpus/` — Phase 3 (FD-05 §4A): the **intent-first** synthetic estate
+  generator. An intent is sampled first (`intent`, `sampler`), an estate is
+  rendered from it (`generator`, `estate`) carrying that intent as ground truth,
+  and it is parsed into a dependency graph either directly (`graph`) or from a
+  real `terraform show -json` plan (`plan_parser`). `splits` enforces
+  estate-level, seed-family train/test separation (FD-05 §9); `pipeline` runs
+  the whole thing. The corpus is clean at this phase — defect injection is
+  Phase 5. No `terraform`/AWS is required to generate it.
 - `environment/` — the FD-08 §8 bootstrap Terraform: day-one budget alarms and
   the cross-account read/write role split. Authored, not yet applied.
 - `.github/workflows/ci.yml` — ruff, mypy, and pytest on every push.
