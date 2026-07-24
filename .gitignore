@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Reproducibility run artifacts (records are re-derivable; do not commit)
+runs/
+*.runrecord.json
+
+# Terraform (never commit state or provider binaries)
+environment/**/.terraform/
+environment/**/*.tfstate
+environment/**/*.tfstate.*
+environment/**/*.tfvars
+!environment/**/*.tfvars.example
+environment/**/.terraform.lock.hcl
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
