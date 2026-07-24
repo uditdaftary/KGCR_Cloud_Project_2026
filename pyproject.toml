@@ -20,8 +20,20 @@ dependencies = [
   "PyYAML==6.0.2",
 ]
 
+# Phase-scoped heavy dependencies, pinned when introduced (see comment above).
+# ``reconstruction`` (P8) is the learned intent classifier; ``labelling`` (P4)
+# is the Checkov policy engine, kept out of ``dev`` because it is slow and its
+# tests skip when it is absent — CI does not install it.
 [project.optional-dependencies]
+reconstruction = [
+  "numpy==2.4.2",
+  "scikit-learn==1.8.0",
+]
+labelling = [
+  "checkov==3.3.8",
+]
 dev = [
+  "kgcr[reconstruction]",
   "pytest==8.3.4",
   "ruff==0.8.4",
   "mypy==1.13.0",
@@ -55,6 +67,7 @@ warn_unused_configs = true
 
 # numpy/torch are optional, probed defensively in kgcr.repro; they are not
 # installed in the scaffolding environment, so their stubs are not required.
+# scikit-learn ships no type stubs, so it is ignored here too (P8 reconstruction).
 [[tool.mypy.overrides]]
-module = ["numpy", "torch"]
+module = ["numpy", "torch", "sklearn.*"]
 ignore_missing_imports = true
