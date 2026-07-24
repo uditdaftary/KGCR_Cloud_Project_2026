@@ -60,6 +60,22 @@ def build_parser() -> argparse.ArgumentParser:
     repro.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
     repro.set_defaults(func=_cmd_repro_info)
 
+    # Research/dev tooling — not part of the product surface. Generates Corpus A
+    # (Phase 3): intent-first synthetic estates, parsed into the graph.
+    corpus = sub.add_parser("corpus", help="[dev] Generate Corpus A synthetic estates (P3)")
+    corpus.add_argument("--count", type=int, default=500, help="Number of estates (default 500)")
+    corpus.add_argument(
+        "--seed", type=int, default=DEFAULT_SEED, help=f"Base seed (default {DEFAULT_SEED})"
+    )
+    corpus.add_argument(
+        "--family-size", type=int, default=1, help="Estates per seed family (default 1)"
+    )
+    corpus.add_argument(
+        "--out", type=str, default=None, help="Write the corpus to this directory (optional)"
+    )
+    corpus.add_argument("--json", action="store_true", help="Emit the summary as JSON")
+    corpus.set_defaults(func=_cmd_corpus)
+
     for name, (help_text, phase) in _PLANNED.items():
         p = sub.add_parser(name, help=f"{help_text} (planned, {phase})")
         p.set_defaults(func=_make_not_implemented(name, phase))
@@ -93,6 +109,36 @@ def _cmd_repro_info(args: argparse.Namespace) -> int:
     print("tool versions:")
     for key, value in sorted(payload["tool_versions"].items()):
         print(f"  {key}: {value}")
+    return 0
+
+
+def _cmd_corpus(args: argparse.Namespace) -> int:
+    # Imported lazily so the reproducibility commands do not pull in the corpus
+    # stack (and so `kgcr --help` stays fast).
+    from kgcr.corpus.pipeline import generate_corpus, summarise_corpus, write_corpus
+
+    estates = generate_corpus(args.count, args.seed, family_size=args.family_size)
+
+    if args.out is not None:
+        manifest = write_corpus(estates, args.out)
+        summary = manifest["summary"]
+    else:
+        summary = summarise_corpus(estates)
+
+    if args.json:
+        print(json.dumps(summary, indent=2, sort_keys=True))
+        return 0
+
+    print(f"estates:             {summary['estates']}")
+    print(f"unique estate ids:   {summary['unique_estate_ids']}")
+    print(f"seed families:       {summary['seed_families']}")
+    print(f"total resources:     {summary['total_resources']}")
+    print(f"graph nodes / edges: {summary['total_graph_nodes']} / {summary['total_graph_edges']}")
+    print("archetype distribution:")
+    for name, n in summary["archetypes"].items():
+        print(f"  {name}: {n}")
+    if args.out is not None:
+        print(f"written to:          {args.out}")
     return 0
 
 
