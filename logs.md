@@ -1,0 +1,147 @@
+# KGCR — build log: processes and progress
+
+Knowledge Graph-Based Cloud Configuration Recommendation framework. This file
+records what has been built, how it was built (the processes and quality gates),
+and what is deliberately deferred. It is maintained alongside the roadmap
+([roadmap.html](roadmap.html)) and the FD specification set in [docs/](docs/).
+
+Last updated: 2026-07-24.
+
+---
+
+## 1. Progress snapshot
+
+| Phase | Title | Status | Where |
+|---|---|---|---|
+| **P0** | Foundation & reproducibility spine | **Done** | `kgcr/{repro,hashing,runrecord,versions,cli}.py`, `environment/`, CI |
+| **P1** | Ontology encoding (L1) | **Not started** — normative content is human-authored by rule (FD-07 §2) | — |
+| **P2** | Gold set | **Not started** — hand-authored + instructor review | — |
+| **P3** | Intent-first generator & Corpus A | **Done** | `kgcr/corpus/` |
+| **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `kgcr/labelling/` |
+| **P5** | Defect taxonomy & DF-7 test set | **Done** | `kgcr/defects/` |
+| **P6** | Advisor & iteration loop | Blocked — needs L1 + a second LLM | — |
+| **P7** | Recommender (GNN) | Blocked — needs P4 labels + L1 + torch | — |
+| **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `kgcr/reconstruction/` |
+| **P9** | Explainer | Blocked — needs P6 | — |
+| **P10** | Agents & end-to-end | Blocked — needs live AWS accounts | — |
+| **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
+| **P12** | Write-up | Not started | — |
+
+Test suite: **130 tests passing** — corpus 45, defects 34, reconstruction 13,
+labelling 8, spine (cli/hashing/repro/runrecord) 30.
+
+---
+
+## 2. Implemented components
+
+### P0 — reproducibility spine (`kgcr/`)
+- `repro.py` — `seed_everything` fixes every RNG in reach; `hash_seed_is_fixed`.
+- `hashing.py` — `canonical_json` / `canonical_hash` (sorted-key, byte-stable).
+- `runrecord.py` — `RunRecord`, identity = hash of `(spec_hash, graph_version, model_version, seed)`; timestamp excluded so identity is what determines the result.
+- `versions.py` — environment version fingerprint.
+- `cli.py` — `kgcr` command surface; `repro-info` and `--version` live, other subcommands stubbed to their phase.
+
+### P3 — corpus (`kgcr/corpus/`)
+Intent-**first** generation (FD-05 §4A): sample intent, then render a clean estate, so every estate carries its originating intent as free ground truth.
+- `intent.py` — the intent space: `Archetype`, `AZSpread`, `NetworkLayout`, `LoggingPosture`, `IAMShape`, `TaggingDiscipline`, `Scale`; canonically hashable.
+- `sampler.py` — seeded, archetype-conditioned intent sampling.
+- `generator.py` — renders a clean estate of real `aws_*` resources; deterministic in `(intent, seed)`.
+- `estate.py` / `resources.py` — the estate IR; `to_terraform_json()` emits `.tf.json`.
+- `graph.py` — in-memory `EstateGraph` (nodes + `DEPENDS_ON` edges), the Neo4j stand-in.
+- `plan_parser.py` — parse real `terraform show -json` into the same graph.
+- `splits.py` — estate-level (seed-family) train/val/test split with a leakage guard (FD-05 §9).
+- `pipeline.py` — sample → render → graph → manifest.
+
+### P5 — defect injection (`kgcr/defects/`)
+- `taxonomy.py` — `DefectClass` DF-1…DF-7, `Severity`, control URIs (FD-07 `kg://` scheme), `DefectInstance` ground truth (class, site, control, expected finding, evidence path).
+- `detectors.py` — a minimal single-resource oracle written from CIS/Checkov rule semantics (silent on the clean corpus) + a bounded graph traversal (`relational_path_exists`).
+- `inject.py` — DF-1…DF-6 single-resource property injectors + DF-7 relational path injectors: `indirect_internet_reachability`, `transitive_trust_chain`, `privilege_escalation_passrole`. DF-7 wires individually-compliant resources into a ≤3-hop path, gated on a sensitive sink (cardholder/PII).
+- `pipeline.py` — inject across a corpus, the DF-7 (Relational) split, manifest, and `verify_df7_gate` (by-construction invariant: DF-7 estates carry zero single-resource findings yet are graph-recoverable).
+- `adversarial.py` — licence-enforcing registry for corpus D (schema only; fetching is a separate step).
+
+### P4 — labelling (`kgcr/labelling/`)
+- `checkov_engine.py` — Checkov as a static labelling function, invoked as a subprocess over resource-only `.tf.json`; pure `parse_checkov_json`; `resource_verdict`.
+- `df7_contrast.py` — the empirical DF-7 gate: per DF-7 estate, **(a)** the graph recovers the path while **(b)** Checkov's verdict for the (pre-existing, unmutated) sink is byte-identical to the compliant parent. Labeller is injectable for stub-based tests.
+- Evidence: `artifacts/p4_df7_checkov_evidence.json`.
+
+### P8 — intent reconstruction (`kgcr/reconstruction/`)
+- `features.py` — purely structural feature extraction (reads resources, never the intent).
+- `reconstructor.py` — one RandomForest per intent axis, each emitting a value + confidence; region is passed through as directly observed.
+- `evaluate.py` — per-field accuracy + per-field calibration (reliability bins + ECE), reported per field, never pooled.
+- `pipeline.py` — fit on train+validation, evaluate on the held-out test split.
+
+---
+
+## 3. Key empirical results
+
+- **DF-7 gate, empirical (P4 × P5):** over 12 DF-7 estates (4 estates × 3 variants), the graph recovers **all 12** paths while Checkov — including its CKV2 graph checks — is blind to the sink on **all 12** (verdict byte-identical to the clean parent). C1 holds for every variant. This closes the empirical half of the gate that P5 could only assert by construction.
+- **Intent reconstruction (P8), 180-estate corpus:** structurally-encoded axes (archetype, network layout, logging, AZ spread) reconstruct at **~100%** and are well-calibrated (ECE ≤ 0.05). `iam_shape` — which the generator leaves no structural trace of — is both least accurate (**~0.42**) and most miscalibrated (**ECE ~0.28**, overconfident at ~0.70). That overconfidence-on-no-signal is the calibration story the reliability diagram exists to surface, and the reason confidence is reported, not just accuracy.
+
+---
+
+## 4. Processes
+
+### Development workflow
+- **Branch → PR → merge.** Feature work lands on a `claude/*` branch, opened as a PR against `master`, and merged there. Never commit feature work directly to `master`.
+- **Conventional commits**, one logical change each. No AI co-author / "Generated with" trailers (per the working-style instruction).
+- **Spec-driven.** Every module cites the FD document that governs it (FD-01…FD-08); the roadmap phase gates define "done".
+- **Advisor consulted** before committing to an approach and before declaring a phase done; findings acted on (e.g. the DF-7 measurement was reframed to the non-circular sink-invariance test after review).
+
+### Quality gates (must run and pass before any "done" claim)
+Run exactly as CI does, with `PYTHONHASHSEED=0`:
+```
+ruff check .
+ruff format --check .
+mypy
+pytest
+```
+- `mypy` is `--strict` over the `kgcr` package (config `packages = ["kgcr"]`); it does not type-check `tests/`.
+- CI matrix: Python 3.11 and 3.12.
+
+### Dependencies (pinned per phase)
+- Base runtime: `PyYAML` only.
+- `dev` extra: pytest, ruff, mypy, types-PyYAML, **and `kgcr[reconstruction]`** (numpy + scikit-learn) so CI gates P8.
+- `reconstruction` extra: `numpy==2.4.2`, `scikit-learn==1.8.0`.
+- `labelling` extra: `checkov==3.3.8` — **deliberately not in CI**; it is slow and version-fragile, and its tests skip when it is absent.
+
+### Reproducibility
+- Deterministic seeding; canonical hashing; run identity from `(spec_hash, graph_version, model_version, seed)`.
+- The corpus, defect corpus, and reconstruction experiment all reproduce from their seeds.
+- Live-Checkov results are captured as committed artifacts/fixtures so they persist without re-running.
+
+### Testing conventions
+- Standard-library `assert`-based tests, no heavy fixtures.
+- External-tool tests are guarded (`skipif(not checkov_available())`) and backed by a committed JSON fixture + injectable stubs, so the suite is green with or without the tool.
+
+---
+
+## 5. Decisions and deferred items
+
+- **DF-7 is gated on a genuinely sensitive sink** (cardholder/PII). The internal-reporting archetype gets no DF-7, keeping it the low-sensitivity contrast case (FD-05 §3) rather than accumulating spurious CRITICALs.
+- **DF-7 measurement is the sink-invariance contrast**, not a class→check_id recall map (which would have been circular). The sink is pre-existing and unmutated, so comparing its Checkov verdict sidesteps incidental nits on the added scaffolding resources.
+- **P1 normative content is not machine-authored** (FD-07 §2: a model may read L1, never write it). P5 defects cite control URIs as strings that will resolve once L1 is hand-authored.
+- **Deferred in P4:** tfsec (Go binary) and Prowler (needs AWS) → so inter-engine agreement and the weak-supervision label model wait for ≥2 engines; a fair DF-1…DF-4 recall baseline needs HCL or real plan JSON (Checkov's `.tf.json` path evaluates single-resource checks inconsistently on interpolated configs).
+- **P8 is a structural-feature baseline**, not the GNN (that is P7's machinery; torch is not installed). Calibration improvement (Platt/isotonic) is the noted upgrade path.
+- **Adversarial corpus D** is schema + licence-enforcement only; cloning repos, verifying each licence, and pinning commits is a separate data-acquisition step.
+
+---
+
+## 6. Environment gotchas (recorded in memory)
+
+- **mypy + StrEnum:** mypy 1.13.0 types `list(SomeStrEnum)` as `list[str]`, not `list[TheEnum]`. This broke `kgcr/corpus/sampler.py` (6 errors). Fixed by drawing members via `Enum.__members__.values()`, which preserves the member type and definition order. Repo-wide mypy is now green.
+- **Checkov `.tf.json` is fragile:** its `terraform_json` parser rejects the `provider` block (feed it resource-only input), and single-resource `CKV_AWS_*` checks evaluate inconsistently on interpolated configs. Checkov is invoked as a subprocess (`python -m checkov.main -d <dir> -o json --compact --soft-fail`), not imported. The DF-7 result does not depend on any of this (it compares the sink verdict, which is robust to the quirks).
+
+---
+
+## 7. Commit and PR record
+
+Merged to `master`:
+- `Scaffold Phase 0: reproducibility spine, CLI, CI, and environment IaC` (PR #1)
+- `Implement Phase 3: intent-first generator and Corpus A` (PR #2)
+- PR #3 — `claude/p5-defect-injection` (merge `1847148`):
+  - `fix(corpus): preserve StrEnum member type in sampler axis draws`
+  - `feat(defects): Phase 5 defect-injection engine and DF-7 test set`
+  - `feat(labelling): Phase 4 Checkov labelling and the empirical DF-7 gate`
+  - `feat(reconstruction): Phase 8 intent reconstruction and calibration`
+
+Docs (FD-01…FD-08, PMD, README, roadmap) landed earlier as `docs:` commits.
