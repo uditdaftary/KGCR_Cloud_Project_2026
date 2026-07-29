@@ -4,12 +4,13 @@ Source of truth: `Project Guidelines-AWS Cloud.pdf` (BCSE355L, Dr. Priya V, subm
 Written 2026-07-29.
 
 > **Status, 2026-07-29.**
-> **Done:** §4 steps 1, 2, 4, 5 — repo created with the 23-commit history pushed as `main`;
-> `develop` + `feature/student1|2|3` branches live; `CLAUDE.md` and `CHANGELOG.md` on
-> `feature/student1` behind PR #1 (open, unmerged).
-> **Remaining:** §4 step 3 (tree restructure + config edits + gate run), README rewrite for this
-> repo, `LICENSE`, §6 authoring (survey, diagrams, dataset, report), §4 step 6 (archive `KGCR`),
-> `develop` as default branch, `main` protection.
+> **Done:** §4 steps 1–5 — repo created with the 23-commit history pushed as `main`; `develop` +
+> `feature/student1|2|3` branches live; `CLAUDE.md` and `CHANGELOG.md` added; **tree restructured**
+> with all four gates green (ruff, ruff format, mypy, 130 tests) and P8 re-run end-to-end through
+> the new `src/ml_model/` entry points. All on `feature/student1` behind PR #1 (open, unmerged).
+> **Remaining:** §6 authoring (15-paper survey, 2 diagrams, dataset details, abstract/objectives/
+> novelty, report assembly), `LICENSE`, `presentation/`, §4 step 6 (archive `KGCR`), `develop` as
+> default branch, `main` protection.
 
 ---
 
