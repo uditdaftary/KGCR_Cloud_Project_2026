@@ -84,12 +84,22 @@ kgcr repro-info             # print the seed + version fingerprint for this env
 kgcr corpus --count 500     # [dev] generate Corpus A and parse it into the graph
 ```
 
-- `kgcr/` — the package. Today it provides the reproducibility spine
+The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
+`dataset/`, `src/{frontend,backend,ml_model,aws}`, `results/`, `presentation/`);
+[CLAUDE.md](CLAUDE.md) is the governing document.
+
+- `src/backend/kgcr/` — the package. Today it provides the reproducibility spine
   (`repro`, `hashing`, `runrecord`, `versions`) that keys every result to
   `(spec_hash, graph_version, model_version)`, plus the `kgcr` CLI whose
   subcommands mirror the [planned interface](#planned-interface) (declared now,
   implemented by the phases that own them).
-- `kgcr/corpus/` — Phase 3 (FD-05 §4A): the **intent-first** synthetic estate
+- `src/ml_model/` — entry points for the P8 intent reconstructor:
+  `preprocessing.py` (generate the corpus into `dataset/processed/`), `train.py`
+  (fit, write `model.pkl` and the evaluation report), `predict.py` (reconstruct
+  one estate's intent with per-field confidence). Thin wrappers over
+  `kgcr.reconstruction`; the library is where the logic and its tests live.
+- `src/frontend/` — Phase-II scope; the Phase-I interface is the CLI.
+- `src/backend/kgcr/corpus/` — Phase 3 (FD-05 §4A): the **intent-first** synthetic estate
   generator. An intent is sampled first (`intent`, `sampler`), an estate is
   rendered from it (`generator`, `estate`) carrying that intent as ground truth,
   and it is parsed into a dependency graph either directly (`graph`) or from a

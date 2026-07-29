@@ -3,7 +3,7 @@
 Knowledge Graph-Based Cloud Configuration Recommendation framework. This file
 records what has been built, how it was built (the processes and quality gates),
 and what is deliberately deferred. It is maintained alongside the roadmap
-([roadmap.html](roadmap.html)) and the FD specification set in [docs/](docs/).
+([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
 Last updated: 2026-07-29.
@@ -26,17 +26,36 @@ deadline 30 July 2026).
   required report sections, citation rules, and hard rules distilled from the
   guidelines PDF.
 - This file renamed `logs.md` → `CHANGELOG.md`; contents otherwise unchanged.
-- `MIGRATION_PLAN.md` records the gap analysis and the remaining steps: tree
-  restructure into `src/{backend,ml_model,aws,frontend}`, the 15-paper literature
-  survey (**all 15 need fresh sourcing** — none of the 33 references in PMD §15
-  satisfies both the venue and the 2023–2026 filter), the two mandatory
-  architecture diagrams, dataset details, and report assembly.
-- `uditdaftary/KGCR` to be archived as reference-only once the tree restructure
-  lands.
+- **Tree restructured** to the mandated layout: `kgcr/` → `src/backend/kgcr/`,
+  `environment/` → `src/aws/`, `artifacts/` → `results/`, roadmap files parked in
+  `docs/`; `architecture/`, `dataset/{raw,processed}/`, `presentation/`,
+  `src/frontend/`, `src/ml_model/` created. No code was rewritten — the package
+  moved whole and setuptools, mypy, and ruff's isort were pointed at
+  `src/backend` (`where`, `mypy_path`, `src`). Without the ruff `src` setting,
+  `kgcr` grades as third-party and every test file reports I001.
+- `src/ml_model/{preprocessing,train,predict}.py` added — the entry points the
+  guidelines name, as thin wrappers over `kgcr.reconstruction`. The library keeps
+  the logic and its tests; the wrappers only parse arguments and print. Running
+  `train.py` surfaced one real bug: `→` in a print statement raises
+  `UnicodeEncodeError` under the Windows console's cp1252 encoding. Output is
+  ASCII now.
+- `src/frontend/` is a stub with a Phase-II scope note; Phase-I's interface is
+  the CLI.
+- Quality gates re-run after the move and green: ruff check, ruff format --check,
+  mypy (31 files), pytest (130 passed).
+- P8 re-run end-to-end through the new entry points on the 180-estate corpus at
+  the default seed. Reproduces the recorded result: `iam_shape` accuracy 0.417,
+  ECE 0.282; structurally-encoded axes at 1.000 with ECE ≤ 0.052. Report
+  committed at `results/reconstruction_report.json`.
+- `MIGRATION_PLAN.md` records the gap analysis and the remaining steps: the
+  15-paper literature survey (**all 15 need fresh sourcing** — none of the 33
+  references in PMD §15 satisfies both the venue and the 2023–2026 filter), the
+  two mandatory architecture diagrams, dataset details, `LICENSE`, and report
+  assembly.
+- `uditdaftary/KGCR` still to be archived as reference-only.
 
-Not yet done: the tree restructure, and therefore the post-move quality-gate run.
-Sections 1–7 below describe the repository as it stood on 2026-07-24 and remain
-accurate for the code itself.
+Sections 1–7 below describe the code as of 2026-07-24 and remain accurate; paths
+in them were updated to the new tree.
 
 ---
 
@@ -44,15 +63,15 @@ accurate for the code itself.
 
 | Phase | Title | Status | Where |
 |---|---|---|---|
-| **P0** | Foundation & reproducibility spine | **Done** | `kgcr/{repro,hashing,runrecord,versions,cli}.py`, `environment/`, CI |
+| **P0** | Foundation & reproducibility spine | **Done** | `src/backend/kgcr/{repro,hashing,runrecord,versions,cli}.py`, `src/aws/`, CI |
 | **P1** | Ontology encoding (L1) | **Not started** — normative content is human-authored by rule (FD-07 §2) | — |
 | **P2** | Gold set | **Not started** — hand-authored + instructor review | — |
-| **P3** | Intent-first generator & Corpus A | **Done** | `kgcr/corpus/` |
-| **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `kgcr/labelling/` |
-| **P5** | Defect taxonomy & DF-7 test set | **Done** | `kgcr/defects/` |
+| **P3** | Intent-first generator & Corpus A | **Done** | `src/backend/kgcr/corpus/` |
+| **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `src/backend/kgcr/labelling/` |
+| **P5** | Defect taxonomy & DF-7 test set | **Done** | `src/backend/kgcr/defects/` |
 | **P6** | Advisor & iteration loop | Blocked — needs L1 + a second LLM | — |
 | **P7** | Recommender (GNN) | Blocked — needs P4 labels + L1 + torch | — |
-| **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `kgcr/reconstruction/` |
+| **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `src/backend/kgcr/reconstruction/` |
 | **P9** | Explainer | Blocked — needs P6 | — |
 | **P10** | Agents & end-to-end | Blocked — needs live AWS accounts | — |
 | **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
@@ -65,14 +84,14 @@ labelling 8, spine (cli/hashing/repro/runrecord) 30.
 
 ## 2. Implemented components
 
-### P0 — reproducibility spine (`kgcr/`)
+### P0 — reproducibility spine (`src/backend/kgcr/`)
 - `repro.py` — `seed_everything` fixes every RNG in reach; `hash_seed_is_fixed`.
 - `hashing.py` — `canonical_json` / `canonical_hash` (sorted-key, byte-stable).
 - `runrecord.py` — `RunRecord`, identity = hash of `(spec_hash, graph_version, model_version, seed)`; timestamp excluded so identity is what determines the result.
 - `versions.py` — environment version fingerprint.
 - `cli.py` — `kgcr` command surface; `repro-info` and `--version` live, other subcommands stubbed to their phase.
 
-### P3 — corpus (`kgcr/corpus/`)
+### P3 — corpus (`src/backend/kgcr/corpus/`)
 Intent-**first** generation (FD-05 §4A): sample intent, then render a clean estate, so every estate carries its originating intent as free ground truth.
 - `intent.py` — the intent space: `Archetype`, `AZSpread`, `NetworkLayout`, `LoggingPosture`, `IAMShape`, `TaggingDiscipline`, `Scale`; canonically hashable.
 - `sampler.py` — seeded, archetype-conditioned intent sampling.
@@ -83,19 +102,19 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
 - `splits.py` — estate-level (seed-family) train/val/test split with a leakage guard (FD-05 §9).
 - `pipeline.py` — sample → render → graph → manifest.
 
-### P5 — defect injection (`kgcr/defects/`)
+### P5 — defect injection (`src/backend/kgcr/defects/`)
 - `taxonomy.py` — `DefectClass` DF-1…DF-7, `Severity`, control URIs (FD-07 `kg://` scheme), `DefectInstance` ground truth (class, site, control, expected finding, evidence path).
 - `detectors.py` — a minimal single-resource oracle written from CIS/Checkov rule semantics (silent on the clean corpus) + a bounded graph traversal (`relational_path_exists`).
 - `inject.py` — DF-1…DF-6 single-resource property injectors + DF-7 relational path injectors: `indirect_internet_reachability`, `transitive_trust_chain`, `privilege_escalation_passrole`. DF-7 wires individually-compliant resources into a ≤3-hop path, gated on a sensitive sink (cardholder/PII).
 - `pipeline.py` — inject across a corpus, the DF-7 (Relational) split, manifest, and `verify_df7_gate` (by-construction invariant: DF-7 estates carry zero single-resource findings yet are graph-recoverable).
 - `adversarial.py` — licence-enforcing registry for corpus D (schema only; fetching is a separate step).
 
-### P4 — labelling (`kgcr/labelling/`)
+### P4 — labelling (`src/backend/kgcr/labelling/`)
 - `checkov_engine.py` — Checkov as a static labelling function, invoked as a subprocess over resource-only `.tf.json`; pure `parse_checkov_json`; `resource_verdict`.
 - `df7_contrast.py` — the empirical DF-7 gate: per DF-7 estate, **(a)** the graph recovers the path while **(b)** Checkov's verdict for the (pre-existing, unmutated) sink is byte-identical to the compliant parent. Labeller is injectable for stub-based tests.
-- Evidence: `artifacts/p4_df7_checkov_evidence.json`.
+- Evidence: `results/p4_df7_checkov_evidence.json`.
 
-### P8 — intent reconstruction (`kgcr/reconstruction/`)
+### P8 — intent reconstruction (`src/backend/kgcr/reconstruction/`)
 - `features.py` — purely structural feature extraction (reads resources, never the intent).
 - `reconstructor.py` — one RandomForest per intent axis, each emitting a value + confidence; region is passed through as directly observed.
 - `evaluate.py` — per-field accuracy + per-field calibration (reliability bins + ECE), reported per field, never pooled.
@@ -159,7 +178,7 @@ pytest
 
 ## 6. Environment gotchas (recorded in memory)
 
-- **mypy + StrEnum:** mypy 1.13.0 types `list(SomeStrEnum)` as `list[str]`, not `list[TheEnum]`. This broke `kgcr/corpus/sampler.py` (6 errors). Fixed by drawing members via `Enum.__members__.values()`, which preserves the member type and definition order. Repo-wide mypy is now green.
+- **mypy + StrEnum:** mypy 1.13.0 types `list(SomeStrEnum)` as `list[str]`, not `list[TheEnum]`. This broke `src/backend/kgcr/corpus/sampler.py` (6 errors). Fixed by drawing members via `Enum.__members__.values()`, which preserves the member type and definition order. Repo-wide mypy is now green.
 - **Checkov `.tf.json` is fragile:** its `terraform_json` parser rejects the `provider` block (feed it resource-only input), and single-resource `CKV_AWS_*` checks evaluate inconsistently on interpolated configs. Checkov is invoked as a subprocess (`python -m checkov.main -d <dir> -o json --compact --soft-fail`), not imported. The DF-7 result does not depend on any of this (it compares the sink verdict, which is robust to the quirks).
 
 ---

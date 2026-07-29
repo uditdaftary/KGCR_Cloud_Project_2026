@@ -1,0 +1,1105 @@
+{
+  "estates": [
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "939a48e4cf626c03",
+      "seed_family": "fam-1729-0"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "1051c6aa03a84aab",
+      "seed_family": "fam-1729-1"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "24ef4b7185092884",
+      "seed_family": "fam-1729-2"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "8379d357283e4623",
+      "seed_family": "fam-1729-3"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "8eecd79ccc3ad137",
+      "seed_family": "fam-1729-4"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "f5bc95f7914e4bae",
+      "seed_family": "fam-1729-5"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "b8c27890717512a3",
+      "seed_family": "fam-1729-6"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ac5baaa0e5f95f57",
+      "seed_family": "fam-1729-7"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "aa88215899b88a7a",
+      "seed_family": "fam-1729-8"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "efbc07314c132e1b",
+      "seed_family": "fam-1729-9"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "58e618216a3bb9fe",
+      "seed_family": "fam-1729-10"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "7365842969b1dfde",
+      "seed_family": "fam-1729-11"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "7faa7ae229567966",
+      "seed_family": "fam-1729-12"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "9990905f1b15af31",
+      "seed_family": "fam-1729-13"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "50decda724a39f3d",
+      "seed_family": "fam-1729-14"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "20511b28873b7512",
+      "seed_family": "fam-1729-15"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "0210e4ee891886e6",
+      "seed_family": "fam-1729-16"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "ea3d6f50dab80fb1",
+      "seed_family": "fam-1729-17"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "5bd0595413ea77ad",
+      "seed_family": "fam-1729-18"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "a84b000388035922",
+      "seed_family": "fam-1729-19"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "01bf6d866e927020",
+      "seed_family": "fam-1729-20"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "aca5d057127ba551",
+      "seed_family": "fam-1729-21"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "27127984ca0e08a5",
+      "seed_family": "fam-1729-22"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "9b004954868b4b31",
+      "seed_family": "fam-1729-23"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "544cb53639dd755d",
+      "seed_family": "fam-1729-24"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "3495a8eca3a321c4",
+      "seed_family": "fam-1729-25"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "9fb697e5690cf8be",
+      "seed_family": "fam-1729-26"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "c470a7d8f358f04c",
+      "seed_family": "fam-1729-27"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "84a789f2958aa3df",
+      "seed_family": "fam-1729-28"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "276ffd4699f71840",
+      "seed_family": "fam-1729-29"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "6687ebeffe4055f5",
+      "seed_family": "fam-1729-30"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "e810f0a035b133e0",
+      "seed_family": "fam-1729-31"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ce7a65ae7df5bc0e",
+      "seed_family": "fam-1729-32"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "5aa6adcd14d413d2",
+      "seed_family": "fam-1729-33"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "a0dbc3bf004ccaba",
+      "seed_family": "fam-1729-34"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "3f83d46d87636d36",
+      "seed_family": "fam-1729-35"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "23b416dd0c807469",
+      "seed_family": "fam-1729-36"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "42eb65989146e703",
+      "seed_family": "fam-1729-37"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ae53edc646bc609a",
+      "seed_family": "fam-1729-38"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "81b619362d1443f0",
+      "seed_family": "fam-1729-39"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "6b36eef962077585",
+      "seed_family": "fam-1729-40"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "1867708305c90599",
+      "seed_family": "fam-1729-41"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "0d47d497ce4c30b4",
+      "seed_family": "fam-1729-42"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ae6c3cc64ed2c568",
+      "seed_family": "fam-1729-43"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "238a2ea0cb812aea",
+      "seed_family": "fam-1729-44"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "a8fa32f0b7e4f0ff",
+      "seed_family": "fam-1729-45"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "2c7680db60481a93",
+      "seed_family": "fam-1729-46"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "afdfcbfaada54ef8",
+      "seed_family": "fam-1729-47"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ab40e1e5636a4053",
+      "seed_family": "fam-1729-48"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "a890813abd84ca4a",
+      "seed_family": "fam-1729-49"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "911d83ad90ac6b4c",
+      "seed_family": "fam-1729-50"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ef24bc5f92b2c9d5",
+      "seed_family": "fam-1729-51"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "846c67516bc56374",
+      "seed_family": "fam-1729-52"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "76b2966f7a3bf1fb",
+      "seed_family": "fam-1729-53"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "ddff651cbfc26539",
+      "seed_family": "fam-1729-54"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "9ec923dfeeda478c",
+      "seed_family": "fam-1729-55"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "66a31b4dc32e4a7c",
+      "seed_family": "fam-1729-56"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "c95e89d8a0a13638",
+      "seed_family": "fam-1729-57"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "3b2852efe8691956",
+      "seed_family": "fam-1729-58"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "c07f273738af821f",
+      "seed_family": "fam-1729-59"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ae514608d004e21a",
+      "seed_family": "fam-1729-60"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "dc95fcd7effde158",
+      "seed_family": "fam-1729-61"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "d5f965633138f0aa",
+      "seed_family": "fam-1729-62"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "788164a5f9cbb79f",
+      "seed_family": "fam-1729-63"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "cee582b609e5b0c5",
+      "seed_family": "fam-1729-64"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "20c43a1c6fee17cb",
+      "seed_family": "fam-1729-65"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "7b679b1ee1b62fc7",
+      "seed_family": "fam-1729-66"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "0403527ef8a00250",
+      "seed_family": "fam-1729-67"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "156aee49a06eef44",
+      "seed_family": "fam-1729-68"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "e2086f99ee35519e",
+      "seed_family": "fam-1729-69"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ff84224d085cf766",
+      "seed_family": "fam-1729-70"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "da3912c5e39a8ce5",
+      "seed_family": "fam-1729-71"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "2e843d3eb5a4233d",
+      "seed_family": "fam-1729-72"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "4a81ca3400d1e99e",
+      "seed_family": "fam-1729-73"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "a1b5071d3072cb8d",
+      "seed_family": "fam-1729-74"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "8ccdb51321cc0c84",
+      "seed_family": "fam-1729-75"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "2e5d4c654944dbf6",
+      "seed_family": "fam-1729-76"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "07abff01736c324d",
+      "seed_family": "fam-1729-77"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "b9d0939cddfef631",
+      "seed_family": "fam-1729-78"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "59dd3b5f87a13edb",
+      "seed_family": "fam-1729-79"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "350bc156cae4b29a",
+      "seed_family": "fam-1729-80"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "8b90e8de79a05680",
+      "seed_family": "fam-1729-81"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "db687595a48b94cd",
+      "seed_family": "fam-1729-82"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "08219b8e034fcafd",
+      "seed_family": "fam-1729-83"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "4f215126d0e069c1",
+      "seed_family": "fam-1729-84"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "3b175a456a2a1744",
+      "seed_family": "fam-1729-85"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "a4e700d5e3273894",
+      "seed_family": "fam-1729-86"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "f1d00f1b0d234ff0",
+      "seed_family": "fam-1729-87"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "4b3ad77369a8a1a4",
+      "seed_family": "fam-1729-88"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "2fd5405a39071e76",
+      "seed_family": "fam-1729-89"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "56b62e318c1d97e3",
+      "seed_family": "fam-1729-90"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "bf2470f880dd1673",
+      "seed_family": "fam-1729-91"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "06b7ad123e690e68",
+      "seed_family": "fam-1729-92"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "b6081700b151b25d",
+      "seed_family": "fam-1729-93"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "c63b023cdb0053b3",
+      "seed_family": "fam-1729-94"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "c55ef76418705623",
+      "seed_family": "fam-1729-95"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "4fed6b9e902fe5f9",
+      "seed_family": "fam-1729-96"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "81877ade36b1e41d",
+      "seed_family": "fam-1729-97"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "aacaf9f397cfb9a4",
+      "seed_family": "fam-1729-98"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "d30ce81c5194094e",
+      "seed_family": "fam-1729-99"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "7fbd25a6e32085e0",
+      "seed_family": "fam-1729-100"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "4761dd8c161ccdc1",
+      "seed_family": "fam-1729-101"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "a35fe46776ecda9e",
+      "seed_family": "fam-1729-102"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "6bd4e7fd02afa77e",
+      "seed_family": "fam-1729-103"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "7c6a9bd7185a34bf",
+      "seed_family": "fam-1729-104"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "0b845a381684e065",
+      "seed_family": "fam-1729-105"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "936a4fc384c49020",
+      "seed_family": "fam-1729-106"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "9e05a8d145e64c62",
+      "seed_family": "fam-1729-107"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "657cdfded02422bc",
+      "seed_family": "fam-1729-108"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "3ece1f9263de798e",
+      "seed_family": "fam-1729-109"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "d94c83131fca89bd",
+      "seed_family": "fam-1729-110"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "adce1e1ae14fce72",
+      "seed_family": "fam-1729-111"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "04371b8831b45ac5",
+      "seed_family": "fam-1729-112"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "03778b49bf5ff33e",
+      "seed_family": "fam-1729-113"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "2ec42a9217be3ea6",
+      "seed_family": "fam-1729-114"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "89aca927d67846f5",
+      "seed_family": "fam-1729-115"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "37c265284b519948",
+      "seed_family": "fam-1729-116"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "0c5bbf7c24b7b8dd",
+      "seed_family": "fam-1729-117"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "eafaed92082c8113",
+      "seed_family": "fam-1729-118"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "395cea67eae0933b",
+      "seed_family": "fam-1729-119"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "d52128f654d05708",
+      "seed_family": "fam-1729-120"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "9d44379468714915",
+      "seed_family": "fam-1729-121"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "237f8c2bb5932b20",
+      "seed_family": "fam-1729-122"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "3d47c19acedfe4ae",
+      "seed_family": "fam-1729-123"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "1a2c82e06f49d656",
+      "seed_family": "fam-1729-124"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "0278f86a4f1788a9",
+      "seed_family": "fam-1729-125"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "88e80449ebfe3558",
+      "seed_family": "fam-1729-126"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "b236691ef1d2ba36",
+      "seed_family": "fam-1729-127"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "85094a06a07f5990",
+      "seed_family": "fam-1729-128"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "13ac13fe31c4831a",
+      "seed_family": "fam-1729-129"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "9763885c36f89ee9",
+      "seed_family": "fam-1729-130"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "389d75e39d1a3bc1",
+      "seed_family": "fam-1729-131"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "5792815e23c3f3ee",
+      "seed_family": "fam-1729-132"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "8bf896c236f9b2ba",
+      "seed_family": "fam-1729-133"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "93bf6107b3234daa",
+      "seed_family": "fam-1729-134"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ed065d50c20d05e4",
+      "seed_family": "fam-1729-135"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "7b9cde73d16b17f8",
+      "seed_family": "fam-1729-136"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "90ed2849fd2e91fa",
+      "seed_family": "fam-1729-137"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "7287d3c68b25e468",
+      "seed_family": "fam-1729-138"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "3e0704e929bd4255",
+      "seed_family": "fam-1729-139"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "36c9b024a0a36228",
+      "seed_family": "fam-1729-140"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "8c31bd7f5ac36d89",
+      "seed_family": "fam-1729-141"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "6c2434c2d74ccfd7",
+      "seed_family": "fam-1729-142"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "3364b5647f66a995",
+      "seed_family": "fam-1729-143"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "afb58ba43f122c9c",
+      "seed_family": "fam-1729-144"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "4f48ca54191d48f7",
+      "seed_family": "fam-1729-145"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "82cf6976e5de7a50",
+      "seed_family": "fam-1729-146"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "ec83ada38a9f1806",
+      "seed_family": "fam-1729-147"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "ed66341a1ab3d455",
+      "seed_family": "fam-1729-148"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "34696a4845fcde10",
+      "seed_family": "fam-1729-149"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "13db5d26ad1ca1bd",
+      "seed_family": "fam-1729-150"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "8ae79e9d176487a2",
+      "seed_family": "fam-1729-151"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ea79e3ea816fc302",
+      "seed_family": "fam-1729-152"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "cf1617d3266ec965",
+      "seed_family": "fam-1729-153"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "31e6259a017c3bb5",
+      "seed_family": "fam-1729-154"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "a29745507131b322",
+      "seed_family": "fam-1729-155"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "b011b88e507deb8a",
+      "seed_family": "fam-1729-156"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "d918b08db32334a0",
+      "seed_family": "fam-1729-157"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "7d4974e7cec5657b",
+      "seed_family": "fam-1729-158"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "ad156c4171fdfadf",
+      "seed_family": "fam-1729-159"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ee6833590189d1bc",
+      "seed_family": "fam-1729-160"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "e191f728ed2ad400",
+      "seed_family": "fam-1729-161"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "b5acc9749e6571ad",
+      "seed_family": "fam-1729-162"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "a5d1858715c2cb89",
+      "seed_family": "fam-1729-163"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "609e1d91bccde423",
+      "seed_family": "fam-1729-164"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "2505740fb32b2a9d",
+      "seed_family": "fam-1729-165"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "bafae9e24ff31e37",
+      "seed_family": "fam-1729-166"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ed1e6535b9bd1aad",
+      "seed_family": "fam-1729-167"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "7ec402f63ac0b086",
+      "seed_family": "fam-1729-168"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "3ac955f7484b9893",
+      "seed_family": "fam-1729-169"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "3557292c49ed2137",
+      "seed_family": "fam-1729-170"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "e5fe0e1fd13f0891",
+      "seed_family": "fam-1729-171"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "0d998850680af67d",
+      "seed_family": "fam-1729-172"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ecf0d1385193f791",
+      "seed_family": "fam-1729-173"
+    },
+    {
+      "archetype": "internal_reporting",
+      "estate_id": "c57f75b13d69b8c1",
+      "seed_family": "fam-1729-174"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "fbe41d728a89c867",
+      "seed_family": "fam-1729-175"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "02808de73fd58dbf",
+      "seed_family": "fam-1729-176"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "abd17ac987b37142",
+      "seed_family": "fam-1729-177"
+    },
+    {
+      "archetype": "payments_api",
+      "estate_id": "ff7628317ff90ac1",
+      "seed_family": "fam-1729-178"
+    },
+    {
+      "archetype": "customer_data_platform",
+      "estate_id": "53fa385e073a8c46",
+      "seed_family": "fam-1729-179"
+    }
+  ],
+  "split": {
+    "test": [
+      "0210e4ee891886e6",
+      "0278f86a4f1788a9",
+      "2505740fb32b2a9d",
+      "276ffd4699f71840",
+      "2fd5405a39071e76",
+      "36c9b024a0a36228",
+      "3ac955f7484b9893",
+      "3b2852efe8691956",
+      "4a81ca3400d1e99e",
+      "4b3ad77369a8a1a4",
+      "53fa385e073a8c46",
+      "544cb53639dd755d",
+      "6687ebeffe4055f5",
+      "85094a06a07f5990",
+      "88e80449ebfe3558",
+      "8bf896c236f9b2ba",
+      "90ed2849fd2e91fa",
+      "9763885c36f89ee9",
+      "a1b5071d3072cb8d",
+      "a5d1858715c2cb89",
+      "b5acc9749e6571ad",
+      "ce7a65ae7df5bc0e",
+      "cee582b609e5b0c5",
+      "ea3d6f50dab80fb1"
+    ],
+    "train": [
+      "01bf6d866e927020",
+      "02808de73fd58dbf",
+      "03778b49bf5ff33e",
+      "04371b8831b45ac5",
+      "06b7ad123e690e68",
+      "07abff01736c324d",
+      "08219b8e034fcafd",
+      "0b845a381684e065",
+      "0c5bbf7c24b7b8dd",
+      "0d47d497ce4c30b4",
+      "0d998850680af67d",
+      "1051c6aa03a84aab",
+      "13ac13fe31c4831a",
+      "13db5d26ad1ca1bd",
+      "156aee49a06eef44",
+      "1867708305c90599",
+      "1a2c82e06f49d656",
+      "20c43a1c6fee17cb",
+      "23b416dd0c807469",
+      "27127984ca0e08a5",
+      "2c7680db60481a93",
+      "2e5d4c654944dbf6",
+      "2e843d3eb5a4233d",
+      "34696a4845fcde10",
+      "3495a8eca3a321c4",
+      "350bc156cae4b29a",
+      "3557292c49ed2137",
+      "37c265284b519948",
+      "389d75e39d1a3bc1",
+      "3b175a456a2a1744",
+      "3d47c19acedfe4ae",
+      "3e0704e929bd4255",
+      "3ece1f9263de798e",
+      "42eb65989146e703",
+      "4761dd8c161ccdc1",
+      "4f215126d0e069c1",
+      "4fed6b9e902fe5f9",
+      "50decda724a39f3d",
+      "56b62e318c1d97e3",
+      "5792815e23c3f3ee",
+      "59dd3b5f87a13edb",
+      "5aa6adcd14d413d2",
+      "5bd0595413ea77ad",
+      "609e1d91bccde423",
+      "657cdfded02422bc",
+      "66a31b4dc32e4a7c",
+      "6b36eef962077585",
+      "6c2434c2d74ccfd7",
+      "7365842969b1dfde",
+      "76b2966f7a3bf1fb",
+      "788164a5f9cbb79f",
+      "7b679b1ee1b62fc7",
+      "7b9cde73d16b17f8",
+      "7c6a9bd7185a34bf",
+      "7d4974e7cec5657b",
+      "7ec402f63ac0b086",
+      "7faa7ae229567966",
+      "7fbd25a6e32085e0",
+      "81877ade36b1e41d",
+      "81b619362d1443f0",
+      "82cf6976e5de7a50",
+      "8379d357283e4623",
+      "84a789f2958aa3df",
+      "89aca927d67846f5",
+      "8ae79e9d176487a2",
+      "8c31bd7f5ac36d89",
+      "8ccdb51321cc0c84",
+      "8eecd79ccc3ad137",
+      "911d83ad90ac6b4c",
+      "939a48e4cf626c03",
+      "93bf6107b3234daa",
+      "9990905f1b15af31",
+      "9b004954868b4b31",
+      "9e05a8d145e64c62",
+      "9ec923dfeeda478c",
+      "9fb697e5690cf8be",
+      "a0dbc3bf004ccaba",
+      "a29745507131b322",
+      "a35fe46776ecda9e",
+      "a4e700d5e3273894",
+      "a84b000388035922",
+      "aa88215899b88a7a",
+      "aacaf9f397cfb9a4",
+      "ac5baaa0e5f95f57",
+      "aca5d057127ba551",
+      "ad156c4171fdfadf",
+      "adce1e1ae14fce72",
+      "ae514608d004e21a",
+      "ae53edc646bc609a",
+      "ae6c3cc64ed2c568",
+      "afb58ba43f122c9c",
+      "afdfcbfaada54ef8",
+      "b011b88e507deb8a",
+      "b236691ef1d2ba36",
+      "b6081700b151b25d",
+      "b8c27890717512a3",
+      "b9d0939cddfef631",
+      "bafae9e24ff31e37",
+      "bf2470f880dd1673",
+      "c07f273738af821f",
+      "c470a7d8f358f04c",
+      "c55ef76418705623",
+      "c63b023cdb0053b3",
+      "c95e89d8a0a13638",
+      "cf1617d3266ec965",
+      "d30ce81c5194094e",
+      "d52128f654d05708",
+      "d5f965633138f0aa",
+      "d918b08db32334a0",
+      "d94c83131fca89bd",
+      "db687595a48b94cd",
+      "dc95fcd7effde158",
+      "e191f728ed2ad400",
+      "e5fe0e1fd13f0891",
+      "e810f0a035b133e0",
+      "ea79e3ea816fc302",
+      "ec83ada38a9f1806",
+      "ecf0d1385193f791",
+      "ee6833590189d1bc",
+      "ef24bc5f92b2c9d5",
+      "efbc07314c132e1b",
+      "f1d00f1b0d234ff0",
+      "f5bc95f7914e4bae",
+      "fbe41d728a89c867",
+      "ff7628317ff90ac1",
+      "ff84224d085cf766"
+    ],
+    "validation": [
+      "0403527ef8a00250",
+      "20511b28873b7512",
+      "237f8c2bb5932b20",
+      "238a2ea0cb812aea",
+      "24ef4b7185092884",
+      "2ec42a9217be3ea6",
+      "31e6259a017c3bb5",
+      "3364b5647f66a995",
+      "395cea67eae0933b",
+      "3f83d46d87636d36",
+      "4f48ca54191d48f7",
+      "58e618216a3bb9fe",
+      "6bd4e7fd02afa77e",
+      "7287d3c68b25e468",
+      "846c67516bc56374",
+      "8b90e8de79a05680",
+      "936a4fc384c49020",
+      "9d44379468714915",
+      "a890813abd84ca4a",
+      "a8fa32f0b7e4f0ff",
+      "ab40e1e5636a4053",
+      "abd17ac987b37142",
+      "c57f75b13d69b8c1",
+      "da3912c5e39a8ce5",
+      "ddff651cbfc26539",
+      "e2086f99ee35519e",
+      "eafaed92082c8113",
+      "ed065d50c20d05e4",
+      "ed1e6535b9bd1aad",
+      "ed66341a1ab3d455"
+    ]
+  },
+  "summary": {
+    "archetypes": {
+      "customer_data_platform": 56,
+      "internal_reporting": 60,
+      "payments_api": 64
+    },
+    "estates": 180,
+    "seed_families": 180,
+    "total_graph_edges": 1615,
+    "total_graph_nodes": 2331,
+    "total_resources": 2331,
+    "unique_estate_ids": 180
+  }
+}
