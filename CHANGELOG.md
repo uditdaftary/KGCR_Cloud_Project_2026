@@ -224,7 +224,8 @@ reference repo; numbers there do not correspond to numbers here.
 
 ### This repository — `KGCR_Cloud_Project_2026`
 
-- PR #1 — `feature/udit` → `develop`: `docs: Phase-I governance — CLAUDE.md and CHANGELOG.md`
+- PR #1 — `feature/student1` → `develop`, closed automatically by the branch rename
+- PR #2 — `feature/udit` → `develop`: Phase-I submission (governance, mandated tree, all report deliverables)
 
 ### Archived reference repo — `uditdaftary/KGCR`
 
