@@ -27,7 +27,7 @@ Last updated: 2026-07-30.
   SVG cannot drift. Diagram 1 is the planned AWS service topology (PMD §6);
   Diagram 2 is the FD-01 S1→S10 flow. Both carry an on-diagram note separating
   what is planned from what runs today.
-- **Report sections written:** abstract (298 words), six measurable objectives,
+- **Report sections written:** abstract (296 words), six measurable objectives,
   novelty summary, dataset details covering every mandated field, an AWS services
   planning table over 21 services with planned-versus-running stated per service,
   the implementation-progress table, and the contribution matrix.
@@ -38,7 +38,7 @@ Last updated: 2026-07-30.
 - `LICENSE` added (MIT).
 - Gates green after the additions: ruff check, ruff format --check, mypy.
 
-Still open: the presentation deck, Manya's and Tanmoy's research-gap documents,
+Still open: the slide deck itself (`presentation/outline.md` written), Manya's and Tanmoy's research-gap documents,
 archiving `uditdaftary/KGCR`, and the `develop`-as-default / `main`-protection
 repository settings.
 

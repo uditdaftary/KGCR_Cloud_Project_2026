@@ -35,6 +35,8 @@ feed Amazon S3; Lambda and Glue normalise that evidence into Neo4j on EC2; SageM
 models; API Gateway and Cognito expose and authenticate the interface; IAM separates harvesting from
 writing; CloudWatch, Budgets and SNS provide monitoring, cost control and notification.
 
+*(296 words)*
+
 ---
 
 ## 2. Literature survey

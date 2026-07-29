@@ -18,6 +18,9 @@ The generated estates are not committed — they re-derive exactly from
 `(count, seed)`, so the seed is the artifact worth versioning, not the output.
 `manifest.json` is kept as the record of what a run produced.
 
-Full dataset details in the guideline format (name, source, size, records,
-features, type, licence, purpose, preprocessing) go in
-`dataset_description.pdf` — not yet written.
+Full dataset details in the guideline format (name, source, size, records, features, type,
+licence, purpose, preprocessing) are in [dataset_description.md](dataset_description.md), also
+generated as `dataset_description.docx` by `python docs/make_docx.py`.
+
+The guidelines name this file `dataset_description.pdf`. Export the `.docx` to PDF at submission
+time — there is no PDF writer in this repository's toolchain, so that one step is manual.
