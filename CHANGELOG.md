@@ -1,11 +1,42 @@
-# KGCR — build log: processes and progress
+# CHANGELOG — KGCR build log: processes and progress
 
 Knowledge Graph-Based Cloud Configuration Recommendation framework. This file
 records what has been built, how it was built (the processes and quality gates),
 and what is deliberately deferred. It is maintained alongside the roadmap
 ([roadmap.html](roadmap.html)) and the FD specification set in [docs/](docs/).
+Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-07-24.
+Last updated: 2026-07-29.
+
+---
+
+## 0. 2026-07-29 — Phase-I realignment
+
+The project was re-based onto the BCSE355L Phase-I guidelines (Dr. Priya V,
+deadline 30 July 2026).
+
+- Repository re-created as `KGCR_Cloud_Project_2026` (guideline naming format
+  `ProjectName_Cloud_Project_2026`), **seeded with the full 23-commit history**
+  of `uditdaftary/KGCR` rather than started empty — commit history is a graded
+  artifact. `master` was pushed as `main`.
+- Branch topology created per the guidelines: `main` ← `develop` ←
+  `feature/student1|2|3`. `feature/student2` and `feature/student3` are
+  scaffolding for the other two students; all work recorded here is Student 1's.
+- `CLAUDE.md` added — the submission facts, mandated tree, branch workflow,
+  required report sections, citation rules, and hard rules distilled from the
+  guidelines PDF.
+- This file renamed `logs.md` → `CHANGELOG.md`; contents otherwise unchanged.
+- `MIGRATION_PLAN.md` records the gap analysis and the remaining steps: tree
+  restructure into `src/{backend,ml_model,aws,frontend}`, the 15-paper literature
+  survey (**all 15 need fresh sourcing** — none of the 33 references in PMD §15
+  satisfies both the venue and the 2023–2026 filter), the two mandatory
+  architecture diagrams, dataset details, and report assembly.
+- `uditdaftary/KGCR` to be archived as reference-only once the tree restructure
+  lands.
+
+Not yet done: the tree restructure, and therefore the post-move quality-gate run.
+Sections 1–7 below describe the repository as it stood on 2026-07-24 and remain
+accurate for the code itself.
 
 ---
 
