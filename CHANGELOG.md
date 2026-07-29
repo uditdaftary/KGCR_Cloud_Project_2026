@@ -166,6 +166,15 @@ pytest
 
 ## 7. Commit and PR record
 
+PR numbering restarts in this repository. The list below belongs to the archived
+reference repo; numbers there do not correspond to numbers here.
+
+### This repository — `KGCR_Cloud_Project_2026`
+
+- PR #1 — `feature/student1` → `develop`: `docs: Phase-I governance — CLAUDE.md and CHANGELOG.md`
+
+### Archived reference repo — `uditdaftary/KGCR`
+
 Merged to `master`:
 - `Scaffold Phase 0: reproducibility spine, CLI, CI, and environment IaC` (PR #1)
 - `Implement Phase 3: intent-first generator and Corpus A` (PR #2)

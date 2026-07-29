@@ -3,6 +3,14 @@
 Source of truth: `Project Guidelines-AWS Cloud.pdf` (BCSE355L, Dr. Priya V, submission **30 July 2026**).
 Written 2026-07-29.
 
+> **Status, 2026-07-29.**
+> **Done:** §4 steps 1, 2, 4, 5 — repo created with the 23-commit history pushed as `main`;
+> `develop` + `feature/student1|2|3` branches live; `CLAUDE.md` and `CHANGELOG.md` on
+> `feature/student1` behind PR #1 (open, unmerged).
+> **Remaining:** §4 step 3 (tree restructure + config edits + gate run), README rewrite for this
+> repo, `LICENSE`, §6 authoring (survey, diagrams, dataset, report), §4 step 6 (archive `KGCR`),
+> `develop` as default branch, `main` protection.
+
 ---
 
 ## 1. What the evidence actually says

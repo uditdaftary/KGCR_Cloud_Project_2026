@@ -33,7 +33,9 @@ have branches and own their sections; nothing is written or committed on their b
 
 ## 3. Mandated repository structure
 
-Non-negotiable — from the guidelines, p.5. **Every new file goes into one of these directories.**
+Non-negotiable — from the guidelines, p.5. **Every deliverable file goes into one of these
+directories.** Repository governance and build configuration (`CLAUDE.md`, `CHANGELOG.md`,
+`MIGRATION_PLAN.md`, `pyproject.toml`) stay at the root.
 
 ```
 KGCR_Cloud_Project_2026/
