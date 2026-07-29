@@ -10,9 +10,9 @@ Every entry carries its DOI so any citation can be checked directly.
 
 | Student | Papers | Research gap document |
 |---|---|---|
-| Student 1 (lead) | 1–5 | `Research_Gap_Student1.docx` |
-| Student 2 | 6–10 | `Research_Gap_Student2.docx` |
-| Student 3 | 11–15 | `Research_Gap_Student3.docx` |
+| Udit (lead) | 1–5 | `Research_Gap_Udit.docx` |
+| Manya | 6–10 | `Research_Gap_Manya.docx` |
+| Tanmoy | 11–15 | `Research_Gap_Tanmoy.docx` |
 
 Papers **10** and **15** are marked ⚑ — their bibliographic records are verified, but their
 full texts sit behind publisher paywalls and have not been read yet. Their Method / Dataset /
@@ -28,7 +28,7 @@ substitute.
 
 ## Reference list
 
-### Student 1 — papers 1–5
+### Udit — papers 1–5
 
 1. Verdet, A., Hamdaqa, M., Da Silva, L., & Khomh, F. (2025). Assessing the adoption of security
    policies by developers in terraform across different cloud providers. *Empirical Software
@@ -46,7 +46,7 @@ substitute.
    ACM SIGSOFT International Symposium on Software Testing and Analysis (ISSTA)*, 389–401.
    DOI: [10.1145/3650212.3652136](https://doi.org/10.1145/3650212.3652136)
 
-### Student 2 — papers 6–10
+### Manya — papers 6–10
 
 6. Vo, Q.-H., Dao, H., & Fukuda, K. (2025). Harnessing the Power of LLMs for Code Smell Detection
    in Terraform Infrastructure as Code. *2025 IEEE 49th Annual Computers, Software, and
@@ -64,7 +64,7 @@ substitute.
     intrusion detection systems: Methods, trends and challenges. *Computers & Security*, 141,
     103821. Elsevier. DOI: [10.1016/j.cose.2024.103821](https://doi.org/10.1016/j.cose.2024.103821)
 
-### Student 3 — papers 11–15
+### Tanmoy — papers 11–15
 
 11. Jovanovski, D., Stojcheva, M., Dodevska, M., Lameski, P., Mishkovski, I., & Gjorgjevikj, D.
     (2026). An Empirical Study of Knowledge Graph-Enhanced RAG for Information Security Compliance.
@@ -86,7 +86,7 @@ substitute.
 
 ## Survey table
 
-### Student 1 — papers 1–5
+### Udit — papers 1–5
 
 | # | Paper | Method | Dataset | Advantages | Limitations | Research gap |
 |---|---|---|---|---|---|---|
@@ -96,7 +96,7 @@ substitute.
 | 4 | Hu et al. (2023), *IEEE SecDev* | Experience report characterising static analysis alerts on Terraform manifests, with practitioner perceptions collected per alert category | 491 static analysis alerts across 10 open-source and 1 proprietary Terraform repositories | Produces a 10-category alert taxonomy (5 security-related) grounded in industrial use; reports that practitioner response varies by category rather than treating all alerts alike | Single-organisation industrial context and a small repository sample; analysis is of alerts a tool already emits, so it cannot characterise what those tools never report | The paper's own finding — that resources **with dependencies** attract more alerts than resources without — points at relationships as a source of risk while the analysis itself remains per-manifest. Reasoning over the dependency structure, rather than counting alerts on resources that happen to have dependencies, is left open |
 | 5 | Chu et al. (2024), *ACM ISSTA* | CFExplainer: a counterfactual explainer for GNN-based vulnerability detection that searches for the minimal perturbation to the input code graph which flips the model's prediction | Code property graphs for GNN vulnerability-detection models | Answers "what-if" questions that factual explainers cannot; the minimal perturbation localises the root cause rather than merely highlighting salient features | Explanation is a post-hoc search over a learned black box, so its faithfulness is approximate; the counterfactual is a graph edit, not necessarily an action a developer can take | The explanation is discovered from the model, not read from curated domain knowledge, so it cannot cite an authority for why the flagged structure is wrong. Where the reasoning is encoded rather than learned, a counterfactual can be exact and can name the control it violates — that combination is unaddressed |
 
-### Student 2 — papers 6–10
+### Manya — papers 6–10
 
 | # | Paper | Method | Dataset | Advantages | Limitations | Research gap |
 |---|---|---|---|---|---|---|
@@ -106,7 +106,7 @@ substitute.
 | 9 | Palma, Cicimurri & Angelini (2025), *IJIS* | StatAG: progressive data analysis plus statistical analysis so an analyst can query an attack graph before generation completes; weighted path sampling accelerates convergence of statistical significance | Computer network attack-graph generation workloads | Makes attack-graph analysis usable in real time and adaptive to evolving network structure, addressing the combinatorial scalability barrier | Targets classical network attack graphs; assumes an existing infrastructure to analyse, and answers are statistically significant rather than exact | Scalability of *reactive* analysis over deployed networks. Design-time reasoning — where the graph is small because it describes a proposed configuration, and exactness is achievable — is a different regime this line of work does not address |
 | 10 | ⚑ Zhong et al. (2024), *Computers & Security* | Survey of graph neural network methods for intrusion detection systems — full text not yet read | — (survey) | Consolidates GNN-for-IDS methods, trends and challenges in a highly cited security venue | **To be completed from the full text** | **To be completed from the full text.** Working hypothesis to verify: GNN security work concentrates on runtime traffic and intrusion detection, not on the static configuration graph of an estate before deployment |
 
-### Student 3 — papers 11–15
+### Tanmoy — papers 11–15
 
 | # | Paper | Method | Dataset | Advantages | Limitations | Research gap |
 |---|---|---|---|---|---|---|
@@ -159,4 +159,4 @@ because they establish the techniques, not because they leave a hole shaped like
 - This file is the working Markdown. The mandated deliverable is `docs/Literature_Survey.docx`;
   conversion is a remaining step.
 - Research-gap cells here are working notes. Each student rewrites their five in their own words in
-  `Research_Gap_StudentN.docx`, as the guidelines require.
+  `Research_Gap_<Name>.docx`, as the guidelines require.

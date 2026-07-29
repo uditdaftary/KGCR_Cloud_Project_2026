@@ -22,14 +22,14 @@ The migration that produced this repo is [MIGRATION_PLAN.md](MIGRATION_PLAN.md).
 
 ## 2. Scope of work in this repository
 
-Team of three. **Everything authored here is Student 1's (team lead) contribution.** Students 2 and 3
+Team of three. **Everything authored here is Udit's (as team lead) contribution.** Manya and Tanmoy
 have branches and own their sections; nothing is written or committed on their behalf.
 
-| | Student 1 (lead) | Student 2 | Student 3 |
+| | Udit (lead) | Manya | Tanmoy |
 |---|---|---|---|
 | Literature survey | Papers 1–5 | Papers 6–10 | Papers 11–15 |
-| Research gap doc | `docs/Research_Gap_Student1.docx` | theirs | theirs |
-| Branch | `feature/student1` | `feature/student2` | `feature/student3` |
+| Research gap doc | `docs/Research_Gap_Udit.docx` | theirs | theirs |
+| Branch | `feature/udit` | `feature/manya` | `feature/tanmoy` |
 
 ## 3. Mandated repository structure
 
@@ -53,7 +53,7 @@ KGCR_Cloud_Project_2026/
 ## 4. Branch workflow
 
 ```
-main ← develop ← feature/student1 | feature/student2 | feature/student3
+main ← develop ← feature/udit | feature/manya | feature/tanmoy
 ```
 
 - Each student commits **only** to their own feature branch. Never commit feature work to `develop`
