@@ -60,12 +60,12 @@ writes for them or commits under their names.
 | PDF requirement | Status | Destination | Source material |
 |---|---|---|---|
 | Abstract (200–300 words) | **Derivable tonight** | `docs/Project_Report.docx` | README §1 + "The gap this fills" |
-| 15 papers, 2023–2026, indexed venues | **Missing — all 15** | `docs/Literature_Survey.docx` | PMD §15 has 33 refs, **0 pass both filters**; needs real search |
+| 15 papers, 2023–2026, indexed venues | **Done** (Markdown; DOCX conversion pending) | `docs/Literature_Survey.md` | 15 sourced fresh and Crossref-verified; 13 abstracts read, 2 flagged for library access |
 | Research gap, papers 1–5 (lead) | **Missing** | `docs/Research_Gap_Student1.docx` | Lead's own analysis; students 2–3 write their own |
 | 4–6 objectives | **Derivable tonight** | `docs/Objectives.docx` | README "Core claims" C1–C5 |
 | Novelty summary (≤1 page) | **Derivable tonight** | `docs/Novelty.docx` | README "The gap this fills" (CSPM / policy-as-code / FinOps triangle) |
-| Diagram 1 — AWS architecture | **Missing, mandatory** | `architecture/AWS_Architecture.png` | PMD §6 three-account topology + stack |
-| Diagram 2 — system architecture | **Missing, mandatory** | `architecture/System_Architecture.png` | FD-01 stage flow S1→S10 |
+| Diagram 1 — AWS architecture | **Still missing, mandatory** — the two condition flowcharts filed under it describe workflow, not AWS service interaction | `architecture/AWS_Architecture.png` | PMD §6 three-account topology + stack |
+| Diagram 2 — system architecture | **Missing, mandatory** | `architecture/System_Architecture.png` | FD-01 stage flow S1→S10; the two condition flowcharts are the closest existing material |
 | Dataset details block | **Missing** | `dataset/dataset_description.pdf` | Synthetic corpus — answer honestly (see §6) |
 | AWS services planning table | **Missing** | `docs/Project_Report.docx` | PMD §6 stack |
 | `src/backend/` | Exists | `git mv kgcr/` | — |
