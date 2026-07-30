@@ -4,7 +4,32 @@ Recommend a concrete AWS configuration from a workload stated in business terms,
 
 One-line framing: an experienced cloud architect who has read every compliance standard, never forgets one, and writes down their reasoning every single time.
 
-> **Status: design specification (baseline), Phase 0 scaffolding underway.** The `docs/` set is the controlling reference the implementation follows. Phase 0 (FD-08) has begun: the reproducibility spine, CLI surface, CI, and the environment IaC skeleton are in place (see [Development](#development)). Subsystem logic is added by later phases.
+> **BCSE355L Cloud Architecture Design Project — Phase-I submission.**
+> Course instructor: Dr. Priya V. Team: Udit (lead), Manya, Tanmoy.
+> Start with the [Project Report](docs/Project_Report.md); [CLAUDE.md](CLAUDE.md) is the governing
+> document for how this repository is worked in.
+
+## Phase-I deliverables
+
+| Deliverable | File |
+|---|---|
+| Project report — abstract, AWS services plan, progress, contribution matrix | [docs/Project_Report.md](docs/Project_Report.md) |
+| Literature survey — 15 papers, 2023–2026, DOI-verified | [docs/Literature_Survey.md](docs/Literature_Survey.md) |
+| Research gap analysis — Udit, papers 1–5 | [docs/Research_Gap_Udit.md](docs/Research_Gap_Udit.md) |
+| Objectives — six, each with a measure | [docs/Objectives.md](docs/Objectives.md) |
+| Novelty summary | [docs/Novelty.md](docs/Novelty.md) |
+| Diagram 1 — AWS Cloud Architecture | [architecture/AWS_Architecture.png](architecture/AWS_Architecture.png) |
+| Diagram 2 — Complete System Architecture | [architecture/System_Architecture.png](architecture/System_Architecture.png) |
+| Dataset details | [dataset/dataset_description.md](dataset/dataset_description.md) |
+
+Each is also generated as `.docx` for submission (`python docs/make_docx.py`); the Markdown is the
+source of truth.
+
+**Implementation status.** The reproducibility spine, the intent-first corpus generator, the defect
+taxonomy with its relational (DF-7) test set, the Checkov labelling slice, and intent reconstruction
+with per-field calibration are built and tested (130 tests, CI on Python 3.11 and 3.12). The
+ontology encoding, recommender, Advisor and Explainer are not yet built, and the AWS environment
+Terraform is authored but not applied. The `docs/` FD set remains the controlling specification.
 
 ## The gap this fills
 
@@ -84,12 +109,22 @@ kgcr repro-info             # print the seed + version fingerprint for this env
 kgcr corpus --count 500     # [dev] generate Corpus A and parse it into the graph
 ```
 
-- `kgcr/` — the package. Today it provides the reproducibility spine
+The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
+`dataset/`, `src/{frontend,backend,ml_model,aws}`, `results/`, `presentation/`);
+[CLAUDE.md](CLAUDE.md) is the governing document.
+
+- `src/backend/kgcr/` — the package. Today it provides the reproducibility spine
   (`repro`, `hashing`, `runrecord`, `versions`) that keys every result to
   `(spec_hash, graph_version, model_version)`, plus the `kgcr` CLI whose
   subcommands mirror the [planned interface](#planned-interface) (declared now,
   implemented by the phases that own them).
-- `kgcr/corpus/` — Phase 3 (FD-05 §4A): the **intent-first** synthetic estate
+- `src/ml_model/` — entry points for the P8 intent reconstructor:
+  `preprocessing.py` (generate the corpus into `dataset/processed/`), `train.py`
+  (fit, write `model.pkl` and the evaluation report), `predict.py` (reconstruct
+  one estate's intent with per-field confidence). Thin wrappers over
+  `kgcr.reconstruction`; the library is where the logic and its tests live.
+- `src/frontend/` — Phase-II scope; the Phase-I interface is the CLI.
+- `src/backend/kgcr/corpus/` — Phase 3 (FD-05 §4A): the **intent-first** synthetic estate
   generator. An intent is sampled first (`intent`, `sampler`), an estate is
   rendered from it (`generator`, `estate`) carrying that intent as ground truth,
   and it is parsed into a dependency graph either directly (`graph`) or from a

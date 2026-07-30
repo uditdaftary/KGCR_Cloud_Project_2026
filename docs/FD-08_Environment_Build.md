@@ -113,7 +113,7 @@ The reference estate is itself IaC (§8) so it can be stood up for a demo and to
 
 ## 8. Environment as code
 
-The environment is reproducible infrastructure, part of deliverable 9 (PMD §8). A bootstrap Terraform module (`environment/`) provisions, per account:
+The environment is reproducible infrastructure, part of deliverable 9 (PMD §8). A bootstrap Terraform module (`src/aws/`) provisions, per account:
 
 - The cross-account roles and their trust policies + external IDs (§4).
 - The S3 landing buckets and ETL wiring in C.

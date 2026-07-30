@@ -21,14 +21,18 @@ runs/
 *.runrecord.json
 
 # Terraform (never commit state or provider binaries)
-environment/**/.terraform/
-environment/**/*.tfstate
-environment/**/*.tfstate.*
-environment/**/*.tfvars
-!environment/**/*.tfvars.example
-environment/**/.terraform.lock.hcl
+src/aws/**/.terraform/
+src/aws/**/*.tfstate
+src/aws/**/*.tfstate.*
+src/aws/**/*.tfvars
+!src/aws/**/*.tfvars.example
+src/aws/**/.terraform.lock.hcl
 
 # OS / editor
 .DS_Store
 .idea/
 .vscode/
+
+# Generated corpus (re-derives from (count, seed); manifest is kept)
+dataset/processed/estates/
+src/ml_model/model.pkl

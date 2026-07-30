@@ -43,12 +43,20 @@ dev = [
 [project.scripts]
 kgcr = "kgcr.cli:main"
 
+# The package lives under src/backend/ because the Phase-I guidelines mandate the
+# src/{frontend,backend,ml_model,aws} tree; setuptools and mypy are both told
+# where to look rather than the package being split to match the directories.
 [tool.setuptools.packages.find]
+where = ["src/backend"]
 include = ["kgcr*"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# The package lives under src/backend/, so ruff's isort needs telling where
+# first-party code is; without this `kgcr` imports are graded as third-party and
+# every test file's import block reports I001.
+src = ["src/backend", "."]
 
 [tool.ruff.lint]
 # A pragmatic, reproducibility-friendly rule set: pyflakes, pycodestyle,
@@ -61,6 +69,7 @@ addopts = "-ra"
 
 [tool.mypy]
 python_version = "3.11"
+mypy_path = "src/backend"
 packages = ["kgcr"]
 strict = true
 warn_unused_configs = true
