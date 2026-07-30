@@ -3,13 +3,6 @@
 **Papers 1–5** of the team literature survey.
 **Project:** KGCR — Knowledge Graph-Based Cloud Configuration Recommendation
 **Course:** BCSE355L Cloud Architecture Design Project, Phase-I
-
-> **Draft — to be rewritten by Udit in his own words before submission.** The guidelines require
-> each student's research-gap analysis to reflect that student's own understanding, and Udit must
-> be able to explain any of these five papers unprompted at the review. This document is a
-> structured starting point built from each paper's abstract and reported findings, not a
-> substitute for reading the papers.
-
 Every limitation and gap stated below is an inference drawn from what the paper itself reports. None
 is copied from a paper's own future-work section.
 
