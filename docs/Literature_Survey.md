@@ -3,21 +3,32 @@
 **Project:** KGCR — Knowledge Graph-Based Cloud Configuration Recommendation
 **Course:** BCSE355L Cloud Architecture Design Project, Phase-I
 
-15 papers, all published 2023–2026 in IEEE, Springer, Elsevier, ACM, or MDPI venues.
-Every entry carries its DOI so any citation can be checked directly.
+15 papers in IEEE, Springer, Elsevier, ACM, MDPI and SciTePress (Scopus-indexed) venues. Publication
+dates are 2023–2026 with one deliberate exception: Joshi, Elluri & Nagar (2020), *IEEE Access* —
+retained despite being pre-2023 because it is the closest prior attempt at knowledge-graph-driven
+cloud security *recommendation*, and the granularity it stops at (comparing whole providers rather
+than individual resources) is precisely what this project changes. Every entry carries its DOI so
+any citation can be checked directly.
 
 ## Allocation
 
 | Student | Papers | Research gap document |
 |---|---|---|
-| Udit (lead) | 1–5 | `Research_Gap_Udit.docx` |
-| Manya | 6–10 | `Research_Gap_Manya.docx` |
-| Tanmoy | 11–15 | `Research_Gap_Tanmoy.docx` |
+| Udit (lead) | 1–5 | `docs/Research_Gap_Udit.md` |
+| Manya | 6–10 | `docs/research gap analysis manya.md` |
+| Tanmoy | 11–14, **15 pending** | not yet written |
 
-Papers **10** and **15** are marked ⚑ — their bibliographic records are verified, but their
-full texts sit behind publisher paywalls and have not been read yet. Their Method / Dataset /
-Limitations cells must be completed from the full text via the university library before the
-review. Nothing has been inferred into those cells.
+Paths above are the files that exist today. CLAUDE.md §2 names `.docx` deliverables — those are the
+final submission artefacts, converted from these Markdown sources at the end.
+
+Papers marked ⚑ have verified bibliographic records, but no open-access full text could be obtained.
+Their Method and Dataset cells come from the abstract; their **Limitations and Research gap cells are
+the owning student's inference from the abstract, not claims traced to the full text**. Confirm all
+four against the full text via the university library before the review — the distinction matters if
+a reviewer asks where a limitation comes from.
+
+**Paper 15 is vacant.** Slot 15 previously held Eldjou et al. (2025), which is now paper 9 under
+Manya. Tanmoy chooses the replacement; nothing has been substituted on his behalf.
 
 Research gaps below are working notes grounded in what each paper reports. Each student rewrites
 their own five in their own words for their research-gap document — the guidelines require the
@@ -32,7 +43,9 @@ substitute.
 
 1. Verdet, A., Hamdaqa, M., Da Silva, L., & Khomh, F. (2025). Assessing the adoption of security
    policies by developers in terraform across different cloud providers. *Empirical Software
-   Engineering*, 30. Springer. DOI: [10.1007/s10664-024-10610-0](https://doi.org/10.1007/s10664-024-10610-0)
+   Engineering*, 30(3), article 74. Springer. DOI: [10.1007/s10664-024-10610-0](https://doi.org/10.1007/s10664-024-10610-0)
+   — a publisher Correction, DOI [10.1007/s10664-025-10667-5](https://doi.org/10.1007/s10664-025-10667-5),
+   amends the copyright line only and changes none of the findings cited here.
 2. Wen, J., & Ping, H. (2025). PHOENIX: Misconfiguration Detection for AWS Serverless Computing.
    *IEEE Transactions on Cloud Computing*, 13, 922–934. DOI: [10.1109/TCC.2025.3577211](https://doi.org/10.1109/TCC.2025.3577211)
 3. Nekrasov, R., Fossati, S., Kumara, I., Tamburri, D. A., & van den Heuvel, W.-J. (2026). IaC
@@ -48,21 +61,24 @@ substitute.
 
 ### Manya — papers 6–10
 
-6. Vo, Q.-H., Dao, H., & Fukuda, K. (2025). Harnessing the Power of LLMs for Code Smell Detection
-   in Terraform Infrastructure as Code. *2025 IEEE 49th Annual Computers, Software, and
-   Applications Conference (COMPSAC)*, 533–542. DOI: [10.1109/COMPSAC65507.2025.00075](https://doi.org/10.1109/COMPSAC65507.2025.00075)
-7. Bühler, C., Spielmann, D., Meier, R., & Salvaneschi, G. (2025). TerraDS: A Dataset for Terraform
-   HCL Programs. *2025 IEEE/ACM 22nd International Conference on Mining Software Repositories
-   (MSR)*, 654–658. DOI: [10.1109/MSR66628.2025.00101](https://doi.org/10.1109/MSR66628.2025.00101)
-8. Elmiger, M., Lemoudden, M., Pitropakis, N., & Buchanan, W. J. (2024). Start thinking in graphs:
-   using graphs to address critical attack paths in a Microsoft cloud tenant. *International
-   Journal of Information Security*, 23, 467–485. Springer. DOI: [10.1007/s10207-023-00751-6](https://doi.org/10.1007/s10207-023-00751-6)
-9. Palma, A., Cicimurri, C., & Angelini, M. (2025). Progressive attack graph: a technique for
-   scalable and adaptive attack graph generation. *International Journal of Information Security*,
-   24. Springer. DOI: [10.1007/s10207-025-01125-w](https://doi.org/10.1007/s10207-025-01125-w)
-10. ⚑ Zhong, M., Lin, M., Zhang, C., & Xu, Z. (2024). A survey on graph neural networks for
-    intrusion detection systems: Methods, trends and challenges. *Computers & Security*, 141,
-    103821. Elsevier. DOI: [10.1016/j.cose.2024.103821](https://doi.org/10.1016/j.cose.2024.103821)
+6. ⚑ Banse, C., Kunz, I., Haas, N., & Schneider, A. (2023). A Semantic Evidence-based Approach to
+   Continuous Cloud Service Certification. *Proceedings of the 38th ACM/SIGAPP Symposium on Applied
+   Computing (SAC '23)*, 24–33. ACM. DOI: [10.1145/3555776.3577600](https://doi.org/10.1145/3555776.3577600)
+7. Joshi, K. P., Elluri, L., & Nagar, A. (2020). An Integrated Knowledge Graph to Automate Cloud
+   Data Compliance. *IEEE Access*, 8, 148541–148555. DOI: [10.1109/ACCESS.2020.3008964](https://doi.org/10.1109/ACCESS.2020.3008964)
+   — the pre-2023 exception explained above.
+8. Banse, C., Fanta, B., Alonso, J., & Martinez, C. (2025). EMERALD: Evidence Management for
+   Continuous Certification as a Service in the Cloud. *Proceedings of the 15th International
+   Conference on Cloud Computing and Services Science (CLOSER 2025)*, 190–197. SciTePress.
+   DOI: [10.5220/0013348100003950](https://doi.org/10.5220/0013348100003950) (preprint: arXiv 2502.07330)
+9. ⚑ Eldjou, A., Kitouni, I., Benmounah, Z., & Bennacer, S. (2025). Enhancing cloud native security:
+   a knowledge graph approach for securing container runtimes. *Cluster Computing*, 28, article 777.
+   Springer. DOI: [10.1007/s10586-025-05531-6](https://doi.org/10.1007/s10586-025-05531-6)
+10. ⚑ Zhu, Z., Chen, T., Kong, H., Zhong, Y., & Song, Q. (2024). DocSecKG: A Systematic Approach for
+    Building Knowledge Graph to Understand the Relationship Between Docker Image and Vulnerability.
+    *Advanced Intelligent Computing Technology and Applications (ICIC 2024)*, Lecture Notes in
+    Computer Science vol. 14874, 392–404. Springer.
+    DOI: [10.1007/978-981-97-5618-6_33](https://doi.org/10.1007/978-981-97-5618-6_33)
 
 ### Tanmoy — papers 11–15
 
@@ -78,9 +94,8 @@ substitute.
 14. Guo, Z., Wu, Z., Xiao, T., Aggarwal, C., Liu, H., & Wang, S. (2025). Counterfactual Learning on
     Graphs: A Survey. *Machine Intelligence Research*, 22, 17–59. Springer.
     DOI: [10.1007/s11633-024-1519-z](https://doi.org/10.1007/s11633-024-1519-z)
-15. ⚑ Eldjou, A., Kitouni, I., Benmounah, Z., & Bennacer, S. (2025). Enhancing cloud native
-    security: a knowledge graph approach for securing container runtimes. *Cluster Computing*, 28.
-    Springer. DOI: [10.1007/s10586-025-05531-6](https://doi.org/10.1007/s10586-025-05531-6)
+15. **Vacant.** This slot held Eldjou et al. (2025), which is now paper 9 under Manya. Tanmoy's
+    replacement to be added on `feature/tanmoy`.
 
 ---
 
@@ -92,7 +107,7 @@ substitute.
 |---|---|---|---|---|---|---|
 | 1 | Verdet et al. (2025), *EMSE* | Empirical study of scripted security-policy adoption in Terraform, using Checkov and Tfsec as static analysers across AWS, Azure and GCP | 812 open-source GitHub projects containing Terraform configuration files | Establishes a cross-provider baseline for which policy categories developers actually adopt; finds Access policy most adopted and Encryption at rest most neglected; ends with practitioner guidelines | Measures adoption per configuration file through single-resource rule engines; the study inherits whatever those engines can express, and open-source repositories may not reflect regulated production estates | The paper measures *whether* a policy was adopted, never *why* a given resource needed it. Adoption is scored against rule text, so a configuration that is compliant resource-by-resource yet unsafe in combination scores as adopted. A representation that carries the workload's intent and the controls it is bound by could distinguish an omission from a justified exception |
 | 2 | Wen & Ping (2025), *IEEE TCC* | PHOENIX learns configuration patterns from a uniform representation of AWS SAM files and flags deviations from those learned patterns as misconfigurations | 733 real-world AWS SAM configuration files; evaluation set of 35 injected and 70 real-world confirmed misconfigurations | Detects 100% of injected and 97.14% of real-world misconfigurations, outperforming prior work; grounded in a characterisation study of real serverless configurations first | Learned patterns are descriptive of what is common, not normative — a widely repeated insecure pattern becomes the norm the detector defends. Scope is one schema (AWS SAM) at the function level | Deviation from the majority is not the same as violation of a control. There is no link from a flagged deviation to a regulatory clause, so the finding cannot be defended to an auditor. Grounding detection in curated compliance knowledge rather than corpus frequency is the unfilled step |
-| 3 | Nekrasov et al. (2026), *ACM TOSEM* | Injects structured configuration knowledge into LLM-based Terraform generation, progressing from naive RAG to Graph RAG with semantic enrichment and inter-resource dependency modelling; adds an error taxonomy and cloud emulation | Enhanced IaC-Eval benchmark with cloud emulation and automated error analysis | Raises technical validation success from 27.1% baseline to 75.3% and overall success to 62.7%; names the "Correctness–Congruence Gap" between valid code and intended code | Intent alignment plateaus despite the correctness gains — the paper's own framing is that LLMs become proficient coders but remain limited architects. Knowledge injection is one-directional; the model is not asked to justify a choice | Intent is treated as an input the user supplies and the model may or may not honour. Nothing recovers or verifies intent from the artefact produced. Reconstructing the intent a configuration was built to serve, then checking the configuration against it, is the missing direction |
+| 3 | Nekrasov et al. (2026), *ACM TOSEM* | Injects structured configuration knowledge into LLM-based Terraform generation, progressing from naive RAG to Graph RAG with semantic enrichment and inter-resource dependency modelling; adds an error taxonomy and cloud emulation | Enhanced IaC-Eval benchmark with cloud emulation and automated error analysis | Raises overall success from a 27.1% baseline to 62.6%, with technical validation success reaching 75.3%; names the "Correctness–Congruence Gap" between valid code and intended code | Intent alignment plateaus despite the correctness gains — the paper's own framing is that LLMs become proficient coders but remain limited architects. Knowledge injection is one-directional; the model is not asked to justify a choice | Intent is treated as an input the user supplies and the model may or may not honour. Nothing recovers or verifies intent from the artefact produced. Reconstructing the intent a configuration was built to serve, then checking the configuration against it, is the missing direction |
 | 4 | Hu et al. (2023), *IEEE SecDev* | Experience report characterising static analysis alerts on Terraform manifests, with practitioner perceptions collected per alert category | 491 static analysis alerts across 10 open-source and 1 proprietary Terraform repositories | Produces a 10-category alert taxonomy (5 security-related) grounded in industrial use; reports that practitioner response varies by category rather than treating all alerts alike | Single-organisation industrial context and a small repository sample; analysis is of alerts a tool already emits, so it cannot characterise what those tools never report | The paper's own finding — that resources **with dependencies** attract more alerts than resources without — points at relationships as a source of risk while the analysis itself remains per-manifest. Reasoning over the dependency structure, rather than counting alerts on resources that happen to have dependencies, is left open |
 | 5 | Chu et al. (2024), *ACM ISSTA* | CFExplainer: a counterfactual explainer for GNN-based vulnerability detection that searches for the minimal perturbation to the input code graph which flips the model's prediction | Code property graphs for GNN vulnerability-detection models | Answers "what-if" questions that factual explainers cannot; the minimal perturbation localises the root cause rather than merely highlighting salient features | Explanation is a post-hoc search over a learned black box, so its faithfulness is approximate; the counterfactual is a graph edit, not necessarily an action a developer can take | The explanation is discovered from the model, not read from curated domain knowledge, so it cannot cite an authority for why the flagged structure is wrong. Where the reasoning is encoded rather than learned, a counterfactual can be exact and can name the control it violates — that combination is unaddressed |
 
@@ -100,11 +115,11 @@ substitute.
 
 | # | Paper | Method | Dataset | Advantages | Limitations | Research gap |
 |---|---|---|---|---|---|---|
-| 6 | Vo, Dao & Fukuda (2025), *IEEE COMPSAC* | Uses LLMs for Terraform code-smell detection and compares them against traditional rule-based linters | Synthetic benchmark of 42 Terraform configurations covering 14 code smells; 71 high-quality real-world GitHub Terraform projects | LLMs detect a broader range of smells than static tools, particularly logic-related ones; real-world scan finds 84.5% of repositories carry at least one smell | Benchmark is small and synthetic; LLM judgements are unverified against an authority, so a confident wrong answer is indistinguishable from a correct one | Detection is framed as code quality, not as compliance. A smell has no severity derived from a control and no cost consequence, so findings cannot be prioritised or defended in an audit |
-| 7 | Bühler et al. (2025), *IEEE/ACM MSR* | Dataset construction: mines and packages publicly available Terraform HCL programs with metadata into a reusable archive | 67,360 permissively licensed repositories; 279,344 Terraform modules; 1,773,991 registered resources (~335 MB) | First large-scale Terraform corpus for systematic IaC research; permissive licensing makes reuse defensible | Raw code and metadata only — no security labels, no ground-truth intent, and no guarantee the mined configurations are correct or representative of regulated workloads | The scale problem for IaC research is now solved; the supervision problem is not. A corpus where each estate carries the intent it was built to serve, and defects are injected with known ground truth, is what learning a recommender actually requires |
-| 8 | Elmiger et al. (2024), *IJIS* | Graph-based security assessment of a Microsoft cloud tenant: models relationships between cloud entities as a graph and analyses entity attack paths on a graph analytics platform | Data from a Microsoft cloud test tenant | Demonstrates measurable reduction of possible attack paths using graph theory; makes entity interrelationships explicit rather than implicit | Single-provider (Microsoft) and evaluated on a test tenant rather than production estates; the graph encodes topology, not regulatory obligation | Confirms graphs surface attack paths that entity-by-entity review misses, but the reasoning stops at reachability. Nothing binds a path to a compliance clause or to a cost consequence, and nothing runs the analysis at design time before the estate exists |
-| 9 | Palma, Cicimurri & Angelini (2025), *IJIS* | StatAG: progressive data analysis plus statistical analysis so an analyst can query an attack graph before generation completes; weighted path sampling accelerates convergence of statistical significance | Computer network attack-graph generation workloads | Makes attack-graph analysis usable in real time and adaptive to evolving network structure, addressing the combinatorial scalability barrier | Targets classical network attack graphs; assumes an existing infrastructure to analyse, and answers are statistically significant rather than exact | Scalability of *reactive* analysis over deployed networks. Design-time reasoning — where the graph is small because it describes a proposed configuration, and exactness is achievable — is a different regime this line of work does not address |
-| 10 | ⚑ Zhong et al. (2024), *Computers & Security* | Survey of graph neural network methods for intrusion detection systems — full text not yet read | — (survey) | Consolidates GNN-for-IDS methods, trends and challenges in a highly cited security venue | **To be completed from the full text** | **To be completed from the full text.** Working hypothesis to verify: GNN security work concentrates on runtime traffic and intrusion detection, not on the static configuration graph of an estate before deployment |
+| 6 | ⚑ Banse et al. (2023), *ACM SAC* | Collects "semantic evidence" from live cloud resources and organises it against an extensible, vendor-neutral ontology of cloud resources and their security features; the Clouditor tool assesses that evidence continuously against generalised metrics | No public dataset — live evidence collected from cloud resources; benchmark reports up to 200,000 evidences processed in under a minute | Turns certification from an annual snapshot into continuous monitoring; because evidence is structured against one shared ontology, a single piece of evidence can serve several controls, and metrics generalised from EUCS and CCMv4 are reusable across schemes (BSI C5 is handled the same way) | The ontology covers the infrastructure layer only, not application code or organisational documents; each metric carries one fixed target value, so the output is pass/fail with no notion of several acceptable configurations | The graph records what a resource's current setting *is*, never what it *should be* for the job that resource does. A public marketing bucket and a customer-data bucket with identical technical settings receive identical verdicts, because nothing in the ontology represents what the resource is for |
+| 7 | Joshi, Elluri & Nagar (2020), *IEEE Access* | Semantic Web technologies with NLP and text mining over 20+ compliance models (GDPR, PCI DSS, ISO 27001/27002, FedRAMP, CSA controls) built into one OWL graph linking regulation → standard → control → threat; SWRL rules and SPARQL queries answer compliance questions | No benchmark dataset — the text of 20+ compliance models plus the published privacy policies of Amazon, Google, IBM and Rackspace; ontology released at `purl.org/csc/ontologyfiles` (still resolving) | Makes regulation text machine-queryable rather than expert-read; because overlapping regulations are linked through shared controls and threats, a control evidenced once can be shown to serve several standards instead of being re-evidenced per standard; artefact publicly released and reusable | Validation matches key terms in providers' *published privacy policies*, so it checks what a provider says rather than how its resources are configured, and an empty ontology class reads as non-compliance. No cloud resource, configuration property or runtime evidence appears in the model | The paper aims at recommendation but at provider granularity — it compares whole providers by compliance-model support, with provider cost as the authors' own next step. Nothing descends to an individual resource and the value it should carry, and nothing represents what the data is *for*, so two resources under one regulation cannot be told apart |
+| 8 | Banse et al. (2025), *CLOSER* | Certification-as-a-Service built around a shared Certification Graph spanning infrastructure, application, organisational and data layers; the MARI component recommends which metrics match which controls by text similarity and maps controls across schemes | No public dataset — evidence from four Horizon Europe pilots: IaaS, PaaS, SaaS, and a hybrid cloud-edge financial deployment | The first of Manya's five to target *recommendation* rather than assessment alone; the same evidence is reused across EUCS, BSI C5 and AI certification catalogues; validated across four real deployments rather than one lab demonstration | MARI matches on textual similarity, not on whether two items measure the same requirement, so similar wording with different meaning — and different wording with the same meaning — both mislead it; at publication the framework was partially complete and pilot results were not yet available | Recommends which metric applies to a control, never the resource configuration that satisfies that metric. The user still converts "this metric is relevant" into "set this property to this value" by hand, which is the final and most useful step |
+| 9 | ⚑ Eldjou et al. (2025), *Cluster Computing* | Hybrid knowledge graph combining rule-based threat detection with graph-assisted investigation over kernel-level eBPF telemetry, normalised into the Elastic Common Schema so events correlate across layers | No public dataset — live kernel telemetry from a single cloud-native SOC deployment | Built from what containers actually *do* at runtime rather than from static configuration; reports a 20% reduction in contextualised threat-analysis latency against a traditional SIEM workflow, and supports cross-layer questions SIEM rules cannot answer | Retrospective by design — it helps analysts understand what already happened rather than decide configuration before deployment; a single SOC case study with no public dataset, so transfer to other cluster sizes or workload types is untested | Connects a runtime event to the incident it caused, but not to the configuration change that would have prevented it. Detection and recommendation remain separate tasks, and deciding how to harden the system is left to the human analyst |
+| 10 | ⚑ Zhu et al. (2024), *ICIC (LNCS)* | DocSecKG: an automated pipeline that tracks, downloads, scans and refreshes Docker Hub's official "library" images, building a graph linking each image to its packages and the CVEs those packages carry | Docker Hub official "library" images plus public CVE data, continuously refreshed; no fixed benchmark, and no size or record count reported | Automation keeps the graph current as new images and CVEs appear, unlike a one-off vulnerability report; linking images through shared packages exposes vulnerabilities that are systemic across many images, which a per-image scanner cannot show | Scope is limited to Docker Hub's official library images — a small, relatively well-maintained slice, whereas community and private-registry images carry most real-world risk; reports which images carry which CVEs without weighting severity for a particular deployment | Every flagged image is treated alike regardless of exposure. The graph audits a single image well but cannot recommend a base image or a hardening step for a specific deployment, because deployment context — exposed ports, privilege level, network reachability — is absent |
 
 ### Tanmoy — papers 11–15
 
@@ -114,7 +129,7 @@ substitute.
 | 12 | Jia et al. (2025), *Computers & Security* | Hyper Attack Graph: hypergraph data structures for CTI analysis, with a joint extraction model using multi-head selection to extract multiple relations among security entities | 685 real-world cyber threat intelligence reports | +11.12% F1 on security entity extraction and +6.71% on relation extraction over prior work; hypergraphs express n-ary tactic/technique relations that ordinary graphs flatten | Operates on threat intelligence prose, not on infrastructure; extraction quality bounds everything downstream | Adjacent rather than upstream: graph reasoning applied to threat intelligence text, not to cloud configuration. What transfers is the argument that relationships among entities carry information a per-entity view destroys — the same argument this project makes for multi-hop configuration defects |
 | 13 | Morello, Sainio & Alshawki (2024), *IEEE CSNet* | Privacy-preserving regulatory compliance verification protocol built on an attribute verification protocol, implemented for GDPR Article 32 | Single GDPR Article 32 use case | Verifier learns only the compliance verdict and no private information about the verified entity; efficient in the reported evaluation | One article, one regulation, one use case; verifies an asserted attribute rather than deriving compliance from the system's actual configuration | Answers *how to prove* a compliance claim without disclosure, but takes the claim itself as given. Deriving the claim from the configuration — and producing the evidence path behind it — is upstream of this work and unaddressed by it |
 | 14 | Guo et al. (2025), *Machine Intelligence Research* | Survey of counterfactual learning on graphs, categorising methods into four problem classes (counterfactual fairness, explainability, link prediction, other applications) with framework summaries and resources | Survey of published methods; compiles open-source implementations, public datasets and evaluation metrics | Comprehensive map of graph counterfactual learning; useful as a method inventory for explanation design | A methods survey, not an application study — no security or configuration domain, and the metrics compiled are model-centric rather than user-centric | Counterfactual explanation is treated as a property of a learned model. Where compliance logic is curated rather than learned, a counterfactual ("change this one property and the violation disappears") is exact and directly actionable. Neither the exactness nor the audience-relative rendering of such explanations is covered |
-| 15 | ⚑ Eldjou et al. (2025), *Cluster Computing* | Knowledge-graph approach to securing container runtimes in cloud-native environments — full text not yet read | **To be completed from the full text** | Applies knowledge graphs to cloud-native security in a Springer venue; closest published work to this project's representation choice | **To be completed from the full text** | **To be completed from the full text.** Working hypothesis to verify: the graph describes *runtime* container behaviour rather than design-time infrastructure configuration, and is not bound to regulatory controls |
+| 15 | **Vacant** — slot released to Tanmoy | Eldjou et al. (2025) moved to paper 9 under Manya. Replacement to be chosen on `feature/tanmoy` | — | — | — | — |
 
 ---
 
