@@ -36,3 +36,8 @@ src/aws/**/.terraform.lock.hcl
 # Generated corpus (re-derives from (count, seed); manifest is kept)
 dataset/processed/estates/
 src/ml_model/model.pkl
+
+# Retrieved source papers. Not ours to redistribute — several are publisher PDFs and
+# author preprints whose licences do not permit it. Every source URL is recorded in
+# docs/Citation_Verification_Report.md, so the folder re-fetches from there.
+docs/papers/

@@ -11,7 +11,9 @@ is copied from a paper's own future-work section.
 ## Paper 1 — Verdet, Hamdaqa, Da Silva & Khomh (2025)
 
 *Assessing the adoption of security policies by developers in terraform across different cloud
-providers.* Empirical Software Engineering 30. Springer. DOI 10.1007/s10664-024-10610-0
+providers.* Empirical Software Engineering 30(3), article 74. Springer.
+DOI 10.1007/s10664-024-10610-0 (see also the publisher's Correction, DOI 10.1007/s10664-025-10667-5,
+which amends the copyright line only)
 
 **Existing method.** An empirical study of how far developers actually adopt scripted security
 practices in Terraform. The authors scan 812 open-source GitHub projects across AWS, Azure and
@@ -86,8 +88,8 @@ RAG with semantically enriched components and modelled inter-resource dependenci
 IaC-Eval benchmark with cloud emulation and automated error analysis, and contribute an error
 taxonomy for LLM-assisted IaC.
 
-**Advantages.** The gain is large and clearly attributed: technical validation success rises from a
-27.1% baseline to 75.3%, and overall success to 62.7%. The error taxonomy is reusable independently
+**Advantages.** The gain is large and clearly attributed: overall success rises from a 27.1%
+baseline to 62.6%, with technical validation success reaching 75.3%. The error taxonomy is reusable independently
 of the technique, and the finding that a *graph* representation of inter-resource dependencies helps
 more than flat retrieval is directly relevant to any project representing an estate as a graph.
 
