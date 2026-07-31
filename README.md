@@ -139,7 +139,3 @@ The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
 ## Context
 
 This is an academic project spanning cloud architecture and applied AI. It is trained and evaluated on a synthetic, mined, and adversarial corpus; no real financial-sector data is used, and that limitation is stated openly in FD-05. The commercial analysis in PMD §12 is candid about what a student build can and cannot substantiate.
-
-## License
-
-Not yet specified.
