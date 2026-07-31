@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+import argparse
 
 from docx import Document
 from docx.enum.section import WD_ORIENT
@@ -190,5 +191,61 @@ def convert(md_path: Path, out_path: Path, landscape: bool, images: list[str]) -
 
 
 if __name__ == "__main__":
-    for md, out, landscape, images in DELIVERABLES:
-        convert(ROOT / md, ROOT / out, landscape, images)
+    parser = argparse.ArgumentParser(
+        description="Convert Markdown files to .docx. By default converts files listed in DELIVERABLES."
+    )
+    parser.add_argument("files", nargs="*", help="Markdown files to convert (workspace-relative or relative to repo root)")
+    parser.add_argument("--dir", "-d", help="Directory to scan for .md files (relative to repo root)")
+    parser.add_argument("--all", "-a", action="store_true", help="Convert all .md files under the repository root")
+    parser.add_argument("--out", "-o", help="Output directory for generated .docx files (relative to repo root). Defaults to same directory as source files.")
+    parser.add_argument("--landscape", action="store_true", help="Generate output pages in landscape orientation (applies to all outputs)")
+    args = parser.parse_args()
+
+    md_paths: list[Path] = []
+
+    if args.all:
+        md_paths = list(ROOT.rglob("*.md"))
+    elif args.dir:
+        md_root = (ROOT / args.dir).resolve()
+        if md_root.is_dir():
+            md_paths = list(md_root.rglob("*.md"))
+    elif args.files:
+        for f in args.files:
+            p = (ROOT / f).resolve()
+            if p.exists():
+                md_paths.append(p)
+
+    # If no CLI inputs were provided, fall back to DELIVERABLES list
+    if not md_paths:
+        for md, out, landscape, images in DELIVERABLES:
+            convert(ROOT / md, ROOT / out, landscape, images)
+    else:
+        for md in md_paths:
+            if not md.exists() or not md.suffix.lower() == ".md":
+                continue
+            out_dir = (ROOT / args.out) if args.out else md.parent
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_path = out_dir / (md.stem + ".docx")
+            convert(md, out_path, args.landscape, [])
+
+
+"""
+Quick usage examples (run from repository root):
+
+Convert all markdown files under the project:
+    python docs/make_docx.py --all
+
+Convert every .md in a specific folder:
+    python docs/make_docx.py --dir docs
+
+Convert specific files:
+    python docs/make_docx.py docs/One.md docs/Two.md
+
+Convert and write outputs to a single folder:
+    python docs/make_docx.py --dir docs --out docs/docx_outputs
+
+Notes:
+
+The new CLI falls back to the original DELIVERABLES behavior when no CLI args are given.
+Landscape output is controlled with --landscape (applies to all outputs produced in that run).
+"""
