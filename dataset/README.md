@@ -1,7 +1,6 @@
 # Dataset
 
-The corpus is **generated, not downloaded**. No external dataset is used, and no
-real financial-sector data is involved (FD-05).
+
 
 | | |
 |---|---|
