@@ -1,0 +1,17 @@
+9 work categories as the shelving system: INFRA, ONTO, DATA, ML, SYS, XAI, EVAL, DOC, TEST. Every task carries its category tag and its owner badge.
+
+13 phases in 4 stages, each with: complexity (Low → Critical), time estimate, lead + support students, prerequisites/inputs, category-tagged tasks, a dedicated testing block, and an exit gate.
+
+Student split (specialised to cut coordination overhead):
+
+A — cloud/infra & systems: environment, IAM, CI/invariants, agents, CLI.
+B — knowledge & data: ontology, gold set, generator, labelling, defects.
+C — modeling/XAI/eval: advisor, recommender, reconstruction, explainer, study.
+Instructor — gold-set review, the P6 gate sign-off, and the one practitioner in the study.
+Scheduling calls I made (adjust freely — the Gantt is indicative, ~22 weeks):
+
+P1 ontology runs in parallel with P0, since encoding needs no AWS. That's the biggest schedule win.
+P6 (Advisor) is the one hard gate — sycophancy test at 100% persistence, instructor signs off; a failure means revisiting the architecture before P7–P11.
+P8 reconstruction is prototyped early (~week 7) because it's the most uncertain and its evaluation is free.
+P10 agents parallelises with P9 explainer (A and C on separate tracks).
+A "start early" callout flags the five long-lead/high-risk items, notably filing ethics approval by week 6 or the study slips.

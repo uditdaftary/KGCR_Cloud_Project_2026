@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Reproducibility run artifacts (records are re-derivable; do not commit)
+runs/
+*.runrecord.json
+
+# Terraform (never commit state or provider binaries)
+src/aws/**/.terraform/
+src/aws/**/*.tfstate
+src/aws/**/*.tfstate.*
+src/aws/**/*.tfvars
+!src/aws/**/*.tfvars.example
+src/aws/**/.terraform.lock.hcl
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Generated corpus (re-derives from (count, seed); manifest is kept)
+dataset/processed/estates/
+src/ml_model/model.pkl
+
+# Retrieved source papers. Not ours to redistribute — several are publisher PDFs and
+# author preprints whose licences do not permit it. Every source URL is recorded in
+# docs/Citation_Verification_Report.md, so the folder re-fetches from there.
+docs/papers/

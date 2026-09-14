@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1290" height="2250" viewBox="1230 -670 1290 2250">
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#1a1a1a"/>
+</marker>
+</defs>
+<rect x="1230" y="-670" width="1290" height="2250" fill="#ffffff"/>
+<text x="1254" y="-634" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="20" font-weight="600" fill="#1a1a1a">Condition 2 — “what’s wrong with my config / review my current config…”</text>
+<polyline points="1975,-460 1975,-360" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1975,-260 1975,-160" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1975,-60 1980,-30 1985,0" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1985,100 1982,120 1980,140" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1890,190 1680,230 1680,270" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1600,335 1500,370 1420,410" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="1488.2" y="361.0" width="23.5" height="18" rx="3" fill="#1a1a1a"/>
+<text x="1500.0" y="374.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.0" fill="#ffffff">no</text>
+<polyline points="1760,335 1870,370 1980,410" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="1854.9" y="361.0" width="30.3" height="18" rx="3" fill="#1a1a1a"/>
+<text x="1870.0" y="374.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.0" fill="#ffffff">yes</text>
+<polyline points="1420,510 1420,560 1760,560 1760,460 1840,460" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1980,510 1980,610" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1980,710 1980,810" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1980,910 1980,990" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1980,1130 1980,1165 1980,1200" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1870,1285 1770,1287 1670,1290" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="1754.9" y="1278.0" width="30.3" height="18" rx="3" fill="#1a1a1a"/>
+<text x="1770.0" y="1291.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.0" fill="#ffffff">yes</text>
+<polyline points="2090,1285 2140,1287 2190,1290" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="2128.2" y="1278.0" width="23.5" height="18" rx="3" fill="#1a1a1a"/>
+<text x="2140.0" y="1291.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12.0" fill="#ffffff">no</text>
+<polyline points="2250,1330 2295,1250 2340,1160" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="2210,1110 2165,985 2120,860" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<polyline points="1610,1330 1610,1380 1610,1430" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<ellipse cx="1975.0" cy="-520.0" rx="135.0" ry="60.0" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1975.0" y="-531.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Condition 2</text>
+<text x="1975.0" y="-515.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">“whats wrong with my config</text>
+<text x="1975.0" y="-499.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">/ review my current config…”</text>
+<polygon points="1913.0,-360 2055,-360 2037.0,-260 1895,-260" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1975.0" y="-305.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Agent 2 Deployed</text>
+<text x="1560.0" y="-366.3" text-anchor="start" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Agent 2 fetches the current config from AWS/Cloud</text>
+<rect x="1875" y="-160" width="200" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1975.0" y="-105.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">config mapped and stored</text>
+<rect x="1855" y="0" width="260" height="100" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1985.0" y="54.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Finalize a config spec autonomously</text>
+<rect x="1890" y="140" width="180" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1980.0" y="186.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Spec reviewed by</text>
+<text x="1980.0" y="202.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">advisor</text>
+<text x="1440.1" y="254.5" text-anchor="start" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">advisor has access to knowledge graph</text>
+<polygon points="1680.1,270 1760.2,335.1 1680.1,400.2 1600,335.1" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1680.1" y="331.6" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Advisor “GO</text>
+<text x="1680.1" y="347.6" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">AHEAD”?</text>
+<rect x="1280" y="410" width="280" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1420.0" y="464.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">implement advisor suggestions in spec</text>
+<rect x="1840" y="410" width="280" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1980.0" y="464.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">produce Dependency graph of the spec</text>
+<rect x="1840" y="610" width="280" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1980.0" y="656.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">compare produced dependency graph with</text>
+<text x="1980.0" y="672.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">stored ‘existing’ config data</text>
+<rect x="1840" y="810" width="280" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1980.0" y="840.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">XAI &amp; advisor try to justify and</text>
+<text x="1980.0" y="856.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">understand user’s choices of config.</text>
+<text x="1980.0" y="872.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">find out defects and give out</text>
+<text x="1980.0" y="888.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">suggestions</text>
+<polygon points="1918.0,990 2060,990 2042.0,1130 1900,1130" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1980.0" y="1016.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">make a spec</text>
+<text x="1980.0" y="1032.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">calling out</text>
+<text x="1980.0" y="1048.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">suggested changes</text>
+<text x="1980.0" y="1064.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">and proposed</text>
+<text x="1980.0" y="1080.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">solutions to the</text>
+<text x="1980.0" y="1096.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">noted defects in</text>
+<text x="1980.0" y="1112.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">original config.</text>
+<rect x="2210" y="1060" width="260" height="100" rx="15" ry="15" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="2340.0" y="1114.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Spec updated per user suggestions</text>
+<polygon points="1980.0,1200 2090.0,1285.0 1980.0,1370 1870.0,1285.0" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1980.0" y="1273.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">User Accepts spec</text>
+<text x="1980.0" y="1289.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">and dependency</text>
+<text x="1980.0" y="1305.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">graph?</text>
+<polygon points="1574.0,1250 1670.0,1250 1646.0,1330 1550.0,1330" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1610.0" y="1286.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Agent 1</text>
+<text x="1610.0" y="1302.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">Deployed.</text>
+<polygon points="2214.0,1250 2310.0,1250 2286.0,1330 2190.0,1330" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="2250.0" y="1286.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">User inputs</text>
+<text x="2250.0" y="1302.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">changes</text>
+<text x="1420.0" y="1244.5" text-anchor="start" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">agent 1 = the creator and implementor of the config in aws/cloud</text>
+<ellipse cx="1610.0" cy="1480.0" rx="70.0" ry="50.0" fill="#ffffff" stroke="#1a1a1a" stroke-width="2"/>
+<text x="1610.0" y="1484.5" text-anchor="middle" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="13.0" fill="#3d3d3d">STOP</text>
+</svg>

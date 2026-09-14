@@ -1,0 +1,90 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.7.5",
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "mode": "managed",
+          "type": "aws_vpc",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": { "cidr_block": "10.20.0.0/16", "tags": { "Name": "main" } }
+        },
+        {
+          "address": "aws_subnet.private_0",
+          "mode": "managed",
+          "type": "aws_subnet",
+          "name": "private_0",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": { "cidr_block": "10.20.1.0/24", "map_public_ip_on_launch": false }
+        },
+        {
+          "address": "aws_security_group.app",
+          "mode": "managed",
+          "type": "aws_security_group",
+          "name": "app",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": { "description": "application security group" }
+        },
+        {
+          "address": "data.aws_caller_identity.current",
+          "mode": "data",
+          "type": "aws_caller_identity",
+          "name": "current",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {}
+        }
+      ],
+      "child_modules": [
+        {
+          "address": "module.logging",
+          "resources": [
+            {
+              "address": "module.logging.aws_s3_bucket.logs",
+              "mode": "managed",
+              "type": "aws_s3_bucket",
+              "name": "logs",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": { "bucket_prefix": "kgcr-logs-" }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "configuration": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_vpc.main",
+          "type": "aws_vpc",
+          "name": "main",
+          "expressions": {
+            "cidr_block": { "constant_value": "10.20.0.0/16" }
+          }
+        },
+        {
+          "address": "aws_subnet.private_0",
+          "type": "aws_subnet",
+          "name": "private_0",
+          "expressions": {
+            "vpc_id": { "references": ["aws_vpc.main.id", "aws_vpc.main"] },
+            "cidr_block": { "constant_value": "10.20.1.0/24" }
+          }
+        },
+        {
+          "address": "aws_security_group.app",
+          "type": "aws_security_group",
+          "name": "app",
+          "expressions": {
+            "vpc_id": { "references": ["aws_vpc.main.id", "aws_vpc.main"] },
+            "description": { "constant_value": "application security group" },
+            "account": { "references": ["data.aws_caller_identity.current.account_id"] }
+          }
+        }
+      ]
+    }
+  }
+}

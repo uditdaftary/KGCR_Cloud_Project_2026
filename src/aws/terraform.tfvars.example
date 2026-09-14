@@ -1,0 +1,28 @@
+# Copy to terraform.tfvars and fill in per account. terraform.tfvars is
+# gitignored (holds account IDs and external IDs); this .example is committed.
+# FD-08 §8: account IDs and external IDs are supplied as variables, never
+# hard-committed.
+
+region      = "eu-west-1"
+alert_email = "you@example.com"
+
+# Thresholds in USD (FD-08 §6). Leave as the default unless you have reason not
+# to; $5 / $15 / $30 is the specified day-one posture.
+budget_thresholds_usd = [5, 15, 30]
+
+# The principal in Account C (shared-security) that assumes into A and B.
+security_account_principal_arn = "arn:aws:iam::111111111111:role/kgcr-cli"
+
+# External IDs — generate distinct random values; do not reuse across roles.
+harvest_external_id   = "REPLACE_WITH_RANDOM_STRING"
+provision_external_id = "REPLACE_WITH_RANDOM_STRING"
+
+# Provision role stays absent outside the demo window. When enabling for a demo
+# in Account A, set enable_provision_role = true and scope the resource types.
+enable_provision_role    = false
+provision_resource_types = []
+
+tags = {
+  project = "kgcr"
+  phase   = "P0"
+}

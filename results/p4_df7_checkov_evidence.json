@@ -1,0 +1,157 @@
+{
+  "by_variant": {
+    "indirect_internet_reachability": {
+      "engine_blind": 4,
+      "graph_recovered": 4,
+      "total": 4
+    },
+    "privilege_escalation_passrole": {
+      "engine_blind": 4,
+      "graph_recovered": 4,
+      "total": 4
+    },
+    "transitive_trust_chain": {
+      "engine_blind": 4,
+      "graph_recovered": 4,
+      "total": 4
+    }
+  },
+  "c1_holds_for_all": true,
+  "contrasts": [
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "37e0366409289d08",
+      "graph_recovers": true,
+      "parent_estate_id": "18cb69406935a417",
+      "sink": "aws_db_instance.cardholder",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "indirect_internet_reachability"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "5ec665571cf5d850",
+      "graph_recovers": true,
+      "parent_estate_id": "18cb69406935a417",
+      "sink": "aws_db_instance.cardholder",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "transitive_trust_chain"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "d16e076e84feae9c",
+      "graph_recovers": true,
+      "parent_estate_id": "18cb69406935a417",
+      "sink": "aws_db_instance.cardholder",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "privilege_escalation_passrole"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "970364ad4b85003a",
+      "graph_recovers": true,
+      "parent_estate_id": "e1c95942122ee236",
+      "sink": "aws_db_instance.cardholder",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "indirect_internet_reachability"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "41e6284d1df6219b",
+      "graph_recovers": true,
+      "parent_estate_id": "e1c95942122ee236",
+      "sink": "aws_db_instance.cardholder",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "transitive_trust_chain"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "3946cbedfcedd01e",
+      "graph_recovers": true,
+      "parent_estate_id": "e1c95942122ee236",
+      "sink": "aws_db_instance.cardholder",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "privilege_escalation_passrole"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "ab3709cf1e691e4a",
+      "graph_recovers": true,
+      "parent_estate_id": "8dda9399b14922eb",
+      "sink": "aws_s3_bucket.lake",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "indirect_internet_reachability"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "f5310bac0eb663fc",
+      "graph_recovers": true,
+      "parent_estate_id": "8dda9399b14922eb",
+      "sink": "aws_s3_bucket.lake",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "transitive_trust_chain"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "b59a2c944a2d0225",
+      "graph_recovers": true,
+      "parent_estate_id": "8dda9399b14922eb",
+      "sink": "aws_s3_bucket.lake",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "privilege_escalation_passrole"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "f950b8ac34418cba",
+      "graph_recovers": true,
+      "parent_estate_id": "719e46936ecc49ab",
+      "sink": "aws_s3_bucket.lake",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "indirect_internet_reachability"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "3bace3ebcb24e5e2",
+      "graph_recovers": true,
+      "parent_estate_id": "719e46936ecc49ab",
+      "sink": "aws_s3_bucket.lake",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "transitive_trust_chain"
+    },
+    {
+      "c1_holds": true,
+      "checkov_sink_unchanged": true,
+      "defect_estate_id": "2f97ff9595dce1ad",
+      "graph_recovers": true,
+      "parent_estate_id": "719e46936ecc49ab",
+      "sink": "aws_s3_bucket.lake",
+      "sink_checks_added": [],
+      "sink_checks_removed": [],
+      "variant": "privilege_escalation_passrole"
+    }
+  ],
+  "engine_blind": 12,
+  "graph_recovered": 12,
+  "total_df7_estates": 12
+}

@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="940" viewBox="0 0 1500 940" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1500" height="940" fill="#ffffff"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1a1a1a"/></marker></defs>
+<text x="40" y="40" font-size="21" text-anchor="start" dominant-baseline="central" fill="#1a1a1a" font-weight="bold">Diagram 1 — AWS Cloud Architecture (planned)</text>
+<text x="40" y="66" font-size="13" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">KGCR: three-account topology, evidence pipeline and analysis plane (PMD section 6, FD-08)</text>
+<rect x="40" y="96" width="340" height="470" rx="6" fill="#f5f5f4" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="52" y="112" font-size="13" text-anchor="start" dominant-baseline="central" fill="#6b6b6b" font-weight="bold">Account A — prod-payments (estate under analysis)</text>
+<rect x="64" y="132" width="292" height="54" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="150.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon VPC — subnets, route tables,</text>
+<text x="210.0" y="167.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">security groups, NAT / IGW</text>
+<rect x="64" y="200" width="292" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="214.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon EC2 / ECS</text>
+<text x="210.0" y="231.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">application workload</text>
+<rect x="64" y="260" width="292" height="46" rx="4" fill="#eef2f6" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="274.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon RDS</text>
+<text x="210.0" y="291.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">cardholder data store</text>
+<rect x="64" y="320" width="292" height="46" rx="4" fill="#eef2f6" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="334.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon S3</text>
+<text x="210.0" y="351.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">object storage</text>
+<rect x="64" y="380" width="292" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="394.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS KMS</text>
+<text x="210.0" y="411.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">encryption keys</text>
+<rect x="64" y="440" width="292" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="454.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS IAM</text>
+<text x="210.0" y="471.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">roles, policies, trust relationships</text>
+<rect x="64" y="500" width="292" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="210.0" y="523.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Elastic Load Balancing</text>
+<rect x="40" y="590" width="340" height="120" rx="6" fill="#f5f5f4" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="52" y="606" font-size="13" text-anchor="start" dominant-baseline="central" fill="#6b6b6b" font-weight="bold">Account B — dev-staging (drift comparison)</text>
+<rect x="64" y="622" width="292" height="62" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="210.0" y="644.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Divergent copy of Account A</text>
+<text x="210.0" y="661.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">same resource types, drifted configuration</text>
+<rect x="415" y="96" width="300" height="614" rx="6" fill="#f5f5f4" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="427" y="112" font-size="13" text-anchor="start" dominant-baseline="central" fill="#6b6b6b" font-weight="bold">Evidence collection and processing</text>
+<rect x="437" y="132" width="256" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="146.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS Config</text>
+<text x="565.0" y="163.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">resource inventory + relationships</text>
+<rect x="437" y="192" width="256" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="206.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS CloudTrail</text>
+<text x="565.0" y="223.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">API audit events</text>
+<rect x="437" y="252" width="256" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="266.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Cost &amp; Usage Reports</text>
+<text x="565.0" y="283.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">cost attribution per resource</text>
+<rect x="437" y="330" width="256" height="54" rx="4" fill="#eef2f6" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="340.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon S3</text>
+<text x="565.0" y="357.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">evidence landing bucket</text>
+<text x="565.0" y="374.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">(versioned, SSE-KMS)</text>
+<rect x="437" y="424" width="256" height="54" rx="4" fill="#e8eef4" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="442.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS Lambda / AWS Glue</text>
+<text x="565.0" y="459.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">ETL: normalise to the L2 graph schema</text>
+<rect x="437" y="518" width="256" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="532.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon EventBridge</text>
+<text x="565.0" y="549.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">scheduled + change-driven triggers</text>
+<rect x="437" y="590" width="256" height="100" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="565.0" y="614.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon CloudWatch</text>
+<text x="565.0" y="631.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">logs, metrics, alarms</text>
+<text x="565.0" y="648.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">— monitoring —</text>
+<text x="565.0" y="665.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS Budgets cost alarms (FD-08)</text>
+<rect x="750" y="96" width="380" height="614" rx="6" fill="#f5f5f4" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="762" y="112" font-size="13" text-anchor="start" dominant-baseline="central" fill="#6b6b6b" font-weight="bold">Account C — shared-security (analysis platform)</text>
+<rect x="774" y="132" width="332" height="62" rx="4" fill="#e8eef4" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="146.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Neo4j Community on Amazon EC2</text>
+<text x="940.0" y="163.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">knowledge graph: L1 controls,</text>
+<text x="940.0" y="180.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">L2 estate, L3 run records</text>
+<rect x="774" y="214" width="332" height="54" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="232.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon SageMaker</text>
+<text x="940.0" y="249.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">train recommender + intent reconstructor</text>
+<rect x="774" y="288" width="332" height="54" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="306.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS Lambda</text>
+<text x="940.0" y="323.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Advisor / Explainer inference</text>
+<rect x="774" y="362" width="332" height="54" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="380.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon Bedrock</text>
+<text x="940.0" y="397.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">intent extraction and verbalisation only</text>
+<rect x="774" y="436" width="332" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="450.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon API Gateway</text>
+<text x="940.0" y="467.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">REST surface for the kgcr CLI</text>
+<rect x="774" y="496" width="332" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="510.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon Cognito</text>
+<text x="940.0" y="527.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">user authentication</text>
+<rect x="774" y="556" width="332" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="570.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">AWS IAM</text>
+<text x="940.0" y="587.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">cross-account read / write role split</text>
+<rect x="774" y="616" width="332" height="46" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="940.0" y="630.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Amazon SNS</text>
+<text x="940.0" y="647.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">findings and budget notifications</text>
+<rect x="1165" y="96" width="295" height="350" rx="6" fill="#f5f5f4" stroke="#6b6b6b" stroke-width="1.2" stroke-dasharray="6 4"/>
+<text x="1177" y="112" font-size="13" text-anchor="start" dominant-baseline="central" fill="#6b6b6b" font-weight="bold">Users and outputs</text>
+<rect x="1187" y="132" width="251" height="54" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="1312.5" y="150.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">kgcr CLI</text>
+<text x="1312.5" y="167.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">design / review / explain</text>
+<rect x="1187" y="206" width="251" height="62" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="1312.5" y="220.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Architect / Auditor / Learner</text>
+<text x="1312.5" y="237.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">audience-relative rendering</text>
+<text x="1312.5" y="254.0" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">of the same conclusion</text>
+<rect x="1187" y="288" width="251" height="54" rx="4" fill="#ffffff" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="1312.5" y="306.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Terraform plan / apply</text>
+<text x="1312.5" y="323.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Agent 1 (write-only role)</text>
+<rect x="1187" y="362" width="251" height="62" rx="4" fill="#eef2f6" stroke="#1a1a1a" stroke-width="1.2"/>
+<text x="1312.5" y="384.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">Evidence export</text>
+<text x="1312.5" y="401.5" font-size="13" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">OSCAL / attestation artefacts</text>
+<line x1="380" y1="223" x2="437" y2="155" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="406" y="196" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">harvest</text>
+<line x1="380" y1="283" x2="437" y2="215" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="380" y1="343" x2="437" y2="275" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="380" y1="653" x2="437" y2="366" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="404" y="576" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">drift baseline</text>
+<line x1="565" y1="178" x2="565" y2="330" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="565" y1="298" x2="565" y2="330" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<line x1="565" y1="384" x2="565" y2="424" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="565.0" y="395.0" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">extract</text>
+<line x1="565" y1="478" x2="565" y2="518" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="565.0" y="489.0" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">load</text>
+<line x1="693" y1="451" x2="774" y2="182" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="742" y="300" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">L2 graph load</text>
+<line x1="1130" y1="163" x2="1187" y2="159" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="1158" y="146" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">query</text>
+<line x1="1130" y1="459" x2="1187" y2="245" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="1152" y="350" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">results</text>
+<line x1="1130" y1="639" x2="1187" y2="330" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="1152" y="490" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">notify</text>
+<line x1="693" y1="620" x2="774" y2="620" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="733.5" y="611.0" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">metrics</text>
+<line x1="1313" y1="342" x2="1313" y2="726" stroke="#1a1a1a" stroke-width="1.4"/>
+<line x1="1313" y1="726" x2="1000" y2="726" stroke="#1a1a1a" stroke-width="1.4"/>
+<line x1="1000" y1="726" x2="1000" y2="604" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="1140" y="740" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">Agent 1 assumes the write role</text>
+<line x1="886" y1="602" x2="886" y2="752" stroke="#1a1a1a" stroke-width="1.4"/>
+<line x1="886" y1="752" x2="210" y2="752" stroke="#1a1a1a" stroke-width="1.4"/>
+<line x1="210" y1="752" x2="210" y2="566" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
+<text x="548" y="766" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">cross-account read — Agent 2, read-only</text>
+<text x="40" y="800" font-size="14" text-anchor="start" dominant-baseline="central" fill="#1a1a1a" font-weight="bold">Legend</text>
+<text x="40" y="824" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Solid box = AWS service.   Shaded box = data store.   Dashed container = AWS account boundary.</text>
+<text x="40" y="846" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Authentication: Amazon Cognito for users; AWS IAM cross-account roles for the agents (Agent 2 read-only, Agent 1 write-only).</text>
+<text x="40" y="868" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Monitoring: Amazon CloudWatch logs, metrics and alarms; AWS Budgets alarms live from day one (FD-08).   Notifications: Amazon SNS.</text>
+<text x="40" y="898" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">Status — this is a Phase-I planning diagram. Implemented today: the AWS Budgets and cross-account IAM Terraform in src/aws/ (authored, not applied). Everything else is the Phase-II</text>
+<text x="40" y="920" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">build target; the analysis pipeline currently runs locally in Python under src/backend/.</text>
+</svg>
