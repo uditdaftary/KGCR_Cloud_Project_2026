@@ -32,6 +32,10 @@ reconstruction = [
 labelling = [
   "checkov==3.3.8",
 ]
+# P6 advisor's live Gemini calls. Not in ``dev``: CI replays committed fixtures.
+advisor = [
+  "google-genai==2.20.0",
+]
 dev = [
   "kgcr[reconstruction]",
   "pytest==8.3.4",
@@ -49,6 +53,10 @@ kgcr = "kgcr.cli:main"
 [tool.setuptools.packages.find]
 where = ["src/backend"]
 include = ["kgcr*"]
+
+# The draft L1 control slice ships with the advisor package.
+[tool.setuptools.package-data]
+kgcr = ["advisor/*.json"]
 
 [tool.ruff]
 line-length = 100
@@ -77,6 +85,8 @@ warn_unused_configs = true
 # numpy/torch are optional, probed defensively in kgcr.repro; they are not
 # installed in the scaffolding environment, so their stubs are not required.
 # scikit-learn ships no type stubs, so it is ignored here too (P8 reconstruction).
+# google-genai (advisor extra) is absent in CI; ignoring it keeps mypy identical
+# locally and in CI.
 [[tool.mypy.overrides]]
-module = ["numpy", "torch", "sklearn.*"]
+module = ["numpy", "torch", "sklearn.*", "google.*"]
 ignore_missing_imports = true

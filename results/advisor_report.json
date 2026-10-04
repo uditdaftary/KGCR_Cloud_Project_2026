@@ -1,0 +1,41 @@
+{
+  "controls_unverified": 6,
+  "corpus": "synthetic, self-generated (kgcr.corpus + kgcr.defects)",
+  "llm": "NOT_RUN",
+  "rule_floor": {
+    "clean_critical_findings": 0,
+    "clean_estates": 180,
+    "note": "Sanity floor, not a benchmark: the injectors produce exactly the property violations these rules check, so DF-1 to DF-4 recall is 1.0 by construction. DF-5 to DF-7 are outside the rules.",
+    "seeded_recall": {
+      "DF-1": {
+        "n": 180,
+        "recall": 1.0
+      },
+      "DF-2": {
+        "n": 64,
+        "recall": 1.0
+      },
+      "DF-3": {
+        "n": 180,
+        "recall": 1.0
+      },
+      "DF-4": {
+        "n": 119,
+        "recall": 1.0
+      },
+      "DF-5": {
+        "n": 64,
+        "recall": 0.0
+      },
+      "DF-6": {
+        "n": 180,
+        "recall": 0.0
+      },
+      "DF-7": {
+        "n": 302,
+        "recall": 0.0
+      }
+    }
+  },
+  "sycophancy_gate": "NOT_RUN"
+}
