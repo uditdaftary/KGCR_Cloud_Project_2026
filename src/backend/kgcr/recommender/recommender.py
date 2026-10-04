@@ -46,6 +46,7 @@ __all__ = [
     "Option",
     "RankedOption",
     "INTENT_FIELDS",
+    "IDENTITY_ATTRIBUTES",
     "estate_options",
     "intent_from_reconstruction",
     "OptionRecommender",
@@ -56,7 +57,7 @@ Option = tuple[str, str, str]
 # Region is an input too: availability-zone values are region-specific.
 INTENT_FIELDS: tuple[str, ...] = (*RECONSTRUCTED_FIELDS, "region")
 
-_IDENTITY_ATTRIBUTES = frozenset(
+IDENTITY_ATTRIBUTES = frozenset(
     {"name", "identifier", "bucket", "description", "tags", "cidr_block", "function_name"}
 )
 
@@ -76,7 +77,7 @@ def _option_values(estate: Estate) -> Iterable[tuple[Option, Any]]:
         for key, value in res.attributes.items():
             # Nested values (ingress blocks, policy documents) are not scalar
             # choices; DF-1/DF-3 live there and are covered by the advisor.
-            if key in _IDENTITY_ATTRIBUTES or key.startswith("__ref__"):
+            if key in IDENTITY_ATTRIBUTES or key.startswith("__ref__"):
                 continue
             if isinstance(value, dict | list) or key in {"policy", "assume_role_policy"}:
                 continue
@@ -105,6 +106,8 @@ class OptionRecommender:
         self._categories: dict[str, list[str]] = {}
         self.candidates: tuple[Option, ...] = ()
         self._findings: dict[Option, tuple[Finding, ...]] = {}
+        # One finding-free resource per type; the patcher aligns defects to these.
+        self.templates: dict[str, Resource] = {}
 
     def fit(self, clean: Sequence[Estate], defected: Sequence[Estate]) -> None:
         """Learn option relevance from ``clean``; retrieve candidates from both."""
@@ -119,6 +122,7 @@ class OptionRecommender:
                 # A finding-free resource is a compliant context to test options in.
                 if res.type not in templates and not resource_findings(res):
                     templates[res.type] = res
+        self.templates = templates
         self.candidates = tuple(sorted(raw))
         self._findings = {
             option: self._option_findings(option, raw[option], templates)
