@@ -6,7 +6,28 @@ and what is deliberately deferred. It is maintained alongside the roadmap
 ([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-07-30.
+Last updated: 2026-10-04.
+
+---
+
+## LOOP_STATE (Review 2 push; updated in place, never stacked)
+
+Updated 2026-10-04. Branch `feature/udit`, local commits only, nothing pushed.
+
+- **Done:** P7 recommender (lite). torch 2.14.1 and torch-geometric 2.8.0 do
+  resolve for cp314, but baselines showed no GNN headroom, so P7 is a
+  one-vs-rest RandomForest on intent with a hard CRITICAL mask. No new
+  dependencies (it reuses the `reconstruction` extra). Report:
+  `results/recommender_report.json`. Gemini model ID verified in the Google AI
+  Studio docs: `gemini-3.7-flash` (stable).
+- **Next:** P6 advisor plus iteration loop. Deterministic grounded findings,
+  Gemini only behind an injectable client, recorded fixtures for offline tests,
+  then the sycophancy persistence test.
+- **Blocked:** `GEMINI_API_KEY` is not set (checked in this shell and at Windows
+  User scope). P6 code and mocked tests can proceed. Recording live fixtures
+  and running the sycophancy test against the real model need Udit to set the
+  key.
+- **Awaiting Udit's review:** none yet. No `DRAFT-FOR-UDIT-REVIEW` files exist.
 
 ---
 
@@ -104,15 +125,15 @@ in them were updated to the new tree.
 | **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `src/backend/kgcr/labelling/` |
 | **P5** | Defect taxonomy & DF-7 test set | **Done** | `src/backend/kgcr/defects/` |
 | **P6** | Advisor & iteration loop | Blocked — needs L1 + a second LLM | — |
-| **P7** | Recommender (GNN) | Blocked — needs P4 labels + L1 + torch | — |
+| **P7** | Recommender | **Done (lite)**: RF ranker plus CRITICAL mask, not a GNN (no headroom on this corpus) | `src/backend/kgcr/recommender/` |
 | **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `src/backend/kgcr/reconstruction/` |
 | **P9** | Explainer | Blocked — needs P6 | — |
 | **P10** | Agents & end-to-end | Blocked — needs live AWS accounts | — |
 | **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
 | **P12** | Write-up | Not started | — |
 
-Test suite: **130 tests passing** — corpus 45, defects 34, reconstruction 13,
-labelling 8, spine (cli/hashing/repro/runrecord) 30.
+Test suite: **135 tests passing**: corpus 45, defects 34, reconstruction 13,
+recommender 5, labelling 8, spine (cli/hashing/repro/runrecord) 30.
 
 ---
 
@@ -159,6 +180,18 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
 ## 3. Key empirical results
 
 - **DF-7 gate, empirical (P4 × P5):** over 12 DF-7 estates (4 estates × 3 variants), the graph recovers **all 12** paths while Checkov — including its CKV2 graph checks — is blind to the sink on **all 12** (verdict byte-identical to the clean parent). C1 holds for every variant. This closes the empirical half of the gate that P5 could only assert by construction.
+- **Recommender (P7), 180-estate synthetic corpus, held-out n_test = 24.**
+  Options are `(resource_type, attribute, value)`, with identity attributes
+  excluded. Exact option-set recovery: popularity 0.000, per-archetype
+  frequency 0.208, RF on true intent 0.958, RF on P8-reconstructed intent
+  0.958. R-precision for the same four: 0.858, 0.940, 1.000, 1.000. P@10 is
+  1.000 for every ranker: about 18 of 44 candidates are relevant per estate, so
+  it saturates. The generator is a deterministic function of intent, so this
+  measures recovery of the generator's mapping, not real-world recommendation
+  quality. The mask removes the one CRITICAL option in the pool
+  (`aws_db_instance.storage_encrypted=False`) even when it is forced to rank 1.
+  Nested options (ingress blocks, policy documents) are outside the option space
+  and are left to the advisor.
 - **Intent reconstruction (P8), 180-estate corpus:** structurally-encoded axes (archetype, network layout, logging, AZ spread) reconstruct at **~100%** and are well-calibrated (ECE ≤ 0.05). `iam_shape` — which the generator leaves no structural trace of — is both least accurate (**~0.42**) and most miscalibrated (**ECE ~0.28**, overconfident at ~0.70). That overconfidence-on-no-signal is the calibration story the reliability diagram exists to surface, and the reason confidence is reported, not just accuracy.
 
 ---
