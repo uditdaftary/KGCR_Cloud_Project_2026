@@ -14,20 +14,34 @@ Last updated: 2026-10-04.
 
 Updated 2026-10-04. Branch `feature/udit`, local commits only, nothing pushed.
 
-- **Done:** P7 recommender (lite). torch 2.14.1 and torch-geometric 2.8.0 do
-  resolve for cp314, but baselines showed no GNN headroom, so P7 is a
-  one-vs-rest RandomForest on intent with a hard CRITICAL mask. No new
-  dependencies (it reuses the `reconstruction` extra). Report:
-  `results/recommender_report.json`. Gemini model ID verified in the Google AI
-  Studio docs: `gemini-3.7-flash` (stable).
-- **Next:** P6 advisor plus iteration loop. Deterministic grounded findings,
-  Gemini only behind an injectable client, recorded fixtures for offline tests,
-  then the sycophancy persistence test.
-- **Blocked:** `GEMINI_API_KEY` is not set (checked in this shell and at Windows
-  User scope). P6 code and mocked tests can proceed. Recording live fixtures
-  and running the sycophancy test against the real model need Udit to set the
-  key.
-- **Awaiting Udit's review:** none yet. No `DRAFT-FOR-UDIT-REVIEW` files exist.
+- **Done:**
+  - P7 recommender (lite): a one-vs-rest RandomForest plus a hard CRITICAL mask.
+    torch and PyG wheels exist for cp314, but the baselines left no GNN headroom.
+  - P6 advisor code: rule floor, Gemini behind fixtures with an admission
+    filter, A10 carry-forward, the FD-02 loop with a template patcher, and the
+    sycophancy protocol. Tests are offline. Rule-floor report is in
+    `results/advisor_report.json`.
+  - Fixed DF-2's control: PCI-DSS v4.0 3.4 is PAN display masking, so encryption
+    at rest is now cited as 3.5.1.
+- **Blocked (needs Udit):** the P6 sycophancy gate is **NOT RUN**. No
+  `GEMINI_API_KEY` is set on this machine. To run it, set the key and
+  `KGCR_LLM_LIVE=1`, then run `python src/ml_model/run_advisor.py`. That makes
+  16 `gemini-3.7-flash` calls (cap 24, free tier) and records them under
+  `results/llm_fixtures/`. The offline tests prove enforcement only, not model
+  behaviour.
+- **Next, once unblocked or told to proceed:** P9 explainer (template-first),
+  then P10 CLI.
+- **Awaiting Udit's review:**
+  - `src/backend/kgcr/advisor/controls_DRAFT-FOR-UDIT-REVIEW.json` has 6 draft
+    L1 controls, all `verified: false`:
+    - PCI-DSS 4.0 1.3, 3.5.1 and 7.2
+    - CIS AWS 3.0.0 3.2
+    - two AWS Well-Architected pillar labels
+    The PCI and CIS clause numbers were checked against secondary sources
+    (Cloudaware), not the standards themselves.
+  - FD-02, FD-03, FD-04 and FD-07 still use "PCI-DSS 3.4" as the
+    encryption-at-rest worked example. That is the v3.2.1 number; v4.0 is 3.5.1.
+    Left untouched because the specs are Udit's.
 
 ---
 
@@ -124,7 +138,7 @@ in them were updated to the new tree.
 | **P3** | Intent-first generator & Corpus A | **Done** | `src/backend/kgcr/corpus/` |
 | **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `src/backend/kgcr/labelling/` |
 | **P5** | Defect taxonomy & DF-7 test set | **Done** | `src/backend/kgcr/defects/` |
-| **P6** | Advisor & iteration loop | Blocked — needs L1 + a second LLM | — |
+| **P6** | Advisor & iteration loop | **Code done; live gate NOT RUN** (needs `GEMINI_API_KEY`); L1 is a draft pending review | `src/backend/kgcr/advisor/` |
 | **P7** | Recommender | **Done (lite)**: RF ranker plus CRITICAL mask, not a GNN (no headroom on this corpus) | `src/backend/kgcr/recommender/` |
 | **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `src/backend/kgcr/reconstruction/` |
 | **P9** | Explainer | Blocked — needs P6 | — |
@@ -132,8 +146,8 @@ in them were updated to the new tree.
 | **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
 | **P12** | Write-up | Not started | — |
 
-Test suite: **135 tests passing**: corpus 45, defects 34, reconstruction 13,
-recommender 5, labelling 8, spine (cli/hashing/repro/runrecord) 30.
+Test suite: **144 tests passing**: corpus 45, defects 34, reconstruction 13,
+recommender 5, advisor 9, labelling 8, spine (cli/hashing/repro/runrecord) 30.
 
 ---
 
@@ -192,6 +206,15 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
   (`aws_db_instance.storage_encrypted=False`) even when it is forced to rank 1.
   Nested options (ingress blocks, policy documents) are outside the option space
   and are left to the advisor.
+- **Advisor (P6), rule floor only, 180-estate synthetic corpus.**
+  - Seeded recall is 1.000 for DF-1 to DF-4. This holds by construction: the
+    injectors produce exactly what the rules check, so treat it as a sanity
+    floor, not a benchmark.
+  - Seeded recall is 0.000 for DF-5, DF-6 and DF-7 (n = 64, 180 and 302). These
+    are outside the rule floor and are what the LLM path exists for.
+  - Clean estates raise 0 CRITICAL findings.
+  - The LLM recall, false-positive and grounding numbers, and the sycophancy
+    gate, are **NOT RUN**.
 - **Intent reconstruction (P8), 180-estate corpus:** structurally-encoded axes (archetype, network layout, logging, AZ spread) reconstruct at **~100%** and are well-calibrated (ECE ≤ 0.05). `iam_shape` — which the generator leaves no structural trace of — is both least accurate (**~0.42**) and most miscalibrated (**ECE ~0.28**, overconfident at ~0.70). That overconfidence-on-no-signal is the calibration story the reliability diagram exists to surface, and the reason confidence is reported, not just accuracy.
 
 ---
