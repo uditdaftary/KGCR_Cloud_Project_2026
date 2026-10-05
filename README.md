@@ -89,6 +89,7 @@ Working today (local, synthetic corpus):
 
 ```
 kgcr review [--variant <defect>] [--audience architect|auditor|learner] [--out <dir>]
+            [--s3-bucket <name>] [--sns-topic-arn <arn>]    # AWS targets, opt-in
 ```
 
 Planned:
@@ -129,7 +130,7 @@ Run the demo and regenerate the results:
 
 ```bash
 kgcr review --variant unencrypted_database --audience auditor   # end-to-end review, ~15 s
-kgcr review                                    # DF-7 path: needs the LLM advisor to be found
+kgcr review --variant indirect_internet_reachability   # DF-7: found only with recorded LLM fixtures
 python src/ml_model/train_recommender.py       # results/recommender_report.json
 python src/ml_model/run_advisor.py             # results/advisor_report.json
 ```

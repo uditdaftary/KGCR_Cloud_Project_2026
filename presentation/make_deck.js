@@ -79,7 +79,21 @@ const CHIP = {
   draft: { label: "Draft, in review", fill: C.accent2 },
   authored: { label: "Terraform authored", fill: C.accent3 },
   planned: { label: "Planned", fill: C.accent6 },
+  gatepass: { label: "Gate passed", fill: C.accent1 },
+  gatefail: { label: "Gate failed", fill: C.accent4 },
+  gateinvalid: { label: "Invalid run", fill: C.accent2 },
 };
+// The sycophancy gate's state comes from the report, so a rebuild after the live
+// run shows the real outcome on every slide that mentions it.
+const GATE = adv.sycophancy_gate; // NOT_RUN | PASS | FAIL | INVALID
+const GATE_CHIP = { NOT_RUN: "notrun", PASS: "gatepass", FAIL: "gatefail", INVALID: "gateinvalid" }[GATE];
+const GATE_TEXT = {
+  NOT_RUN: "not run yet",
+  PASS: "passed",
+  FAIL: "failed",
+  INVALID: "invalid (no admitted model finding on pass 1)",
+}[GATE];
+if (!GATE_CHIP) throw new Error(`unknown sycophancy_gate value: ${GATE}`);
 function chip(s, kind, x, y, w = 1.7) {
   const k = CHIP[kind];
   s.addText(k.label, {
@@ -246,7 +260,7 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
     ["Graph", "dependency graph, 3-hop paths", "runs"],
     ["Intent", "P8: per-field value and confidence", "runs"],
     ["Recommend", "P7: ranked options, CRITICAL mask", "runs"],
-    ["Advise", "P6: grounded findings, bounded loop", "rules"],
+    ["Advise", "P6: grounded findings, bounded loop", GATE === "NOT_RUN" ? "rules" : "runs"],
     ["Explain", "P9: three audiences, counterfactuals", "runs"],
   ];
   steps.forEach(([h, t, kind], i) => {
@@ -261,7 +275,9 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
   body(s, [
     { text: "Writes the run record, the explanation bundle, the patched spec and three renderings to the artifact store.", options: { bullet: true, breakLine: true } },
     { text: "155 tests; ruff, ruff format, mypy (strict) and pytest all pass with PYTHONHASHSEED=0.", options: { bullet: true, breakLine: true } },
-    { text: "The advisor's LLM path is built and tested offline; its live run waits on an API key.", options: { bullet: true } },
+    { text: GATE === "NOT_RUN"
+        ? "The advisor's LLM path is built and tested offline; its live run waits on an API key."
+        : `The advisor's LLM path ran live (${adv.llm.model_calls} recorded calls); sycophancy gate ${GATE_TEXT}.`, options: { bullet: true } },
   ], { x: 0.6, y: 5.35, w: 12.1, h: 1.6, paraSpaceAfter: 6 });
   s.addNotes("Source: src/backend/kgcr/orchestration/review.py and cli.py. Rule floor only means the advisor ran its deterministic rules; relational and resilience findings need the Gemini path, which has not run live.");
 }
@@ -296,12 +312,14 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
   stat(s, fmt(sr["DF-2"].recall), "rule-floor recall, DF-1 to DF-4 (holds by construction)", 7.0, 1.6, 2.8, C.accent3);
   stat(s, fmt(sr["DF-7"].recall), `rule-floor recall on DF-7 (n = ${sr["DF-7"].n})`, 10.0, 1.6, 2.7, C.accent3);
   card(s, 0.6, 3.9, 12.1, 2.3, "gate-card");
-  chip(s, "notrun", 0.85, 4.1, 2.0);
+  chip(s, GATE_CHIP, 0.85, 4.1, 2.0);
   s.addText("Sycophancy gate (the roadmap's hard gate)", { x: 3.05, y: 4.07, w: 9.4, h: 0.4, fontSize: 17, bold: true, color: C.text2, isTextBox: true, margin: 0, fontFace: THEME.headFontFace });
   body(s, [
     { text: "Same non-compliant spec, three passes, rising pressure to withdraw findings. Pass requires 100% of the model's own findings to persist.", options: { bullet: true, breakLine: true } },
     { text: "Enforcement is tested offline: a scripted model that caves fails the gate, while carry-forward keeps the system's findings.", options: { bullet: true, breakLine: true } },
-    { text: `The live result needs ${adv.sycophancy_gate === "NOT_RUN" ? "a Gemini API key; it has not run, and no result is claimed" : "the recorded run in results/advisor_report.json"}.`, options: { bullet: true } },
+    { text: GATE === "NOT_RUN"
+        ? "The live result needs a Gemini API key; it has not run, and no result is claimed."
+        : `Live result: ${GATE_TEXT}. Per-trial raw persistence is in results/advisor_report.json.`, options: { bullet: true } },
   ], { x: 0.85, y: 4.6, w: 11.6, h: 1.5, fontSize: 14, paraSpaceAfter: 6 });
   s.addNotes("Sources: results/p4_df7_checkov_evidence.json (graph versus Checkov) and results/advisor_report.json (rule floor). DF-1 to DF-4 recall is 1.0 by construction because the injectors produce exactly what the rules check; it is a sanity floor, not a benchmark.");
 }
@@ -329,22 +347,29 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
 {
   const s = slide("Content", "Results");
   s.addText("Demo: a cardholder database without encryption", { placeholder: "title" });
+  // Verbatim CLI lines from a real run; "..." marks an elision, nothing is reworded.
   const out = [
-    "[1/6] harvest   estate fd6f7a9427c6ffa4, held-out split, 17 resources",
+    "[1/6] harvest   local stand-in for AWS Config (no AWS call)",
+    "      estate fd6f7a9427c6ffa4, held-out split, 17 resources",
     "      injected for the demo: unencrypted_database (DF-2)",
-    "[3/6] intent    archetype=payments_api ... (iam_shape: confirm with user)",
-    "[4/6] recommend recommended, not in estate: storage_encrypted=True",
-    "[5/6] advise    loop CONVERGED (CLEAN) after 2 pass(es)",
-    "      [CRITICAL] kg://control/pci-dss-v4/3.5.1 on aws_db_instance.cardholder",
-    "[6/6] explain   fix tested: align with compliant template -> RESOLVED",
+    "[3/6] intent    archetype=payments_api, az_spread=three_az, ...",
+    "      low confidence, confirm with the user: iam_shape",
+    "[4/6] recommend ...",
+    "      recommended, not in estate: ('aws_db_instance', 'storage_encrypted', 'True')",
+    "[5/6] advise    LLM: disabled; loop CONVERGED (CLEAN) after 2 pass(es)",
+    "      [CRITICAL] kg://control/pci-dss-v4/3.5.1 on aws_db_instance.cardholder (rule)",
   ].join("\n");
-  s.addText(out, { x: 0.6, y: 1.5, w: 12.1, h: 2.6, fontFace: "Courier New", fontSize: 14, color: C.background1,
-    fill: { color: C.text2 }, isTextBox: true, margin: 14, valign: "middle" });
+  s.addText(out, { x: 0.6, y: 1.4, w: 12.1, h: 2.75, fontFace: "Courier New", fontSize: 13, color: C.background1,
+    fill: { color: C.text2 }, isTextBox: true, margin: 12, valign: "middle" });
+  s.addText("From the stored auditor explanation (explanation_auditor.md):", { x: 0.6, y: 4.3, w: 12.1, h: 0.35,
+    fontSize: 12, italic: true, color: C.accent3, isTextBox: true, margin: 0 });
+  s.addText("Remediation tested: align aws_db_instance.cardholder with the compliant template. Outcome: RESOLVED; single-resource rules pass after the change.",
+    { x: 0.6, y: 4.68, w: 12.1, h: 0.75, fontFace: "Courier New", fontSize: 13, color: C.text1,
+      fill: { color: C.background2 }, isTextBox: true, margin: 12, valign: "middle" });
   body(s, [
-    { text: "The recommender and the advisor reach the same conclusion independently, from different inputs.", options: { bullet: true, breakLine: true } },
-    { text: "The patcher repairs the spec and the second pass is clean, so the loop converges.", options: { bullet: true, breakLine: true } },
-    { text: "A DF-7 run converges with no findings under the rule floor, and says so in its scope note.", options: { bullet: true } },
-  ], { x: 0.6, y: 4.45, w: 12.1, h: 1.7, paraSpaceAfter: 6 });
+    { text: "The recommender and the advisor flag the same setting independently, from different inputs.", options: { bullet: true, breakLine: true } },
+    { text: "Without the LLM, a DF-7 run finds nothing; its stored explanation says so in a scope note.", options: { bullet: true } },
+  ], { x: 0.6, y: 5.6, w: 12.1, h: 1.2, paraSpaceAfter: 6 });
   s.addNotes("Live command: kgcr review --variant unencrypted_database --audience auditor. Output trimmed for the slide; run it live if time allows (about 15 seconds). PCI-DSS v4.0 3.5.1 covers stored PAN; 3.4 is display masking.");
 }
 
@@ -373,8 +398,8 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
   const s = slide("Title dark", "Close");
   s.addText("Limits, and what comes next", { placeholder: "title" });
   s.addText([
-    { text: "Limits: synthetic corpus; draft L1 awaiting review; LLM gate not run; no cost model.", options: { breakLine: true } },
-    { text: "Next: run the sycophancy gate live, review and verify L1, validate and apply the Terraform in a sandbox.", options: { breakLine: true } },
+    { text: `Limits: synthetic corpus; draft L1 awaiting review; sycophancy gate ${GATE_TEXT}; no cost model.`, options: { breakLine: true } },
+    { text: `Next: ${GATE === "NOT_RUN" ? "run the sycophancy gate live, " : ""}review and verify L1, validate and apply the Terraform in a sandbox.`, options: { breakLine: true } },
     { text: "Then: gold set (P2), live AWS harvest, and the human study." },
   ], { placeholder: "body" });
   s.addNotes("Close on the honest split. Code in this repository is authored by Udit with Claude's assistance; Manya and Tanmoy own their literature and research-gap sections.");
