@@ -88,29 +88,31 @@ is what Phase-I asks for; the final column states honestly what is running today
 | AWS service | Purpose in this project | Status |
 |---|---|---|
 | Amazon EC2 | Host Neo4j Community (the knowledge graph store) and the analysis workload | Planned |
-| Amazon S3 | Evidence landing bucket for Config, CloudTrail and cost data; corpus and artefact storage | Planned |
+| Amazon S3 | Evidence landing bucket for Config, CloudTrail and cost data; corpus and artefact storage | Planned. A local directory stands in for the run-artifact bucket today |
 | Amazon RDS | Represents the cardholder data store in the estates under analysis | Planned |
 | AWS Lambda | ETL of harvested evidence into the graph schema; Advisor and Explainer inference | Planned |
 | AWS Glue | Batch normalisation of large Config and Cost and Usage Report extracts | Planned |
-| Amazon SageMaker | Train and host the recommender and the intent reconstructor | Planned — the reconstructor currently trains locally with scikit-learn |
-| Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned |
+| Amazon SageMaker | Train and host the recommender and the intent reconstructor | Planned. Both currently train locally with scikit-learn |
+| Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned. Gemini Flash (Google AI Studio, free tier) stands in for the advisor's proposals; its live run is pending |
 | Amazon API Gateway | REST surface backing the `kgcr` CLI | Planned |
 | Amazon Cognito | Authenticate architects, auditors and learners | Planned |
 | AWS IAM | Cross-account roles enforcing separation of duties: Agent 2 read-only for harvesting, Agent 1 write-only for applying | **Terraform authored** in `src/aws/`, not yet applied |
-| AWS Config | Resource inventory and relationships — the primary input to the estate graph | Planned |
+| AWS Config | Resource inventory and relationships — the primary input to the estate graph | Planned. The synthetic corpus stands in for harvest |
 | AWS CloudTrail | API audit events, supporting evidence-retention controls | Planned |
 | AWS Cost and Usage Reports | Per-resource cost attribution for the joint cost/compliance objective | Planned |
 | Amazon EventBridge | Scheduled and change-driven triggers for re-harvesting and drift detection | Planned |
 | Amazon CloudWatch | Logs, metrics and alarms across all three accounts | Planned |
 | AWS Budgets | Cost alarms, provisioned as code before any workload runs | **Terraform authored** in `src/aws/`, not yet applied |
-| Amazon SNS | Deliver compliance findings and budget breach notifications | Planned |
+| Amazon SNS | Deliver compliance findings and budget breach notifications | Planned. Contested runs are logged locally in its place |
 | Amazon VPC, subnets, security groups, NAT, Internet Gateway | The network topology whose relationships the multi-hop defect analysis reasons over | Planned |
 | AWS KMS | Encryption keys for the evidence bucket and the estates under analysis | Planned |
 | Elastic Load Balancing | Ingress in the estates under analysis | Planned |
 | AWS Organizations | Three-account structure: prod-payments, dev-staging, shared-security | Planned |
 
-**Stated plainly:** what runs today is a local Python pipeline (`src/backend/`) plus authored but
-unapplied Terraform (`src/aws/`). Phase-I asks for a service plan, and this is it; the gap between
+**Stated plainly:** what runs today is a local Python pipeline (`src/backend/`, one command:
+`kgcr review`) plus authored but unapplied Terraform (`src/aws/`). Where the pipeline will touch S3
+and SNS it goes through two small interfaces with local stand-ins behind them; nothing is deployed and
+no AWS spend has been incurred. Phase-I asks for a service plan, and this is it; the gap between
 plan and implementation is stated rather than concealed, and Diagram 1 carries the same note.
 
 ---
@@ -125,9 +127,13 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 | Checkov labelling and the empirical relational-defect gate | Partial | `src/backend/kgcr/labelling/`, 8 tests, `results/p4_df7_checkov_evidence.json` |
 | Intent reconstruction with per-field calibration | Done (structural baseline) | `src/backend/kgcr/reconstruction/`, 13 tests, `results/reconstruction_report.json` |
 | Cross-account IAM and budget alarms as Terraform | Authored, not applied | `src/aws/` |
-| Ontology encoding (L1), recommender, Advisor, Explainer | Not started / blocked | See `CHANGELOG.md` §1 |
+| L1 control slice (6 controls) | Draft, awaiting Udit's review | `src/backend/kgcr/advisor/controls_DRAFT-FOR-UDIT-REVIEW.json` |
+| Recommender (P7): retrieve, rank, CRITICAL mask | Done (random forest, not a GNN) | `src/backend/kgcr/recommender/`, 5 tests, `results/recommender_report.json` |
+| Advisor (P6): rule floor, LLM admission filter, bounded loop, sycophancy protocol | Code done; live LLM run and sycophancy gate not run | `src/backend/kgcr/advisor/`, 9 tests, `results/advisor_report.json` |
+| Explainer (P9): exact paths, evaluated counterfactuals, three renderings | Done (templates, no LLM) | `src/backend/kgcr/explainer/`, 4 tests |
+| End-to-end review command (P10) with local AWS stand-ins | Done, local | `src/backend/kgcr/orchestration/`, `kgcr review`, 4 tests |
 
-**Test suite:** 130 tests passing. Quality gates — `ruff check`, `ruff format --check`, `mypy`
+**Test suite:** 151 tests passing. Quality gates — `ruff check`, `ruff format --check`, `mypy`
 (strict) and `pytest` — run in CI on Python 3.11 and 3.12 on every push.
 
 ### Results obtained so far
@@ -141,6 +147,24 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
    calibration error at or below 0.052. `iam_shape`, which the estate carries no structural trace
    of, reconstructs at 0.417 accuracy with ECE 0.282 — confidently wrong. Reporting that
    miscalibration rather than hiding it is why confidence is reported per field and never pooled.
+3. **Recommendation (objective O3).** On the same held-out split (24 estates), the recommender
+   recovers the exact option set for 0.958 of estates from true intent and 0.958 from
+   P8-reconstructed intent. Baselines: per-archetype frequency 0.208, global popularity 0.000.
+   R-precision is 1.000, against 0.940 and 0.858 for the baselines. The generator is a function of
+   intent, so this measures recovery of the generator's mapping, not real-world recommendation
+   quality. That is also why a random forest was used rather than a GNN: a GNN had no headroom to
+   show. The CRITICAL mask removes the one illegal option in the pool even when it is forced to
+   rank first.
+4. **Advisor, rule floor (objective O2).**
+   - DF-1 to DF-4 recall is 1.000. This holds by construction, because the injectors produce
+     exactly what the rules check, so it is a sanity floor rather than a benchmark.
+   - DF-5, DF-6 and DF-7 recall is 0.000. Those findings need the LLM path.
+   - Clean estates raise no CRITICAL finding.
+   - The sycophancy-resistance gate has **not run**. It needs live Gemini calls, and no result is
+     claimed for it.
+5. **Explanation (objective O5).** For every defect variant, the architect, auditor and learner
+   renderings yield identical claim sets (INV-2): controls, severities, resources and counterfactual
+   outcomes, extracted back out of the rendered text.
 
 ---
 
@@ -191,9 +215,13 @@ KGCR_Cloud_Project_2026/
   checked against human-authored insecure configurations (Corpus D is planned, not present).
 - The AWS deployment is planned, not built. The Terraform for budget alarms and cross-account IAM is
   authored but has not been applied to live accounts.
-- The compliance encoding (L1) is not yet written. Defect definitions cite control URIs that will
-  resolve once the encoding is hand-authored, and by project rule that content is written by a human
-  rather than generated.
+- The compliance encoding (L1) exists only as a six-control draft slice written by Claude. By project
+  rule L1 is human-authored, so it counts only after Udit reviews each entry; the clause numbers were
+  checked against secondary sources, not the standards themselves.
+- The advisor's LLM path has not run live, so relational (DF-7) and resilience (DF-5) findings are
+  not yet produced by the demo, and the sycophancy gate is open.
+- The recommender is a random forest over intent, not a graph neural network, and no cost model
+  exists yet, so objective O3's cost delta is unmeasured.
 - Intent reconstruction is a structural-feature baseline, not the graph neural network it is
   intended to become, and its calibration on the weakest axis is poor by design of the experiment
   rather than by accident.
