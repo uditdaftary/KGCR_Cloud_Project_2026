@@ -6,42 +6,41 @@ and what is deliberately deferred. It is maintained alongside the roadmap
 ([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-10-04.
+Last updated: 2026-10-05.
 
 ---
 
 ## LOOP_STATE (Review 2 push; updated in place, never stacked)
 
-Updated 2026-10-04. Branch `feature/udit`, local commits only, nothing pushed.
+Updated 2026-10-05. Branch `feature/udit`, local commits only, nothing pushed.
 
 - **Done:**
-  - P7 recommender (lite): a one-vs-rest RandomForest plus a hard CRITICAL mask.
-    torch and PyG wheels exist for cp314, but the baselines left no GNN headroom.
-  - P6 advisor code: rule floor, Gemini behind fixtures with an admission
-    filter, A10 carry-forward, the FD-02 loop with a template patcher, and the
-    sycophancy protocol. Tests are offline. Rule-floor report is in
-    `results/advisor_report.json`.
-  - Fixed DF-2's control: PCI-DSS v4.0 3.4 is PAN display masking, so encryption
-    at rest is now cited as 3.5.1.
-- **Blocked (needs Udit):** the P6 sycophancy gate is **NOT RUN**. No
-  `GEMINI_API_KEY` is set on this machine. To run it, set the key and
-  `KGCR_LLM_LIVE=1`, then run `python src/ml_model/run_advisor.py`. That makes
-  16 `gemini-3.7-flash` calls (cap 24, free tier) and records them under
-  `results/llm_fixtures/`. The offline tests prove enforcement only, not model
-  behaviour.
-- **Next, once unblocked or told to proceed:** P9 explainer (template-first),
-  then P10 CLI.
+  - **P7 recommender:** a one-vs-rest random forest with a hard CRITICAL mask.
+  - **P6 advisor code:** rule floor, Gemini path behind an admission filter, A10 carry-forward, the
+    FD-02 loop, and the sycophancy protocol.
+  - **P9 explainer:** template-based; the INV-2 test passes.
+  - **P10 command:** `kgcr review` runs end to end.
+  - **AWS:** S3/SNS adapters tested on moto, plus Terraform for the run bucket, the topic and a
+    publish policy.
+  - **Deck:** `presentation/KGCR_Review2.pptx`, 14 slides.
+  - **Docs:** README, the report, the objectives and the diagrams all updated.
+  - **Citation fix:** DF-2 now cites PCI-DSS v4.0 3.5.1.
+- **Blocked (needs Udit):**
+  - **Sycophancy gate NOT RUN.** No `GEMINI_API_KEY` in the shell or at User scope. Run:
+    `pip install -e ".[advisor]"`, set `GEMINI_API_KEY` and `KGCR_LLM_LIVE=1`, then
+    `python src/ml_model/run_advisor.py` (16 calls, cap 24, free tier). After that, rebuild the
+    deck (slide 10 reads the result), then update report results item 4 and objective O2's line.
+  - **Terraform never validated.** It isn't installed here, so `terraform validate` has not run.
 - **Awaiting Udit's review:**
-  - `src/backend/kgcr/advisor/controls_DRAFT-FOR-UDIT-REVIEW.json` has 6 draft
-    L1 controls, all `verified: false`:
-    - PCI-DSS 4.0 1.3, 3.5.1 and 7.2
-    - CIS AWS 3.0.0 3.2
-    - two AWS Well-Architected pillar labels
-    The PCI and CIS clause numbers were checked against secondary sources
-    (Cloudaware), not the standards themselves.
-  - FD-02, FD-03, FD-04 and FD-07 still use "PCI-DSS 3.4" as the
-    encryption-at-rest worked example. That is the v3.2.1 number; v4.0 is 3.5.1.
-    Left untouched because the specs are Udit's.
+  - The six draft L1 controls in `controls_DRAFT-FOR-UDIT-REVIEW.json`, all unverified.
+  - The FD-02/03/04/07 specs still cite "PCI-DSS 3.4" for encryption at rest; v4.0 numbers it
+    3.5.1.
+  - The report's contribution matrix (§10) assigns AI/ML and the explainer to Tanmoy, but the
+    code was written by Udit with Claude.
+  - `docs/*.docx` were deleted from git on 2026-07-31. They are regenerated locally, not
+    re-committed.
+  - `dataset/dataset_description.docx` was already modified before this session and is left
+    uncommitted.
 
 ---
 
@@ -141,13 +140,13 @@ in them were updated to the new tree.
 | **P6** | Advisor & iteration loop | **Code done; live gate NOT RUN** (needs `GEMINI_API_KEY`); L1 is a draft pending review | `src/backend/kgcr/advisor/` |
 | **P7** | Recommender | **Done (lite)**: RF ranker plus CRITICAL mask, not a GNN (no headroom on this corpus) | `src/backend/kgcr/recommender/` |
 | **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `src/backend/kgcr/reconstruction/` |
-| **P9** | Explainer | Blocked — needs P6 | — |
-| **P10** | Agents & end-to-end | Blocked — needs live AWS accounts | — |
+| **P9** | Explainer | **Done (templates)**: exact paths, evaluated counterfactuals, INV-2 test | `src/backend/kgcr/explainer/` |
+| **P10** | Agents & end-to-end | **Local end to end done** (`kgcr review`); S3/SNS adapters on moto; live AWS not deployed | `src/backend/kgcr/orchestration/`, `src/aws/run_artifacts.tf` |
 | **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
 | **P12** | Write-up | Not started | — |
 
-Test suite: **144 tests passing**: corpus 45, defects 34, reconstruction 13,
-recommender 5, advisor 9, labelling 8, spine (cli/hashing/repro/runrecord) 30.
+Test suite: **155 tests passing**: corpus 45, defects 34, reconstruction 13,
+recommender 5, advisor 9, explainer 4, orchestration 8, labelling 8, spine (cli/hashing/repro/runrecord) 29.
 
 ---
 
