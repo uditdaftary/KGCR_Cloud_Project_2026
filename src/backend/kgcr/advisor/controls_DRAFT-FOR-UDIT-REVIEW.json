@@ -41,7 +41,7 @@
     },
     {
       "control_node": "kg://control/aws-war/reliability-multi-az",
-      "control_ref": "AWS-WAR-Reliability (multi-AZ, backups)",
+      "control_ref": "AWS-WAR-Reliability-multi-AZ",
       "classification": "heuristic",
       "summary": "Stateful data stores keep backups and survive the loss of one availability zone.",
       "checked_against": "pillar-level label, no clause number",
@@ -49,7 +49,7 @@
     },
     {
       "control_node": "kg://control/aws-war/cost-rightsizing",
-      "control_ref": "AWS-WAR-Cost (right-sizing, unused resources)",
+      "control_ref": "AWS-WAR-Cost-rightsizing",
       "classification": "heuristic",
       "summary": "Resources that serve no workload, such as unattached volumes, are removed.",
       "checked_against": "pillar-level label, no clause number",
