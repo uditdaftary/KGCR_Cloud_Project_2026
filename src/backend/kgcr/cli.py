@@ -6,11 +6,13 @@ they are declared but not implemented: each exits with a clear "planned for
 Phase N" message so the interface shape is real and testable while the
 subsystems behind it are built.
 
-Two commands work today, because they belong to the reproducibility spine:
+Working today:
 
 * ``kgcr --version`` prints the package version.
 * ``kgcr repro-info`` prints the seed report and version fingerprint that go
   into every run record — the fastest way to confirm an environment is pinned.
+* ``kgcr review`` runs review mode end to end, locally: harvest stand-in, graph,
+  intent reconstruction, recommendation, advisor loop, explanation, stored run.
 """
 
 from __future__ import annotations
@@ -33,7 +35,6 @@ EXIT_NOT_IMPLEMENTED = 3
 # subcommand -> (help text, phase it lands in)
 _PLANNED: dict[str, tuple[str, str]] = {
     "design": ("Recommend a configuration from a stated intent", "P6/P7"),
-    "review": ("Review an existing account's estate", "P6/P10"),
     "explain": ("Explain a run as a reasoning subgraph", "P9"),
     "plan": ("Produce a terraform plan for a spec", "P3/P10"),
     "apply": ("Apply a previously produced plan", "P10"),
@@ -75,6 +76,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     corpus.add_argument("--json", action="store_true", help="Emit the summary as JSON")
     corpus.set_defaults(func=_cmd_corpus)
+
+    review = sub.add_parser(
+        "review",
+        help="Review an estate end to end, locally (harvest stand-in -> explain)",
+    )
+    review.add_argument(
+        "--variant",
+        default="indirect_internet_reachability",
+        help="Defect to inject into the held-out estate (default: a DF-7 relational path)",
+    )
+    review.add_argument(
+        "--audience", choices=("architect", "auditor", "learner"), default="architect"
+    )
+    review.add_argument("--out", default="runs-local", help="Artifact store root (S3 stand-in)")
+    review.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
+    review.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
+    review.set_defaults(func=_cmd_review)
 
     for name, (help_text, phase) in _PLANNED.items():
         p = sub.add_parser(name, help=f"{help_text} (planned, {phase})")
@@ -139,6 +157,60 @@ def _cmd_corpus(args: argparse.Namespace) -> int:
         print(f"  {name}: {n}")
     if args.out is not None:
         print(f"written to:          {args.out}")
+    return 0
+
+
+def _cmd_review(args: argparse.Namespace) -> int:
+    # Lazy imports: the ML stack is only needed for this command.
+    import logging
+    from pathlib import Path
+
+    from kgcr.explainer.explainer import render
+    from kgcr.orchestration.aws import LocalArtifactStore, LogNotifier
+    from kgcr.orchestration.review import run_review
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    run = run_review(
+        variant=args.variant,
+        store=LocalArtifactStore(Path(args.out)),
+        notifier=LogNotifier(),
+        count=args.count,
+        seed=args.seed,
+    )
+    estate = run.target.estate
+    print("[1/6] harvest   local stand-in for AWS Config (no AWS call)")
+    print(f"      estate {estate.estate_id}, held-out split, {len(estate.resources)} resources")
+    defect = run.target.defect
+    print(f"      injected for the demo: {defect.variant} ({defect.defect_class})")
+    print(f"[2/6] graph     {run.graph_nodes} nodes, {run.graph_edges} dependency edges")
+    fields = ", ".join(f"{f}={run.intent.value(f)}" for f in sorted(run.intent.fields))
+    print(f"[3/6] intent    {fields}")
+    if run.escalated:
+        print(f"      low confidence, confirm with the user: {', '.join(run.escalated)}")
+    chosen = sum(r.score >= 0.5 for r in run.recommended)
+    print(
+        f"[4/6] recommend {chosen} options recommended (score >= 0.5) of "
+        f"{len(run.recommended)} ranked after the CRITICAL mask"
+    )
+    for option in run.missing_from_estate:
+        print(f"      recommended, not in estate: {option}")
+    for option in run.unexpected_in_estate:
+        print(f"      in estate, not recommended: {option}")
+    print(
+        f"[5/6] advise    LLM: {run.llm_mode}; loop {run.loop.status} ({run.loop.reason}) "
+        f"after {len(run.loop.passes)} pass(es)"
+    )
+    if run.llm_mode != "ok":
+        print("      rule floor only: relational (DF-7) and resilience (DF-5) findings need")
+        print("      the LLM advisor, so they are not reported in this run")
+    for f in run.reviewed_findings:
+        where = ", ".join(f.affected_elements)
+        print(f"      [{f.severity.value}] {f.control_node} on {where} ({f.origin})")
+    print(f"[6/6] explain   audience={args.audience}; run {run.record.run_id[:16]}")
+    for name, uri in run.artifacts.items():
+        print(f"      stored {name}: {uri}")
+    print()
+    print(render(run.bundle, args.audience))
     return 0
 
 

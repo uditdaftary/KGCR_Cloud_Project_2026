@@ -91,6 +91,7 @@ class ExplanationBundle:
     loop_reason: str
     findings: tuple[ExplainedFinding, ...]
     cost_note: str = COST_NOTE
+    scope_note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -98,6 +99,7 @@ class ExplanationBundle:
             "loop_status": self.loop_status,
             "loop_reason": self.loop_reason,
             "cost_note": self.cost_note,
+            "scope_note": self.scope_note,
             "findings": [
                 {
                     "control_ref": f.control_ref,
@@ -172,6 +174,7 @@ def build_bundle(
     *,
     loop_status: str,
     loop_reason: str,
+    scope_note: str = "",
 ) -> ExplanationBundle:
     """Explain ``findings`` on ``estate``; counterfactuals for the top three by severity."""
     ordered = sorted(findings, key=lambda f: (_SEVERITY_ORDER[f.severity], f.key))
@@ -190,7 +193,9 @@ def build_bundle(
                 _counterfactual(estate, f, patcher) if i < MAX_COUNTERFACTUALS else None,
             )
         )
-    return ExplanationBundle(estate.estate_id, loop_status, loop_reason, tuple(explained))
+    return ExplanationBundle(
+        estate.estate_id, loop_status, loop_reason, tuple(explained), scope_note=scope_note
+    )
 
 
 _ACRONYMS = {
@@ -266,8 +271,10 @@ def render(bundle: ExplanationBundle, audience: str) -> str:
         titles[audience],
         f"Loop outcome: {bundle.loop_status} ({bundle.loop_reason}).",
         f"Note: {bundle.cost_note}.",
-        "",
     ]
+    if bundle.scope_note:
+        lines.append(f"Scope: {bundle.scope_note}.")
+    lines.append("")
     if not bundle.findings:
         lines.append("No findings.")
     for n, f in enumerate(bundle.findings, start=1):
