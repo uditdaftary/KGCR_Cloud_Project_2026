@@ -44,3 +44,4 @@ docs/papers/
 
 # kgcr review artifact store (local S3 stand-in)
 runs-local/
+node_modules/
