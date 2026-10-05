@@ -83,8 +83,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     review.add_argument(
         "--variant",
-        default="indirect_internet_reachability",
-        help="Defect to inject into the held-out estate (default: a DF-7 relational path)",
+        default="unencrypted_database",
+        help="Defect to inject into the held-out estate (default: DF-2; DF-7 variants need "
+        "recorded LLM fixtures to be found)",
     )
     review.add_argument(
         "--audience", choices=("architect", "auditor", "learner"), default="architect"
@@ -180,7 +181,7 @@ def _cmd_review(args: argparse.Namespace) -> int:
         S3ArtifactStore,
         SnsNotifier,
     )
-    from kgcr.orchestration.review import run_review
+    from kgcr.orchestration.review import default_llm, run_review
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     # Local stand-ins unless AWS targets are named explicitly: no flag, no AWS call.
@@ -192,6 +193,7 @@ def _cmd_review(args: argparse.Namespace) -> int:
         variant=args.variant,
         store=store,
         notifier=notifier,
+        llm=default_llm(),
         count=args.count,
         seed=args.seed,
     )

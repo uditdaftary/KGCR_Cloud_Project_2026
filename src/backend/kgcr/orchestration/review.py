@@ -19,7 +19,13 @@ from typing import Any
 
 from kgcr.advisor.advisor import Advisor, AdvisorFinding
 from kgcr.advisor.controls import DRAFT_CONTROLS_PATH
-from kgcr.advisor.llm import DEFAULT_FIXTURE_DIR, GEMINI_MODEL, FixtureClient, live_client_from_env
+from kgcr.advisor.llm import (
+    DEFAULT_FIXTURE_DIR,
+    GEMINI_MODEL,
+    FixtureClient,
+    LLMClient,
+    live_client_from_env,
+)
 from kgcr.advisor.loop import LoopResult, TemplatePatcher, advisor_loop, spec_hash
 from kgcr.corpus.estate import Estate
 from kgcr.corpus.graph import build_graph_from_estate
@@ -40,7 +46,7 @@ from kgcr.reconstruction.reconstructor import IntentReconstructor, Reconstructed
 from kgcr.repro import seed_everything
 from kgcr.runrecord import RunRecord
 
-__all__ = ["ReviewRun", "select_target", "run_review"]
+__all__ = ["ReviewRun", "select_target", "default_llm", "run_review"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +78,14 @@ def select_target(test: list[Estate], variant: str) -> DefectedEstate:
     raise ValueError(f"no held-out estate admits variant {variant!r}")
 
 
+def default_llm() -> LLMClient | None:
+    """Fixture replay (recording when live is opted into), or None with no fixtures."""
+    live = live_client_from_env()
+    if live is None and not DEFAULT_FIXTURE_DIR.exists():
+        return None
+    return FixtureClient(DEFAULT_FIXTURE_DIR, live)
+
+
 def _graph_version() -> str:
     digest = hashlib.sha256(DRAFT_CONTROLS_PATH.read_bytes()).hexdigest()[:12]
     return f"l1-draft-{digest}"
@@ -82,9 +96,12 @@ def run_review(
     variant: str,
     store: ArtifactStore,
     notifier: Notifier,
+    llm: LLMClient | None,
     count: int = 180,
     seed: int = 1729,
 ) -> ReviewRun:
+    """Run review mode. ``llm`` is injected so callers (and tests) decide whether
+    the advisor may reach a model; :func:`default_llm` is what the CLI passes."""
     seed_everything(seed)
     corpus = generate_corpus(count, seed)
     split = split_estates(corpus)
@@ -110,8 +127,6 @@ def run_review(
 
     # S3 advisor loop (P6). Gemini replays fixtures; without one the advisor
     # logs a warning and runs the rule floor only (strict_llm=False).
-    live = live_client_from_env()
-    llm = FixtureClient(DEFAULT_FIXTURE_DIR, live) if live or DEFAULT_FIXTURE_DIR.exists() else None
     advisor = Advisor(llm, strict_llm=False)
     patcher = TemplatePatcher(recommender.templates)
     loop = advisor_loop(estate, intent_values, advisor, patcher)

@@ -14,11 +14,18 @@ from kgcr.orchestration.aws import LocalArtifactStore, LogNotifier  # noqa: E402
 from kgcr.orchestration.review import run_review  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def offline(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Second guard behind llm=None: the CLI test builds its own client.
+    monkeypatch.delenv("KGCR_LLM_LIVE", raising=False)
+
+
 def test_review_patches_a_rule_defect_and_stores_every_artifact(tmp_path: Path) -> None:
     run = run_review(
         variant="unencrypted_database",
         store=LocalArtifactStore(tmp_path),
         notifier=LogNotifier(),
+        llm=None,
         count=60,
     )
     assert (run.loop.status, run.loop.reason) == ("CONVERGED", "CLEAN")
@@ -32,7 +39,12 @@ def test_review_patches_a_rule_defect_and_stores_every_artifact(tmp_path: Path) 
 
 
 def test_run_identity_is_stable_across_reruns(tmp_path: Path) -> None:
-    kwargs = {"variant": "unencrypted_database", "notifier": LogNotifier(), "count": 60}
+    kwargs = {
+        "variant": "unencrypted_database",
+        "notifier": LogNotifier(),
+        "llm": None,
+        "count": 60,
+    }
     first = run_review(store=LocalArtifactStore(tmp_path / "a"), **kwargs)  # type: ignore[arg-type]
     second = run_review(store=LocalArtifactStore(tmp_path / "b"), **kwargs)  # type: ignore[arg-type]
     assert first.record.run_id == second.record.run_id

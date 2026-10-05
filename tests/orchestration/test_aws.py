@@ -24,6 +24,7 @@ def fake_aws(monkeypatch: pytest.MonkeyPatch):
         "AWS_DEFAULT_REGION": REGION,
     }.items():
         monkeypatch.setenv(name, value)
+    monkeypatch.delenv("KGCR_LLM_LIVE", raising=False)  # never call Gemini from these tests
     with moto.mock_aws():
         yield
 
@@ -36,7 +37,11 @@ def test_review_writes_encrypted_artifacts_to_s3() -> None:
     store = S3ArtifactStore("kgcr-runs-test", client=s3)
 
     run = run_review(
-        variant="unencrypted_database", store=store, notifier=SnsNotifier(_topic()), count=60
+        variant="unencrypted_database",
+        store=store,
+        notifier=SnsNotifier(_topic()),
+        llm=None,
+        count=60,
     )
     assert all(uri.startswith("s3://kgcr-runs-test/runs/") for uri in run.artifacts.values())
     key = run.artifacts["bundle"].removeprefix("s3://kgcr-runs-test/")
