@@ -13,9 +13,9 @@ deliverables actually use; anything else passes through as plain text.
 
 from __future__ import annotations
 
+import argparse
 import re
 from pathlib import Path
-import argparse
 
 from docx import Document
 from docx.enum.section import WD_ORIENT
@@ -192,13 +192,29 @@ def convert(md_path: Path, out_path: Path, landscape: bool, images: list[str]) -
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Convert Markdown files to .docx. By default converts files listed in DELIVERABLES."
+        description="Convert Markdown files to .docx (default: the files in DELIVERABLES)."
     )
-    parser.add_argument("files", nargs="*", help="Markdown files to convert (workspace-relative or relative to repo root)")
-    parser.add_argument("--dir", "-d", help="Directory to scan for .md files (relative to repo root)")
-    parser.add_argument("--all", "-a", action="store_true", help="Convert all .md files under the repository root")
-    parser.add_argument("--out", "-o", help="Output directory for generated .docx files (relative to repo root). Defaults to same directory as source files.")
-    parser.add_argument("--landscape", action="store_true", help="Generate output pages in landscape orientation (applies to all outputs)")
+    parser.add_argument(
+        "files",
+        nargs="*",
+        help="Markdown files to convert (workspace-relative or relative to repo root)",
+    )
+    parser.add_argument(
+        "--dir", "-d", help="Directory to scan for .md files (relative to repo root)"
+    )
+    parser.add_argument(
+        "--all", "-a", action="store_true", help="Convert all .md files under the repository root"
+    )
+    parser.add_argument(
+        "--out",
+        "-o",
+        help="Output directory for .docx files, relative to repo root (default: beside source).",
+    )
+    parser.add_argument(
+        "--landscape",
+        action="store_true",
+        help="Generate output pages in landscape orientation (applies to all outputs)",
+    )
     args = parser.parse_args()
 
     md_paths: list[Path] = []

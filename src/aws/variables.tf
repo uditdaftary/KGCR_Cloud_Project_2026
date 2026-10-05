@@ -68,3 +68,14 @@ variable "tags" {
     phase   = "P0"
   }
 }
+
+variable "run_artifact_retention_days" {
+  description = "Days before kgcr run artifacts expire from the run bucket (they are reproducible)."
+  type        = number
+  default     = 30
+
+  validation {
+    condition     = var.run_artifact_retention_days >= 1
+    error_message = "Retention must be at least one day."
+  }
+}

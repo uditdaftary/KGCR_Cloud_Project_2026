@@ -25,11 +25,20 @@ One-line framing: an experienced cloud architect who has read every compliance s
 Each is also generated as `.docx` for submission (`python docs/make_docx.py`); the Markdown is the
 source of truth.
 
-**Implementation status.** The reproducibility spine, the intent-first corpus generator, the defect
-taxonomy with its relational (DF-7) test set, the Checkov labelling slice, and intent reconstruction
-with per-field calibration are built and tested (130 tests, CI on Python 3.11 and 3.12). The
-ontology encoding, recommender, Advisor and Explainer are not yet built, and the AWS environment
-Terraform is authored but not applied. The `docs/` FD set remains the controlling specification.
+**Implementation status (Review 2).** Review mode runs end to end locally as one command,
+`kgcr review`: estate, dependency graph, intent reconstruction (P8), recommendation with a hard
+CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). 155 tests run in CI on
+Python 3.11 and 3.12. What is not done yet:
+
+- The advisor's Gemini path is built and tested offline, but the live run, including the
+  sycophancy gate, has not happened yet. Without it the advisor runs its deterministic rules only,
+  and every run says so.
+- The L1 control slice is a draft awaiting Udit's review.
+- The corpus is synthetic.
+- AWS is represented by local stand-ins by default. S3/SNS adapters are tested against a mocked
+  AWS (moto), and the Terraform is authored but not applied; nothing is deployed.
+
+The `docs/` FD set remains the controlling specification.
 
 ## The gap this fills
 
@@ -74,7 +83,16 @@ Deliberately narrow, to demonstrate depth rather than breadth:
 - **Three workload archetypes:** payments API (cardholder data), customer data platform (PII), internal reporting service (cost-dominant contrast case).
 - **Two enforced frameworks:** PCI-DSS v4.0 and CIS AWS Foundations Benchmark. NIST 800-53 / OSCAL is a cross-reference and export layer; FIBO anchors the financial domain.
 
-## Planned interface
+## Interface
+
+Working today (local, synthetic corpus):
+
+```
+kgcr review [--variant <defect>] [--audience architect|auditor|learner] [--out <dir>]
+            [--s3-bucket <name>] [--sns-topic-arn <arn>]    # AWS targets, opt-in
+```
+
+Planned:
 
 ```
 kgcr design  --intent "<statement>" [--audience=<a>] [--plan-only] [--budget=<n>]
@@ -99,15 +117,27 @@ Later phases build the generator, labelling pipeline, Advisor, Recommender, inte
 
 ## Development
 
-Phase 0 scaffolding (FD-08). Requires Python 3.11+.
+Requires Python 3.11+.
 
 ```bash
 pip install -e ".[dev]"     # install with dev tooling (pinned versions)
-PYTHONHASHSEED=0 pytest     # run the test suite
-ruff check . && mypy        # lint and type-check
+ruff check . && ruff format --check . && mypy && PYTHONHASHSEED=0 pytest   # the CI gates
 kgcr repro-info             # print the seed + version fingerprint for this env
 kgcr corpus --count 500     # [dev] generate Corpus A and parse it into the graph
 ```
+
+Run the demo and regenerate the results:
+
+```bash
+kgcr review --variant unencrypted_database --audience auditor   # end-to-end review, ~15 s
+kgcr review --variant indirect_internet_reachability   # DF-7: found only with recorded LLM fixtures
+python src/ml_model/train_recommender.py       # results/recommender_report.json
+python src/ml_model/run_advisor.py             # results/advisor_report.json
+```
+
+Live Gemini calls (`gemini-3.7-flash`) need `pip install -e ".[advisor]"`, `GEMINI_API_KEY`, and
+`KGCR_LLM_LIVE=1`. They are capped at 24 per run and recorded under `results/llm_fixtures/`, so
+tests and later runs replay them offline. The key is read from the environment and never written.
 
 The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
 `dataset/`, `src/{frontend,backend,ml_model,aws}`, `results/`, `presentation/`);
@@ -132,7 +162,16 @@ The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
   estate-level, seed-family train/test separation (FD-05 §9); `pipeline` runs
   the whole thing. The corpus is clean at this phase — defect injection is
   Phase 5. No `terraform`/AWS is required to generate it.
-- `environment/` — the FD-08 §8 bootstrap Terraform: day-one budget alarms and
+- `src/backend/kgcr/recommender/` — P7: options retrieved from the clean and
+  defect corpora, ranked from intent, then filtered by a hard CRITICAL mask.
+- `src/backend/kgcr/advisor/` — P6: rule floor, Gemini proposals behind an
+  admission filter, the FD-02 bounded loop, and the sycophancy protocol. The L1
+  slice it grounds in is `controls_DRAFT-FOR-UDIT-REVIEW.json`.
+- `src/backend/kgcr/explainer/` — P9: exact justifications, counterfactuals by
+  re-evaluation, three audience renderings, and the INV-2 claim-extraction test.
+- `src/backend/kgcr/orchestration/` — P10: the `kgcr review` pipeline and the
+  local stand-ins for the S3 run bucket and the SNS topic.
+- `src/aws/` — the FD-08 §8 bootstrap Terraform: day-one budget alarms and
   the cross-account read/write role split. Authored, not yet applied.
 - `.github/workflows/ci.yml` — ruff, mypy, and pytest on every push.
 

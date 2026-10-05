@@ -350,17 +350,16 @@ def aws_architecture() -> Canvas:
     c.text(
         40,
         898,
-        "Status — this is a Phase-I planning diagram. Implemented today: the AWS "
-        "Budgets and cross-account IAM Terraform in src/aws/ (authored, not applied). "
-        "Everything else is the Phase-II",
+        "Status — this is a planning diagram. Terraform in src/aws/ (authored, not applied): "
+        "Budgets, cross-account IAM, and the S3 run bucket and SNS topic. The rest is the Phase-II",
         size=12,
         anchor="start",
     )
     c.text(
         40,
         920,
-        "build target; the analysis pipeline currently runs locally in Python under "
-        "src/backend/.",
+        "build target; the review pipeline runs locally (kgcr review) with S3/SNS stand-ins "
+        "by default.",
         size=12,
         anchor="start",
     )
@@ -513,8 +512,8 @@ def system_architecture() -> Canvas:
     c.text(
         40,
         986,
-        "Implemented today: S1b intent reconstruction with per-field calibration, the "
-        "estate dependency graph, and the defect corpus. S2, S4 and S6 are Phase-II.",
+        "Runs locally today via kgcr review: S1b, S2 with the CRITICAL mask, S4 (rule floor; "
+        "LLM path not yet run live), S5 and S6. Live harvest and S7 to S9 are Phase-II.",
         size=12,
         anchor="start",
     )

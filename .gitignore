@@ -41,3 +41,7 @@ src/ml_model/model.pkl
 # author preprints whose licences do not permit it. Every source URL is recorded in
 # docs/Citation_Verification_Report.md, so the folder re-fetches from there.
 docs/papers/
+
+# kgcr review artifact store (local S3 stand-in)
+runs-local/
+node_modules/

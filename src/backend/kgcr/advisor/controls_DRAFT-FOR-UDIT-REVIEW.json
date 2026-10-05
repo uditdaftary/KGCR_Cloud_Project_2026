@@ -1,0 +1,59 @@
+{
+  "status": "DRAFT-FOR-UDIT-REVIEW",
+  "note": "Minimal L1 slice for the P6 advisor, drafted by Claude. FD-07 section 2 says a model may read L1 but never author it, so nothing here is normative until Udit reviews each entry and flips verified to true. Summaries are paraphrases, not clause text. Clause numbers were checked against secondary sources only (listed per entry); the AWS Well-Architected entries are pillar-level labels, not numbered clauses.",
+  "classification_to_severity": {
+    "mandatory": "CRITICAL",
+    "hardening": "HIGH",
+    "heuristic": "MEDIUM"
+  },
+  "controls": [
+    {
+      "control_node": "kg://control/pci-dss-v4/1.3",
+      "control_ref": "PCI-DSS-4.0-1.3",
+      "classification": "mandatory",
+      "summary": "Traffic into and out of the cardholder data environment is limited to what is needed; everything else is denied.",
+      "checked_against": "https://ce.prod.cloudaware.com/frameworks/pci-dss-v4.0/01/03",
+      "verified": false
+    },
+    {
+      "control_node": "kg://control/pci-dss-v4/3.5.1",
+      "control_ref": "PCI-DSS-4.0-3.5.1",
+      "classification": "mandatory",
+      "summary": "Stored PAN must be unreadable, for example through strong cryptography with managed keys.",
+      "checked_against": "https://ce.prod.cloudaware.com/frameworks/pci-dss-v4.0/03/05/01/",
+      "verified": false
+    },
+    {
+      "control_node": "kg://control/pci-dss-v4/7.2",
+      "control_ref": "PCI-DSS-4.0-7.2",
+      "classification": "mandatory",
+      "summary": "Access to systems and data is defined and granted by need, under least privilege.",
+      "checked_against": "https://ce.prod.cloudaware.com/frameworks/pci-dss-v4.0/07",
+      "verified": false
+    },
+    {
+      "control_node": "kg://control/cis-aws/3.2",
+      "control_ref": "CIS-AWS-3.0.0-3.2",
+      "classification": "hardening",
+      "summary": "CloudTrail log-file validation is turned on so tampering with delivered logs can be detected.",
+      "checked_against": "https://ce.prod.cloudaware.com/frameworks/cis-aws-v3.0.0/03/02",
+      "verified": false
+    },
+    {
+      "control_node": "kg://control/aws-war/reliability-multi-az",
+      "control_ref": "AWS-WAR-Reliability-multi-AZ",
+      "classification": "heuristic",
+      "summary": "Stateful data stores keep backups and survive the loss of one availability zone.",
+      "checked_against": "pillar-level label, no clause number",
+      "verified": false
+    },
+    {
+      "control_node": "kg://control/aws-war/cost-rightsizing",
+      "control_ref": "AWS-WAR-Cost-rightsizing",
+      "classification": "heuristic",
+      "summary": "Resources that serve no workload, such as unattached volumes, are removed.",
+      "checked_against": "pillar-level label, no clause number",
+      "verified": false
+    }
+  ]
+}

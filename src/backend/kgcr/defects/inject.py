@@ -193,7 +193,7 @@ def _df2_unencrypted_database(estate: Estate) -> DefectedEstate:
         defect_class=DefectClass.ENCRYPTION,
         variant="unencrypted_database",
         injection_site=("aws_db_instance.cardholder",),
-        expected_finding="cardholder database storage is not encrypted at rest (PCI-DSS 3.4)",
+        expected_finding="cardholder database storage is not encrypted at rest (PCI-DSS 3.5.1)",
     )
 
 

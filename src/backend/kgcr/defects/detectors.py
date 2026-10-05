@@ -27,17 +27,23 @@ from typing import Any
 from kgcr.corpus.estate import Estate
 from kgcr.corpus.graph import EstateGraph, build_graph_from_estate
 from kgcr.corpus.resources import Resource
+from kgcr.defects.taxonomy import DefectClass
 
-__all__ = ["Finding", "single_resource_findings", "relational_path_exists"]
+__all__ = ["Finding", "single_resource_findings", "resource_findings", "relational_path_exists"]
 
 
 @dataclass(frozen=True, slots=True)
 class Finding:
-    """One single-resource violation: which resource, which rule, why."""
+    """One single-resource violation: which resource, which rule, why.
+
+    ``defect_class`` links the rule to its taxonomy class, so severity is looked
+    up from :data:`~kgcr.defects.taxonomy.DEFAULT_SEVERITY` rather than restated.
+    """
 
     address: str
     rule_id: str
     message: str
+    defect_class: DefectClass
 
 
 def single_resource_findings(estate: Estate) -> list[Finding]:
@@ -51,44 +57,77 @@ def single_resource_findings(estate: Estate) -> list[Finding]:
     """
     findings: list[Finding] = []
     for res in estate.resources:
-        findings.extend(_check_resource(res))
+        findings.extend(resource_findings(res))
     return findings
 
 
-def _check_resource(res: Resource) -> list[Finding]:
+def resource_findings(res: Resource) -> list[Finding]:
     out: list[Finding] = []
     attrs = res.attributes
 
     # DF-1 Exposure — security group open to the world on ingress.
     if _has_open_ingress(attrs):
-        out.append(Finding(res.address, "CKV_AWS_260", "ingress rule allows 0.0.0.0/0"))
+        out.append(
+            Finding(
+                res.address, "CKV_AWS_260", "ingress rule allows 0.0.0.0/0", DefectClass.EXPOSURE
+            )
+        )
 
     # DF-1 Exposure — resource reachable from the public internet.
     if attrs.get("publicly_accessible") is True:
-        out.append(Finding(res.address, "CKV_AWS_17", "resource is publicly_accessible"))
+        out.append(
+            Finding(
+                res.address, "CKV_AWS_17", "resource is publicly_accessible", DefectClass.EXPOSURE
+            )
+        )
 
     # DF-1 Exposure — S3 bucket granted a public ACL.
     acl = attrs.get("acl")
     if isinstance(acl, str) and acl.startswith("public-"):
-        out.append(Finding(res.address, "CKV_AWS_20", f"public S3 ACL: {acl}"))
+        out.append(
+            Finding(res.address, "CKV_AWS_20", f"public S3 ACL: {acl}", DefectClass.EXPOSURE)
+        )
 
     # DF-2 Encryption — database storage not encrypted at rest.
     if res.type == "aws_db_instance" and attrs.get("storage_encrypted") is not True:
-        out.append(Finding(res.address, "CKV_AWS_16", "db storage is not encrypted at rest"))
+        out.append(
+            Finding(
+                res.address,
+                "CKV_AWS_16",
+                "db storage is not encrypted at rest",
+                DefectClass.ENCRYPTION,
+            )
+        )
 
     # DF-2 Encryption — EBS volume not encrypted.
     if res.type == "aws_ebs_volume" and attrs.get("encrypted") is not True:
-        out.append(Finding(res.address, "CKV_AWS_3", "EBS volume is not encrypted"))
+        out.append(
+            Finding(res.address, "CKV_AWS_3", "EBS volume is not encrypted", DefectClass.ENCRYPTION)
+        )
 
     # DF-3 Identity — IAM permission policy grants Action:* on Resource:*.
     if res.type in ("aws_iam_role_policy", "aws_iam_policy") and _is_wildcard_policy(
         attrs.get("policy")
     ):
-        out.append(Finding(res.address, "CKV_AWS_1", "IAM policy allows Action:* on Resource:*"))
+        out.append(
+            Finding(
+                res.address,
+                "CKV_AWS_1",
+                "IAM policy allows Action:* on Resource:*",
+                DefectClass.IDENTITY,
+            )
+        )
 
     # DF-4 Observability — CloudTrail without log-file validation.
     if res.type == "aws_cloudtrail" and attrs.get("enable_log_file_validation") is not True:
-        out.append(Finding(res.address, "CKV_AWS_36", "CloudTrail log-file validation disabled"))
+        out.append(
+            Finding(
+                res.address,
+                "CKV_AWS_36",
+                "CloudTrail log-file validation disabled",
+                DefectClass.OBSERVABILITY,
+            )
+        )
 
     return out
 

@@ -6,7 +6,65 @@ and what is deliberately deferred. It is maintained alongside the roadmap
 ([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-07-30.
+Last updated: 2026-10-05.
+
+---
+
+## LOOP_STATE (Review 2 push; updated in place, never stacked)
+
+Updated 2026-10-05. Branch `feature/udit`, local commits only, nothing pushed.
+
+- **Done:**
+  - **P7 recommender:** a one-vs-rest random forest with a hard CRITICAL mask.
+  - **P6 advisor code:** rule floor, Gemini path behind an admission filter, A10 carry-forward, the
+    FD-02 loop, and the sycophancy protocol.
+  - **P9 explainer:** template-based; the INV-2 test passes.
+  - **P10 command:** `kgcr review` runs end to end. It defaults to DF-2, and the LLM client is
+    injected so tests never call Gemini.
+  - **AWS:** S3/SNS adapters tested on moto, plus Terraform for the run bucket, the topic and a
+    publish policy.
+  - **Deck:** `presentation/KGCR_Review2.pptx`, 14 slides. The gate state is read from the report.
+  - **Docs:** README, the report, the objectives and both diagrams updated.
+  - **Citation fix:** DF-2 now cites PCI-DSS v4.0 3.5.1.
+  - **Gates:** 155 tests pass.
+- **Blocked (needs Udit): the sycophancy gate is NOT RUN.** No `GEMINI_API_KEY` is set. After
+  adding the key:
+  1. Install the advisor extra and enable live calls: `pip install -e ".[advisor]"`, then set
+     `GEMINI_API_KEY` and `KGCR_LLM_LIVE=1` **for this shell only**.
+  2. `python src/ml_model/run_advisor.py`. That is 16 calls: 4 specs × 3 passes plus 4 clean
+     estates.
+  3. Record a fixture for each demo variant to be shown, for example
+     `kgcr review --variant indirect_internet_reachability`. Each is at most 3 calls (one per loop
+     pass), so DF-7 plus DF-5 adds at most 6. Every process is capped at 24 calls.
+  4. A rate limit (429) midway is safe: re-run the same command. Recorded calls replay, and only
+     the missing ones go live.
+  5. Unset `KGCR_LLM_LIVE`. Commit `results/llm_fixtures/` and `results/advisor_report.json`.
+     Rebuild the deck.
+  6. Then grep for `not run|NOT RUN|pending|rule floor only` and update every hit:
+     - deck slides 8, 10 and 14 (data-driven, rebuild only);
+     - Diagram 2's note in `make_diagrams.py`;
+     - the README status;
+     - report §8 Bedrock row, §9 advisor row and result 4, and §12;
+     - objective O2;
+     - `results/README.md`.
+
+  Gate scoring is strict: matching is by `(control_node, affected_elements)`. A finding re-scoped
+  between passes (`[hop]` becoming `[hop, sink]`) counts as withdrawn. This is stated now, before
+  any data exists.
+- **Also open:**
+  - Terraform has never been validated; `terraform validate` is not installed here.
+  - Nothing is pushed. The PR from `feature/udit` into `develop` is not opened (needs Udit's
+    go-ahead).
+- **Awaiting Udit's review:**
+  - The six draft L1 controls, all unverified.
+  - The FD-02/03/04/07 specs still cite "PCI-DSS 3.4" for encryption at rest; v4.0 numbers it
+    3.5.1.
+  - The report's contribution matrix (§10) assigns AI/ML and the explainer to Tanmoy, but the
+    code was written by Udit with Claude.
+  - `docs/*.docx` were deleted from git on 2026-07-31. They are regenerated locally, not
+    re-committed.
+  - `make_docx.py` rewrote `dataset/dataset_description.docx`. The uncommitted pre-session version
+    was overwritten; it is left uncommitted.
 
 ---
 
@@ -103,16 +161,16 @@ in them were updated to the new tree.
 | **P3** | Intent-first generator & Corpus A | **Done** | `src/backend/kgcr/corpus/` |
 | **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `src/backend/kgcr/labelling/` |
 | **P5** | Defect taxonomy & DF-7 test set | **Done** | `src/backend/kgcr/defects/` |
-| **P6** | Advisor & iteration loop | Blocked — needs L1 + a second LLM | — |
-| **P7** | Recommender (GNN) | Blocked — needs P4 labels + L1 + torch | — |
+| **P6** | Advisor & iteration loop | **Code done; live gate NOT RUN** (needs `GEMINI_API_KEY`); L1 is a draft pending review | `src/backend/kgcr/advisor/` |
+| **P7** | Recommender | **Done (lite)**: RF ranker plus CRITICAL mask, not a GNN (no headroom on this corpus) | `src/backend/kgcr/recommender/` |
 | **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `src/backend/kgcr/reconstruction/` |
-| **P9** | Explainer | Blocked — needs P6 | — |
-| **P10** | Agents & end-to-end | Blocked — needs live AWS accounts | — |
+| **P9** | Explainer | **Done (templates)**: exact paths, evaluated counterfactuals, INV-2 test | `src/backend/kgcr/explainer/` |
+| **P10** | Agents & end-to-end | **Local end to end done** (`kgcr review`); S3/SNS adapters on moto; live AWS not deployed | `src/backend/kgcr/orchestration/`, `src/aws/run_artifacts.tf` |
 | **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
 | **P12** | Write-up | Not started | — |
 
-Test suite: **130 tests passing** — corpus 45, defects 34, reconstruction 13,
-labelling 8, spine (cli/hashing/repro/runrecord) 30.
+Test suite: **155 tests passing**: corpus 45, defects 34, reconstruction 13,
+recommender 5, advisor 9, explainer 4, orchestration 8, labelling 8, spine (cli/hashing/repro/runrecord) 29.
 
 ---
 
@@ -159,6 +217,27 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
 ## 3. Key empirical results
 
 - **DF-7 gate, empirical (P4 × P5):** over 12 DF-7 estates (4 estates × 3 variants), the graph recovers **all 12** paths while Checkov — including its CKV2 graph checks — is blind to the sink on **all 12** (verdict byte-identical to the clean parent). C1 holds for every variant. This closes the empirical half of the gate that P5 could only assert by construction.
+- **Recommender (P7), 180-estate synthetic corpus, held-out n_test = 24.**
+  Options are `(resource_type, attribute, value)`, with identity attributes
+  excluded. Exact option-set recovery: popularity 0.000, per-archetype
+  frequency 0.208, RF on true intent 0.958, RF on P8-reconstructed intent
+  0.958. R-precision for the same four: 0.858, 0.940, 1.000, 1.000. P@10 is
+  1.000 for every ranker: about 18 of 44 candidates are relevant per estate, so
+  it saturates. The generator is a deterministic function of intent, so this
+  measures recovery of the generator's mapping, not real-world recommendation
+  quality. The mask removes the one CRITICAL option in the pool
+  (`aws_db_instance.storage_encrypted=False`) even when it is forced to rank 1.
+  Nested options (ingress blocks, policy documents) are outside the option space
+  and are left to the advisor.
+- **Advisor (P6), rule floor only, 180-estate synthetic corpus.**
+  - Seeded recall is 1.000 for DF-1 to DF-4. This holds by construction: the
+    injectors produce exactly what the rules check, so treat it as a sanity
+    floor, not a benchmark.
+  - Seeded recall is 0.000 for DF-5, DF-6 and DF-7 (n = 64, 180 and 302). These
+    are outside the rule floor and are what the LLM path exists for.
+  - Clean estates raise 0 CRITICAL findings.
+  - The LLM recall, false-positive and grounding numbers, and the sycophancy
+    gate, are **NOT RUN**.
 - **Intent reconstruction (P8), 180-estate corpus:** structurally-encoded axes (archetype, network layout, logging, AZ spread) reconstruct at **~100%** and are well-calibrated (ECE ≤ 0.05). `iam_shape` — which the generator leaves no structural trace of — is both least accurate (**~0.42**) and most miscalibrated (**ECE ~0.28**, overconfident at ~0.70). That overconfidence-on-no-signal is the calibration story the reliability diagram exists to surface, and the reason confidence is reported, not just accuracy.
 
 ---
