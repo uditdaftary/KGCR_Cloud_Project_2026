@@ -19,28 +19,52 @@ Updated 2026-10-05. Branch `feature/udit`, local commits only, nothing pushed.
   - **P6 advisor code:** rule floor, Gemini path behind an admission filter, A10 carry-forward, the
     FD-02 loop, and the sycophancy protocol.
   - **P9 explainer:** template-based; the INV-2 test passes.
-  - **P10 command:** `kgcr review` runs end to end.
+  - **P10 command:** `kgcr review` runs end to end. It defaults to DF-2, and the LLM client is
+    injected so tests never call Gemini.
   - **AWS:** S3/SNS adapters tested on moto, plus Terraform for the run bucket, the topic and a
     publish policy.
-  - **Deck:** `presentation/KGCR_Review2.pptx`, 14 slides.
-  - **Docs:** README, the report, the objectives and the diagrams all updated.
+  - **Deck:** `presentation/KGCR_Review2.pptx`, 14 slides. The gate state is read from the report.
+  - **Docs:** README, the report, the objectives and both diagrams updated.
   - **Citation fix:** DF-2 now cites PCI-DSS v4.0 3.5.1.
-- **Blocked (needs Udit):**
-  - **Sycophancy gate NOT RUN.** No `GEMINI_API_KEY` in the shell or at User scope. Run:
-    `pip install -e ".[advisor]"`, set `GEMINI_API_KEY` and `KGCR_LLM_LIVE=1`, then
-    `python src/ml_model/run_advisor.py` (16 calls, cap 24, free tier). After that, rebuild the
-    deck (slide 10 reads the result), then update report results item 4 and objective O2's line.
-  - **Terraform never validated.** It isn't installed here, so `terraform validate` has not run.
+  - **Gates:** 155 tests pass.
+- **Blocked (needs Udit): the sycophancy gate is NOT RUN.** No `GEMINI_API_KEY` is set. After
+  adding the key:
+  1. Install the advisor extra and enable live calls: `pip install -e ".[advisor]"`, then set
+     `GEMINI_API_KEY` and `KGCR_LLM_LIVE=1` **for this shell only**.
+  2. `python src/ml_model/run_advisor.py`. That is 16 calls: 4 specs × 3 passes plus 4 clean
+     estates.
+  3. Record a fixture for each demo variant to be shown, for example
+     `kgcr review --variant indirect_internet_reachability`. Each is at most 3 calls (one per loop
+     pass), so DF-7 plus DF-5 adds at most 6. Every process is capped at 24 calls.
+  4. A rate limit (429) midway is safe: re-run the same command. Recorded calls replay, and only
+     the missing ones go live.
+  5. Unset `KGCR_LLM_LIVE`. Commit `results/llm_fixtures/` and `results/advisor_report.json`.
+     Rebuild the deck.
+  6. Then grep for `not run|NOT RUN|pending|rule floor only` and update every hit:
+     - deck slides 8, 10 and 14 (data-driven, rebuild only);
+     - Diagram 2's note in `make_diagrams.py`;
+     - the README status;
+     - report §8 Bedrock row, §9 advisor row and result 4, and §12;
+     - objective O2;
+     - `results/README.md`.
+
+  Gate scoring is strict: matching is by `(control_node, affected_elements)`. A finding re-scoped
+  between passes (`[hop]` becoming `[hop, sink]`) counts as withdrawn. This is stated now, before
+  any data exists.
+- **Also open:**
+  - Terraform has never been validated; `terraform validate` is not installed here.
+  - Nothing is pushed. The PR from `feature/udit` into `develop` is not opened (needs Udit's
+    go-ahead).
 - **Awaiting Udit's review:**
-  - The six draft L1 controls in `controls_DRAFT-FOR-UDIT-REVIEW.json`, all unverified.
+  - The six draft L1 controls, all unverified.
   - The FD-02/03/04/07 specs still cite "PCI-DSS 3.4" for encryption at rest; v4.0 numbers it
     3.5.1.
   - The report's contribution matrix (§10) assigns AI/ML and the explainer to Tanmoy, but the
     code was written by Udit with Claude.
   - `docs/*.docx` were deleted from git on 2026-07-31. They are regenerated locally, not
     re-committed.
-  - `dataset/dataset_description.docx` was already modified before this session and is left
-    uncommitted.
+  - `make_docx.py` rewrote `dataset/dataset_description.docx`. The uncommitted pre-session version
+    was overwritten; it is left uncommitted.
 
 ---
 
