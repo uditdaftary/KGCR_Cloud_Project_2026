@@ -87,5 +87,5 @@
 <line x1="1355" y1="315" x2="1322" y2="315" stroke="#1a1a1a" stroke-width="1.4" marker-end="url(#a)"/>
 <text x="1240" y="880" font-size="11" text-anchor="middle" dominant-baseline="central" fill="#6b6b6b">confirmed intent feeds L3</text>
 <text x="40" y="962" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Invariant — the audience setting changes only how a result is rendered. The conclusion is identical for architect, auditor and learner, and this is tested rather than asserted.</text>
-<text x="40" y="986" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">Implemented today: S1b intent reconstruction with per-field calibration, the estate dependency graph, and the defect corpus. S2, S4 and S6 are Phase-II.</text>
+<text x="40" y="986" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">Runs locally today via kgcr review: S1b, S2 with the CRITICAL mask, S4 (rule floor; LLM path not yet run live), S5 and S6. Live harvest and S7 to S9 are Phase-II.</text>
 </svg>

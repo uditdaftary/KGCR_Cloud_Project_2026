@@ -513,8 +513,8 @@ def system_architecture() -> Canvas:
     c.text(
         40,
         986,
-        "Implemented today: S1b intent reconstruction with per-field calibration, the "
-        "estate dependency graph, and the defect corpus. S2, S4 and S6 are Phase-II.",
+        "Runs locally today via kgcr review: S1b, S2 with the CRITICAL mask, S4 (rule floor; "
+        "LLM path not yet run live), S5 and S6. Live harvest and S7 to S9 are Phase-II.",
         size=12,
         anchor="start",
     )
