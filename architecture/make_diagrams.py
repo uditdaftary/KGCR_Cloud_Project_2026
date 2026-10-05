@@ -350,17 +350,16 @@ def aws_architecture() -> Canvas:
     c.text(
         40,
         898,
-        "Status — this is a Phase-I planning diagram. Implemented today: the AWS "
-        "Budgets and cross-account IAM Terraform in src/aws/ (authored, not applied). "
-        "Everything else is the Phase-II",
+        "Status — this is a planning diagram. Terraform in src/aws/ (authored, not applied): "
+        "Budgets, cross-account IAM, and the S3 run bucket and SNS topic. The rest is the Phase-II",
         size=12,
         anchor="start",
     )
     c.text(
         40,
         920,
-        "build target; the analysis pipeline currently runs locally in Python under "
-        "src/backend/.",
+        "build target; the review pipeline runs locally (kgcr review) with S3/SNS stand-ins "
+        "by default.",
         size=12,
         anchor="start",
     )

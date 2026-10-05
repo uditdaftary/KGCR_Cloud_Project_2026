@@ -132,6 +132,6 @@
 <text x="40" y="824" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Solid box = AWS service.   Shaded box = data store.   Dashed container = AWS account boundary.</text>
 <text x="40" y="846" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Authentication: Amazon Cognito for users; AWS IAM cross-account roles for the agents (Agent 2 read-only, Agent 1 write-only).</text>
 <text x="40" y="868" font-size="12" text-anchor="start" dominant-baseline="central" fill="#6b6b6b">Monitoring: Amazon CloudWatch logs, metrics and alarms; AWS Budgets alarms live from day one (FD-08).   Notifications: Amazon SNS.</text>
-<text x="40" y="898" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">Status — this is a Phase-I planning diagram. Implemented today: the AWS Budgets and cross-account IAM Terraform in src/aws/ (authored, not applied). Everything else is the Phase-II</text>
-<text x="40" y="920" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">build target; the analysis pipeline currently runs locally in Python under src/backend/.</text>
+<text x="40" y="898" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">Status — this is a planning diagram. Terraform in src/aws/ (authored, not applied): Budgets, cross-account IAM, and the S3 run bucket and SNS topic. The rest is the Phase-II</text>
+<text x="40" y="920" font-size="12" text-anchor="start" dominant-baseline="central" fill="#1a1a1a">build target; the review pipeline runs locally (kgcr review) with S3/SNS stand-ins by default.</text>
 </svg>
