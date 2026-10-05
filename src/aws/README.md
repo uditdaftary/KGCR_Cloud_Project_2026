@@ -1,4 +1,4 @@
-# `environment/` — Phase 0 bootstrap (FD-08 §8)
+# `src/aws/` — Phase 0 bootstrap (FD-08 §8) and the run-artifact targets
 
 Terraform that reproduces the [FD-08](../docs/FD-08_Environment_Build.md)
 three-account estate using only standalone-account primitives — **no AWS
@@ -25,7 +25,8 @@ important Phase 0 facts true and un-forgettable:
 | `variables.tf` | Inputs — account principal, external IDs, thresholds, tags |
 | `budgets.tf` | The $5 / $15 / $30 budget alarms (FD-08 §6) |
 | `iam_cross_account.tf` | `KGCRHarvestReadOnly` (always) and `KGCRProvisionApply` (demo only) |
-| `outputs.tf` | Role ARNs and budget names |
+| `run_artifacts.tf` | S3 run bucket (private, encrypted, TLS-only, expiring), SNS contested-run topic, least-privilege `KGCRPipelinePublish` policy |
+| `outputs.tf` | Role ARNs, budget names, run bucket, topic ARN, publish policy ARN |
 | `terraform.tfvars.example` | Template for the (gitignored) `terraform.tfvars` |
 
 ## Applying (per account)
@@ -34,7 +35,7 @@ Applied once per account, each with its own `terraform.tfvars` and its own state
 (a separate workspace or backend key per account — accounts A, B, C):
 
 ```bash
-cd environment
+cd src/aws
 cp terraform.tfvars.example terraform.tfvars   # then edit
 terraform init
 terraform plan     # review before every apply
@@ -61,3 +62,16 @@ cost.
 This module covers items 1, 2 (creation half), and 4 of the gate. The remaining
 items are manual or later: the **test-breach verification** of the alarms, the
 **hello-world cross-account read**, and the full **stand-up / tear-down** proof.
+
+## Using the run bucket and topic from `kgcr review`
+
+`kgcr review` stays local by default. Once `run_artifacts.tf` is applied:
+
+```bash
+pip install -e ".[aws]"
+kgcr review --s3-bucket "$(terraform output -raw run_bucket_name)"             --sns-topic-arn "$(terraform output -raw contested_runs_topic_arn)"
+```
+
+The adapters (`S3ArtifactStore`, `SnsNotifier` in `src/backend/kgcr/orchestration/aws.py`) are
+tested against moto's in-process AWS mock (`tests/orchestration/test_aws.py`). They have not been
+run against a real account.
