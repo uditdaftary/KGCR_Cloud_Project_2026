@@ -88,7 +88,7 @@ is what Phase-I asks for; the final column states honestly what is running today
 | AWS service | Purpose in this project | Status |
 |---|---|---|
 | Amazon EC2 | Host Neo4j Community (the knowledge graph store) and the analysis workload | Planned |
-| Amazon S3 | Evidence landing bucket for Config, CloudTrail and cost data; corpus and artefact storage | Planned. A local directory stands in for the run-artifact bucket today |
+| Amazon S3 | Evidence landing bucket for Config, CloudTrail and cost data; corpus and artefact storage | Run-artifact bucket **Terraform authored** (`src/aws/run_artifacts.tf`), not applied; `kgcr review --s3-bucket` adapter tested against a mocked AWS (moto). A local directory is the default |
 | Amazon RDS | Represents the cardholder data store in the estates under analysis | Planned |
 | AWS Lambda | ETL of harvested evidence into the graph schema; Advisor and Explainer inference | Planned |
 | AWS Glue | Batch normalisation of large Config and Cost and Usage Report extracts | Planned |
@@ -96,23 +96,24 @@ is what Phase-I asks for; the final column states honestly what is running today
 | Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned. Gemini Flash (Google AI Studio, free tier) stands in for the advisor's proposals; its live run is pending |
 | Amazon API Gateway | REST surface backing the `kgcr` CLI | Planned |
 | Amazon Cognito | Authenticate architects, auditors and learners | Planned |
-| AWS IAM | Cross-account roles enforcing separation of duties: Agent 2 read-only for harvesting, Agent 1 write-only for applying | **Terraform authored** in `src/aws/`, not yet applied |
+| AWS IAM | Cross-account roles enforcing separation of duties: Agent 2 read-only for harvesting, Agent 1 write-only for applying; a least-privilege publish policy for the pipeline | **Terraform authored** in `src/aws/`, not yet applied |
 | AWS Config | Resource inventory and relationships — the primary input to the estate graph | Planned. The synthetic corpus stands in for harvest |
 | AWS CloudTrail | API audit events, supporting evidence-retention controls | Planned |
 | AWS Cost and Usage Reports | Per-resource cost attribution for the joint cost/compliance objective | Planned |
 | Amazon EventBridge | Scheduled and change-driven triggers for re-harvesting and drift detection | Planned |
 | Amazon CloudWatch | Logs, metrics and alarms across all three accounts | Planned |
 | AWS Budgets | Cost alarms, provisioned as code before any workload runs | **Terraform authored** in `src/aws/`, not yet applied |
-| Amazon SNS | Deliver compliance findings and budget breach notifications | Planned. Contested runs are logged locally in its place |
+| Amazon SNS | Deliver compliance findings and budget breach notifications | Contested-run topic **Terraform authored**, not applied; `kgcr review --sns-topic-arn` adapter tested against a mocked AWS (moto). Logged locally by default |
 | Amazon VPC, subnets, security groups, NAT, Internet Gateway | The network topology whose relationships the multi-hop defect analysis reasons over | Planned |
 | AWS KMS | Encryption keys for the evidence bucket and the estates under analysis | Planned |
 | Elastic Load Balancing | Ingress in the estates under analysis | Planned |
 | AWS Organizations | Three-account structure: prod-payments, dev-staging, shared-security | Planned |
 
 **Stated plainly:** what runs today is a local Python pipeline (`src/backend/`, one command:
-`kgcr review`) plus authored but unapplied Terraform (`src/aws/`). Where the pipeline will touch S3
-and SNS it goes through two small interfaces with local stand-ins behind them; nothing is deployed and
-no AWS spend has been incurred. Phase-I asks for a service plan, and this is it; the gap between
+`kgcr review`) plus authored but unapplied Terraform (`src/aws/`). The pipeline reaches S3 and SNS through two
+small interfaces. Local stand-ins are the default, and the AWS-backed adapters are tested against
+moto's in-process mock. Nothing is deployed, the Terraform has not been validated (Terraform is not
+installed on the build machine), and no AWS spend has been incurred. Phase-I asks for a service plan, and this is it; the gap between
 plan and implementation is stated rather than concealed, and Diagram 1 carries the same note.
 
 ---
@@ -131,9 +132,9 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 | Recommender (P7): retrieve, rank, CRITICAL mask | Done (random forest, not a GNN) | `src/backend/kgcr/recommender/`, 5 tests, `results/recommender_report.json` |
 | Advisor (P6): rule floor, LLM admission filter, bounded loop, sycophancy protocol | Code done; live LLM run and sycophancy gate not run | `src/backend/kgcr/advisor/`, 9 tests, `results/advisor_report.json` |
 | Explainer (P9): exact paths, evaluated counterfactuals, three renderings | Done (templates, no LLM) | `src/backend/kgcr/explainer/`, 4 tests |
-| End-to-end review command (P10) with local AWS stand-ins | Done, local | `src/backend/kgcr/orchestration/`, `kgcr review`, 4 tests |
+| End-to-end review command (P10) with local AWS stand-ins | Done, local | `src/backend/kgcr/orchestration/`, `kgcr review`, 8 tests (4 against a mocked AWS) |
 
-**Test suite:** 151 tests passing. Quality gates — `ruff check`, `ruff format --check`, `mypy`
+**Test suite:** 155 tests passing. Quality gates — `ruff check`, `ruff format --check`, `mypy`
 (strict) and `pytest` — run in CI on Python 3.11 and 3.12 on every push.
 
 ### Results obtained so far
