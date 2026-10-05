@@ -36,8 +36,15 @@ labelling = [
 advisor = [
   "google-genai==2.20.0",
 ]
+# P10 S3/SNS adapters. In ``dev`` (with moto) so CI exercises them against an
+# in-process AWS mock; no test reaches real AWS.
+aws = [
+  "boto3==1.35.49",
+]
 dev = [
   "kgcr[reconstruction]",
+  "kgcr[aws]",
+  "moto[s3]==5.2.3",
   "pytest==8.3.4",
   "ruff==0.8.4",
   "mypy==1.13.0",
@@ -88,5 +95,5 @@ warn_unused_configs = true
 # google-genai (advisor extra) is absent in CI; ignoring it keeps mypy identical
 # locally and in CI.
 [[tool.mypy.overrides]]
-module = ["numpy", "torch", "sklearn.*", "google.*"]
+module = ["numpy", "torch", "sklearn.*", "google.*", "boto3", "boto3.*", "moto", "moto.*"]
 ignore_missing_imports = true

@@ -90,6 +90,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--audience", choices=("architect", "auditor", "learner"), default="architect"
     )
     review.add_argument("--out", default="runs-local", help="Artifact store root (S3 stand-in)")
+    review.add_argument(
+        "--s3-bucket", default=None, help="Store artifacts in this S3 bucket instead (aws extra)"
+    )
+    review.add_argument(
+        "--sns-topic-arn", default=None, help="Publish contested runs to this SNS topic (aws extra)"
+    )
     review.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
     review.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
     review.set_defaults(func=_cmd_review)
@@ -166,14 +172,26 @@ def _cmd_review(args: argparse.Namespace) -> int:
     from pathlib import Path
 
     from kgcr.explainer.explainer import render
-    from kgcr.orchestration.aws import LocalArtifactStore, LogNotifier
+    from kgcr.orchestration.aws import (
+        ArtifactStore,
+        LocalArtifactStore,
+        LogNotifier,
+        Notifier,
+        S3ArtifactStore,
+        SnsNotifier,
+    )
     from kgcr.orchestration.review import run_review
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    # Local stand-ins unless AWS targets are named explicitly: no flag, no AWS call.
+    store: ArtifactStore = (
+        S3ArtifactStore(args.s3_bucket) if args.s3_bucket else LocalArtifactStore(Path(args.out))
+    )
+    notifier: Notifier = SnsNotifier(args.sns_topic_arn) if args.sns_topic_arn else LogNotifier()
     run = run_review(
         variant=args.variant,
-        store=LocalArtifactStore(Path(args.out)),
-        notifier=LogNotifier(),
+        store=store,
+        notifier=notifier,
         count=args.count,
         seed=args.seed,
     )
