@@ -1,0 +1,6 @@
+{
+  "label": "v1-9b5b10ffce9c9596-loop-p1",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "256d16e053681ae36a96416c253b4c3cdee0765924ffe7a7e3d5a2edd6cdbfd4",
+  "response": "[\n {\n  \"affected_elements\": [\n   \"aws_db_instance.cardholder\"\n  ],\n  \"assertion\": \"aws_db_instance.cardholder has backup_retention_period set to 0 and multi_az set to false, disabling backups and failing to survive the loss of an availability zone.\",\n  \"control_node\": \"kg://control/aws-war/reliability-multi-az\",\n  \"evidence_path\": []\n }\n]"
+}
