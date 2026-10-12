@@ -137,7 +137,7 @@ python src/ml_model/run_advisor.py             # results/advisor_report.json
 
 Live Gemini calls (`gemini-3.7-flash`) need `pip install -e ".[advisor]"`, `GEMINI_API_KEY`, and
 `KGCR_LLM_LIVE=1`. They are capped at 24 per run and recorded under `results/llm_fixtures/`, so
-tests and later runs replay them offline. The key is read from the environment and never written.
+tests and later runs replay them offline. Put both in a git-ignored `.env` (copy `.env.example`) or export them; the key is never written.
 
 The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
 `dataset/`, `src/{frontend,backend,ml_model,aws}`, `results/`, `presentation/`);
