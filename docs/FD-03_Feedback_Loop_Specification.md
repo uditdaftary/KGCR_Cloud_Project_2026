@@ -148,7 +148,7 @@ The graph carries three provenance-separated layers.
 
 Every node and edge carries a provenance tag identifying its layer and source.
 
-**Why this is non-negotiable.** If organisational behaviour can rewrite the normative layer, then an institution that habitually accepts a non-compliant pattern will, over time, teach the system that the pattern is compliant. The framework would launder a bad habit into an apparent standard — the precise inverse of its purpose. PCI-DSS Requirement 3.4 does not become negotiable because a hundred engineers clicked accept.
+**Why this is non-negotiable.** If organisational behaviour can rewrite the normative layer, then an institution that habitually accepts a non-compliant pattern will, over time, teach the system that the pattern is compliant. The framework would launder a bad habit into an apparent standard — the precise inverse of its purpose. PCI-DSS v4.0 Requirement 3.5.1 does not become negotiable because a hundred engineers clicked accept.
 
 Behaviour therefore informs **ranking and defaults** only. It never touches **legality**. Stated formally:
 

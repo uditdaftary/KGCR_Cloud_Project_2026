@@ -69,8 +69,8 @@ PriorFindings      — findings from earlier passes in this cycle, with resoluti
   "finding_id": "F-014",
   "severity": "CRITICAL",
   "class": "regulatory | hardening | resilience | cost | relational",
-  "control_ref": "PCI-DSS-4.0-3.4",
-  "control_node": "kg://control/pci-dss-v4/3.4",
+  "control_ref": "PCI-DSS-4.0-3.5.1",
+  "control_node": "kg://control/pci-dss-v4/3.5.1",
   "control_text_summary": "Paraphrase of the obligation, in the Advisor's own words.",
   "affected_elements": ["spec://storage/customer_db", "spec://iam/role/app-exec"],
   "evidence_path": ["kg://resource/rds-primary", "kg://edge/stores", "kg://data/pan"],
@@ -256,7 +256,7 @@ The final row deserves a decision. Using a *different* base model for the Adviso
 
 | ID | Severity | Control | Assertion |
 |---|---|---|---|
-| F-001 | CRITICAL | PCI-DSS-4.0-3.4 | Storage-level encryption does not establish that PAN is rendered unreadable at the field level as the clause requires |
+| F-001 | CRITICAL | PCI-DSS-4.0-3.5.1 | Storage-level encryption does not establish that PAN is rendered unreadable at the field level as the clause requires |
 | F-002 | CRITICAL | *relational* — PCI-DSS-4.0-1.3 | Path exists: `app-role → s3:* → bucket(cardholder-backups) → instance(public-subnet) → igw`. Cardholder data is reachable from an internet-facing compute path via three hops. |
 | F-003 | HIGH | CIS-AWS-1.16 | IAM policy uses wildcard resource scope |
 
