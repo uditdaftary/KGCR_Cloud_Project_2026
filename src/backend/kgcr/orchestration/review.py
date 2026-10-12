@@ -19,13 +19,7 @@ from typing import Any
 
 from kgcr.advisor.advisor import Advisor, AdvisorFinding
 from kgcr.advisor.controls import DRAFT_CONTROLS_PATH
-from kgcr.advisor.llm import (
-    DEFAULT_FIXTURE_DIR,
-    GEMINI_MODEL,
-    FixtureClient,
-    LLMClient,
-    live_client_from_env,
-)
+from kgcr.advisor.llm import GEMINI_MODEL, LLMClient, default_llm
 from kgcr.advisor.loop import LoopResult, TemplatePatcher, advisor_loop, spec_hash
 from kgcr.corpus.estate import Estate
 from kgcr.corpus.graph import build_graph_from_estate
@@ -43,7 +37,7 @@ from kgcr.recommender.recommender import (
 )
 from kgcr.reconstruction.pipeline import ESCALATION_THRESHOLD
 from kgcr.reconstruction.reconstructor import IntentReconstructor, ReconstructedIntent
-from kgcr.repro import seed_everything
+from kgcr.repro import DEFAULT_SEED, seed_everything
 from kgcr.runrecord import RunRecord
 
 __all__ = ["ReviewRun", "select_target", "default_llm", "run_review"]
@@ -78,14 +72,6 @@ def select_target(test: list[Estate], variant: str) -> DefectedEstate:
     raise ValueError(f"no held-out estate admits variant {variant!r}")
 
 
-def default_llm() -> LLMClient | None:
-    """Fixture replay (recording when live is opted into), or None with no fixtures."""
-    live = live_client_from_env()
-    if live is None and not DEFAULT_FIXTURE_DIR.exists():
-        return None
-    return FixtureClient(DEFAULT_FIXTURE_DIR, live)
-
-
 def _graph_version() -> str:
     digest = hashlib.sha256(DRAFT_CONTROLS_PATH.read_bytes()).hexdigest()[:12]
     return f"l1-draft-{digest}"
@@ -98,7 +84,7 @@ def run_review(
     notifier: Notifier,
     llm: LLMClient | None,
     count: int = 180,
-    seed: int = 1729,
+    seed: int = DEFAULT_SEED,
 ) -> ReviewRun:
     """Run review mode. ``llm`` is injected so callers (and tests) decide whether
     the advisor may reach a model; :func:`default_llm` is what the CLI passes."""
@@ -131,7 +117,12 @@ def run_review(
     patcher = TemplatePatcher(recommender.templates)
     loop = advisor_loop(estate, intent_values, advisor, patcher)
     first = loop.passes[0]
-    llm_mode = first.llm_status if llm is not None else "disabled"
+    # "ok" only if the model answered on every pass; a later pass that fell back to
+    # the rule floor (no fixture for that label) must not be reported as LLM-reviewed.
+    statuses = [p.llm_status for p in loop.passes]
+    llm_mode = "disabled" if llm is None else "ok" if set(statuses) == {"ok"} else "partial"
+    if llm_mode == "partial" and statuses[0] != "ok":
+        llm_mode = statuses[0]
 
     # S5 explain (P9) the findings raised on the estate as harvested.
     bundle = build_bundle(
@@ -143,8 +134,8 @@ def run_review(
         loop_reason=loop.reason,
         scope_note=""
         if llm_mode == "ok"
-        else "rule floor only; relational (DF-7) and resilience (DF-5) findings need the "
-        "LLM advisor and were not evaluated",
+        else "rule floor only on at least one pass; relational (DF-7) and resilience (DF-5) "
+        "findings need the LLM advisor and were not evaluated on every pass",
     )
 
     model_version = (

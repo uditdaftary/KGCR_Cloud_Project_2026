@@ -52,19 +52,20 @@ class RecommenderExperiment:
 def _metrics(
     pool: Sequence[tuple[str, str, str]], test: Sequence[Estate], scorer: _Scorer
 ) -> dict[str, float]:
-    truth = np.array([[o in estate_options(e) for o in pool] for e in test], dtype=float)
+    exhibited = [estate_options(e) for e in test]
+    truth = np.array([[o in opts for o in pool] for opts in exhibited], dtype=float)
     scored = [scorer(e) for e in test]
     scores = np.array([[s.get(o, 0.0) for o in pool] for s in scored])
     p_at_10: list[float] = []
     r_prec: list[float] = []
     exact: list[bool] = []
-    for i, estate in enumerate(test):
+    for i, opts in enumerate(exhibited):
         order = np.argsort(-scores[i], kind="stable")
-        relevant = len(estate_options(estate))
+        relevant = len(opts)
         p_at_10.append(float(truth[i][order[:10]].mean()))
         r_prec.append(float(truth[i][order[:relevant]].sum()) / relevant)
         predicted = {pool[j] for j in range(len(pool)) if scores[i][j] >= 0.5}
-        exact.append(predicted == estate_options(estate))
+        exact.append(predicted == opts)
     return {
         "ndcg": round(float(ndcg_score(truth, scores)), 4),
         "p_at_10": round(float(np.mean(p_at_10)), 4),
