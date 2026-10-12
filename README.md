@@ -27,12 +27,12 @@ source of truth.
 
 **Implementation status (Review 2).** Review mode runs end to end locally as one command,
 `kgcr review`: estate, dependency graph, intent reconstruction (P8), recommendation with a hard
-CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). 155 tests run in CI on
+CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). 156 tests run in CI on
 Python 3.11 and 3.12. What is not done yet:
 
-- The advisor's Gemini path is built and tested offline, but the live run, including the
-  sycophancy gate, has not happened yet. Without it the advisor runs its deterministic rules only,
-  and every run says so.
+- The advisor's live run happened once: sycophancy gate PASS on 3 valid trials (1 invalid), 2 of 4
+  relational or resilience variants found, 1 false CRITICAL on 4 clean estates. Recorded responses
+  replay offline from `results/llm_fixtures/`.
 - The L1 control slice is a draft awaiting Udit's review.
 - The corpus is synthetic.
 - AWS is represented by local stand-ins by default. S3/SNS adapters are tested against a mocked

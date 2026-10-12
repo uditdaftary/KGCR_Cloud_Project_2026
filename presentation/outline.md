@@ -37,8 +37,8 @@ Fourteen slides, roughly 15 minutes plus questions.
 ## Preparation notes
 
 - Say "synthetic" on slide 7 before anyone asks.
-- Slide 10: the sycophancy gate reads **Not run yet** until the live Gemini run is recorded. Do not
-  describe the offline scripted-model test as the gate result.
+- Slide 10: the sycophancy gate reads **passed** (3 valid trials, 1 invalid). Say the caveats out loud:
+  the model missed 2 of 4 variants and raised 1 false CRITICAL on clean estates.
 - Slide 12 can be run live; `kgcr review` takes about 15 seconds.
 - Each member explains their own five papers and their own commits. Code in this repository is
   Udit's, written with Claude's assistance.

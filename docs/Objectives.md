@@ -26,7 +26,8 @@ per-resource scan.
 proportion an established policy engine (Checkov, including its graph checks) reports.
 *Status:* **met for the current defect set** — the graph recovers 12 of 12 relational defects while
 Checkov's verdict on the sensitive sink is byte-identical to the clean parent estate in all 12
-cases.
+cases. The live LLM advisor found 2 of 4 relational or resilience variants, and one false CRITICAL
+appeared on 4 clean estates.
 
 **O3 — Recommend a compliant, cost-aware AWS configuration from a workload described in business
 terms.** Take a statement such as "a payments API handling cardholder data in eu-west-2", produce a

@@ -274,12 +274,12 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
     fontFace: "Courier New", fontSize: 16, color: C.background1, fill: { color: C.text2 }, isTextBox: true, margin: 12, valign: "middle" });
   body(s, [
     { text: "Writes the run record, the explanation bundle, the patched spec and three renderings to the artifact store.", options: { bullet: true, breakLine: true } },
-    { text: "155 tests; ruff, ruff format, mypy (strict) and pytest all pass with PYTHONHASHSEED=0.", options: { bullet: true, breakLine: true } },
+    { text: "156 tests; ruff, ruff format, mypy (strict) and pytest all pass with PYTHONHASHSEED=0.", options: { bullet: true, breakLine: true } },
     { text: GATE === "NOT_RUN"
         ? "The advisor's LLM path is built and tested offline; its live run waits on an API key."
-        : `The advisor's LLM path ran live (${adv.llm.model_calls} recorded calls); sycophancy gate ${GATE_TEXT}.`, options: { bullet: true } },
+        : `The advisor's LLM path ran live once (${adv.llm.model_calls} recorded calls); sycophancy gate ${GATE_TEXT} on ${adv.sycophancy_trials.filter((t) => t.valid).length} valid trials.`, options: { bullet: true } },
   ], { x: 0.6, y: 5.35, w: 12.1, h: 1.6, paraSpaceAfter: 6 });
-  s.addNotes("Source: src/backend/kgcr/orchestration/review.py and cli.py. Rule floor only means the advisor ran its deterministic rules; relational and resilience findings need the Gemini path, which has not run live.");
+  s.addNotes("Source: src/backend/kgcr/orchestration/review.py and cli.py. Rule floor only means the advisor ran its deterministic rules; relational and resilience findings need the Gemini path, which ran live once (recorded in results/llm_fixtures).");
 }
 
 // 9. Recommender result
@@ -318,8 +318,8 @@ const CHART_TEXT = { catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-
     { text: "Same non-compliant spec, three passes, rising pressure to withdraw findings. Pass requires 100% of the model's own findings to persist.", options: { bullet: true, breakLine: true } },
     { text: "Enforcement is tested offline: a scripted model that caves fails the gate, while carry-forward keeps the system's findings.", options: { bullet: true, breakLine: true } },
     { text: GATE === "NOT_RUN"
-        ? "The live result needs a Gemini API key; it has not run, and no result is claimed."
-        : `Live result: ${GATE_TEXT}. Per-trial raw persistence is in results/advisor_report.json.`, options: { bullet: true } },
+        ? "The live sycophancy gate has not run; no result is claimed."
+        : `Live result: ${GATE_TEXT} on ${adv.sycophancy_trials.filter((t) => t.valid).length} of ${adv.sycophancy_trials.length} trials (the rest invalid). Beyond the rule floor it found ${Object.values(adv.llm.seeded_recall_beyond_rule_floor).filter(Boolean).length} of 4 variants and raised ${adv.llm.clean_critical_findings} false CRITICAL on ${adv.llm.clean_estates} clean estates.`, options: { bullet: true } },
   ], { x: 0.85, y: 4.6, w: 11.6, h: 1.5, fontSize: 14, paraSpaceAfter: 6 });
   s.addNotes("Sources: results/p4_df7_checkov_evidence.json (graph versus Checkov) and results/advisor_report.json (rule floor). DF-1 to DF-4 recall is 1.0 by construction because the injectors produce exactly what the rules check; it is a sanity floor, not a benchmark.");
 }
