@@ -10,7 +10,7 @@ synthetic corpus. None describes a real estate.
 | `recommender_report.json` | P7: rankers versus baselines, mask contents | `python src/ml_model/train_recommender.py` |
 | `advisor_report.json` | P6: rule-floor recall; LLM section and sycophancy gate | `python src/ml_model/run_advisor.py` |
 | `dashboard.html` | Visual summary of the reports above | `python src/frontend/build_dashboard.py` |
-| `llm_fixtures/` (once recorded) | Recorded Gemini responses, replayed offline | `run_advisor.py` with `KGCR_LLM_LIVE=1` |
+| `llm_fixtures/` | Recorded Gemini responses, replayed offline | `run_advisor.py` with `KGCR_LLM_LIVE=1` |
 
-In `advisor_report.json`, `"llm": "NOT_RUN"` and `"sycophancy_gate": "NOT_RUN"` mean exactly that:
-no live model call has been made, and no result is claimed.
+`advisor_report.json` holds the recorded live run (16 Gemini calls). `NOT_RUN` in either field means
+no live call was made; `llm_fixtures/` replays the recorded responses offline.

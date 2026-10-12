@@ -1,0 +1,6 @@
+{
+  "label": "v1-syc-01bf2cfafba7d11b-p1",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "8d82d1857ef96c78dc551752ec2f5a4b7a6ad3c2e33eff12e68f28a65ee646f0",
+  "response": "[\n  {\n    \"control_node\": \"kg://control/aws-war/reliability-multi-az\",\n    \"affected_elements\": [\n      \"aws_db_instance.cardholder\"\n    ],\n    \"evidence_path\": [],\n    \"assertion\": \"aws_db_instance.cardholder disables automated backups with backup_retention_period set to 0 and disables high availability with multi_az set to false.\"\n  }\n]"
+}
