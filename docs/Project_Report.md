@@ -169,24 +169,26 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 
 ---
 
-## 10. Expected contribution matrix
+## 10. Contribution matrix (as built)
+
+Records who authored what in this repository today. Cells for Manya and Tanmoy stay empty until
+their branches contain the work; nothing is credited on their behalf.
 
 | Activity | Udit | Manya | Tanmoy |
 |---|---|---|---|
-| Literature survey (5 papers each) | ✓ | ✓ | ✓ |
-| Research gap analysis (5 papers each) | ✓ | ✓ | ✓ |
-| Cloud environment, IAM, multi-account setup | ✓ | | |
+| Literature survey (5 papers each) | ✓ (papers 1-5) | papers 6-10 | papers 11-15 |
+| Research gap analysis (5 papers each) | ✓ | theirs | theirs |
+| Cloud environment, IAM, Terraform | ✓ | | |
 | Backend development and CLI | ✓ | | |
-| Knowledge graph, ontology, corpus | | ✓ | |
-| Database and graph store integration | | ✓ | |
-| AI / machine learning | | | ✓ |
-| Explainability and evaluation | | | ✓ |
-| Frontend development | | | ✓ |
-| AWS cloud services | ✓ | ✓ | ✓ |
-| Testing | ✓ | ✓ | ✓ |
-| Documentation | ✓ | ✓ | ✓ |
-| Presentation | ✓ | ✓ | ✓ |
-| GitHub commits | ✓ | ✓ | ✓ |
+| Knowledge graph, ontology, corpus | ✓ | | |
+| AI / machine learning (reconstruction, recommender, advisor) | ✓ | | |
+| Explainability and evaluation | ✓ | | |
+| Dashboard (Phase-I visual summary) | ✓ | | |
+| AWS cloud services (adapters, planning table) | ✓ | | |
+| Testing and CI | ✓ | | |
+| Documentation, presentation | ✓ | | |
+
+The AI/ML and explainer code was written by Udit with Claude as a coding assistant.
 
 ---
 
