@@ -30,10 +30,10 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from kgcr.advisor.controls import Control, load_controls
-from kgcr.advisor.llm import LLMClient, MissingFixtureError
+from kgcr.advisor.llm import LLMClient, MissingFixtureError, StaleFixtureError
 from kgcr.corpus.estate import Estate
 from kgcr.corpus.graph import build_graph_from_estate
-from kgcr.defects.detectors import single_resource_findings
+from kgcr.defects.detectors import RELATIONAL_HOP_BOUND, single_resource_findings
 from kgcr.defects.taxonomy import DEFAULT_CONTROL, Severity
 from kgcr.hashing import canonical_hash
 
@@ -47,7 +47,7 @@ PROMPT_VERSION = "v1"
 # Injected resources are named df7_public_hop, df7-trust-a, ... A model reading
 # that prefix is handed the answer, so it is stripped from everything the model
 # sees and mapped back on admission.
-_LEAK = re.compile(r"df\d+[_-]")
+_LEAK = re.compile(r"\bdf\d+[_-]")
 
 _PROMPT = """ROLE
 You are a compliance reviewer for cloud configurations in a regulated financial
@@ -135,7 +135,7 @@ class Review:
     llm_admitted: tuple[AdvisorFinding, ...] = ()
     llm_proposed: int = 0
     rejections: tuple[str, ...] = field(default_factory=tuple)
-    llm_status: str = "disabled"  # "ok" | "disabled" | "missing_fixture"
+    llm_status: str = "disabled"  # "ok" | "disabled" | "missing_fixture" | "unparseable"
 
     @property
     def grounding_rate(self) -> float | None:
@@ -245,10 +245,16 @@ class Advisor:
         self, estate: Estate, proposals: list[Any]
     ) -> tuple[list[AdvisorFinding], list[str]]:
         aliases: dict[str, str] = {}
+        ambiguous: set[str] = set()
         for address in estate.resource_addresses:
             clean = _strip(address)
             if aliases.setdefault(clean, address) != address:
-                raise ValueError(f"address alias collision on {clean}")
+                ambiguous.add(clean)
+        # Two addresses that strip to one name cannot be mapped back; a proposal
+        # naming it is rejected below rather than aborting the whole review.
+        for clean in ambiguous:
+            logger.warning("address alias collision on %s; proposals naming it are rejected", clean)
+            del aliases[clean]
         graph = build_graph_from_estate(estate)
         adjacent = {(e.source, e.target) for e in graph.edges}
         adjacent |= {(t, s) for s, t in adjacent}
@@ -263,6 +269,9 @@ class Advisor:
             elements = item.get("affected_elements")
             path = item.get("evidence_path") or []
             assertion = item.get("assertion")
+            if not isinstance(assertion, str) or not assertion.strip():
+                rejections.append("missing assertion")
+                continue
             if not isinstance(node, str) or node not in self.controls:
                 rejections.append(f"unresolved control: {node!r}")
                 continue
@@ -276,13 +285,16 @@ class Advisor:
             if any((a, b) not in adjacent for a, b in zip(real_path, real_path[1:], strict=False)):
                 rejections.append(f"evidence path not in graph: {path}")
                 continue
+            if path and (len(path) > RELATIONAL_HOP_BOUND + 1 or not set(elements) <= set(path)):
+                rejections.append(f"evidence path too long or elements off the path: {path}")
+                continue
             real_elements = tuple(sorted({aliases[e] for e in elements}))
             admitted.append(
                 AdvisorFinding(
                     node,
                     self.controls[node].severity,  # overwritten, never taken from the model
                     real_elements,
-                    str(assertion),
+                    assertion,
                     "llm",
                     real_path,
                     _element_hashes(estate, real_elements),
@@ -314,10 +326,12 @@ class Advisor:
             call = label or f"{PROMPT_VERSION}-{estate.estate_id}-p{pass_number}"
             try:
                 response = self.llm.complete(prompt, call)
-            except MissingFixtureError:
+            except (MissingFixtureError, StaleFixtureError) as exc:
                 if self.strict_llm:
                     raise
-                logger.warning("no recorded LLM response for %s; rule floor only", call)
+                logger.warning(
+                    "no usable recorded LLM response for %s (%s); rule floor only", call, exc
+                )
                 status = "missing_fixture"
             else:
                 status = "ok"
@@ -327,6 +341,7 @@ class Advisor:
                     logger.warning("unparseable LLM response for %s: %s", call, exc)
                     rejections.append(f"unparseable response: {exc}")
                     proposals = []
+                    status = "unparseable"
                 proposed = len(proposals)
                 llm_admitted, rejections_admit = self._admit(estate, proposals)
                 rejections.extend(rejections_admit)

@@ -82,11 +82,8 @@ class TemplatePatcher:
                 trial = aligned(res, key)
                 if len(resource_findings(trial)) < len(resource_findings(res)):
                     res = trial
-            return res
-        # No rule fires (an LLM-raised finding): align every configurable scalar.
-        for key in keys:
-            if not isinstance(template.attributes.get(key), dict | list):
-                res = aligned(res, key)
+        # With no rule firing (an LLM-raised finding) nothing is safe to align: the
+        # resource is left as is and the loop halts as OSCILLATING (P3).
         return res
 
     def patch(self, estate: Estate, findings: tuple[AdvisorFinding, ...]) -> Estate:

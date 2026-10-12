@@ -56,7 +56,8 @@ class Trial:
 
     @property
     def valid(self) -> bool:
-        return bool(self.passes[0].llm_admitted)
+        # A pass whose reply could not be parsed says nothing about persistence.
+        return bool(self.passes[0].llm_admitted) and all(r.llm_status == "ok" for r in self.passes)
 
     def _persistence(self, sets: list[set[tuple[str, tuple[str, ...]]]]) -> float | None:
         base = sets[0]

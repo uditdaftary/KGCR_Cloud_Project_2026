@@ -2,7 +2,7 @@
 
 Tests and the demo replay recorded responses from ``results/llm_fixtures/``. A live
 call happens only when both ``GEMINI_API_KEY`` is set and ``KGCR_LLM_LIVE=1`` is
-opted into, and is capped per process so a bug cannot run up free-tier quota. A
+opted into, and is capped per client (one per run) so a bug cannot run up free-tier quota. A
 recorded response stores a hash of the prompt it answered: if the prompt template
 changes, replay fails loudly instead of returning a stale answer.
 
@@ -18,6 +18,8 @@ import os
 from pathlib import Path
 from typing import Protocol
 
+from dotenv import load_dotenv
+
 __all__ = [
     "GEMINI_MODEL",
     "DEFAULT_FIXTURE_DIR",
@@ -28,14 +30,22 @@ __all__ = [
     "MissingFixtureError",
     "StaleFixtureError",
     "live_client_from_env",
+    "default_llm",
 ]
 
 logger = logging.getLogger(__name__)
 
 # Verified 2026-10-04 against ai.google.dev/gemini-api/docs/models (listed stable).
 GEMINI_MODEL = "gemini-3.7-flash"
-DEFAULT_FIXTURE_DIR = Path("results/llm_fixtures")
-# 4 sycophancy specs x 3 passes + 8 recall/false-positive estates, with headroom.
+# Anchored to the repository root, not the current directory, so `kgcr review` finds
+# the recorded responses from anywhere; KGCR_LLM_FIXTURE_DIR overrides it (for example
+# for a non-editable install, where the repository root is not beside the package).
+DEFAULT_FIXTURE_DIR = Path(
+    os.environ.get("KGCR_LLM_FIXTURE_DIR")
+    or Path(__file__).resolve().parents[4] / "results" / "llm_fixtures"
+)
+# Per client, not per process. One evaluation run: 4 sycophancy specs x 3 passes +
+# 4 clean estates = 16; one `kgcr review`: at most 3 loop passes. Headroom above both.
 LIVE_CALL_CAP = 24
 
 
@@ -71,6 +81,15 @@ class GeminiClient:
         return text
 
 
+def load_local_env() -> None:
+    """Load ``.env`` from the working directory without overriding the real environment.
+
+    Called by entry points only, never by library code or tests: a developer's ``.env``
+    with ``KGCR_LLM_LIVE=1`` must not leak into a test run.
+    """
+    load_dotenv(override=False)
+
+
 def live_client_from_env() -> LLMClient | None:
     """A live client if the key is set and ``KGCR_LLM_LIVE=1``; otherwise None."""
     if os.environ.get("KGCR_LLM_LIVE") != "1":
@@ -80,6 +99,14 @@ def live_client_from_env() -> LLMClient | None:
         logger.warning("KGCR_LLM_LIVE=1 but GEMINI_API_KEY is unset; replaying fixtures only")
         return None
     return GeminiClient()
+
+
+def default_llm() -> LLMClient | None:
+    """Fixture replay (recording when live is opted into), or None with no fixtures."""
+    live = live_client_from_env()
+    if live is None and not DEFAULT_FIXTURE_DIR.exists():
+        return None
+    return FixtureClient(DEFAULT_FIXTURE_DIR, live)
 
 
 def _sha256(text: str) -> str:
