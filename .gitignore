@@ -45,3 +45,6 @@ docs/papers/
 # kgcr review artifact store (local S3 stand-in)
 runs-local/
 node_modules/
+
+# Local secrets (GEMINI_API_KEY etc.); copy .env.example to .env
+.env

@@ -18,6 +18,7 @@ authors = [{ name = "KGCR project" }]
 # them, each pinned when introduced.
 dependencies = [
   "PyYAML==6.0.2",
+  "python-dotenv==1.2.2",
 ]
 
 # Phase-scoped heavy dependencies, pinned when introduced (see comment above).
