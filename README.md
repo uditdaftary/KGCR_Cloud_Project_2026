@@ -130,7 +130,7 @@ Run the demo and regenerate the results:
 
 ```bash
 kgcr review --variant unencrypted_database --audience auditor   # end-to-end review, ~15 s
-kgcr review --variant indirect_internet_reachability   # DF-7: found only with recorded LLM fixtures
+kgcr review --variant transitive_trust_chain   # DF-7: found only with recorded LLM fixtures
 python src/ml_model/train_recommender.py       # results/recommender_report.json
 python src/ml_model/run_advisor.py             # results/advisor_report.json
 ```
