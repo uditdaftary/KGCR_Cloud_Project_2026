@@ -46,6 +46,9 @@ class LocalArtifactStore:
         if key.startswith(("/", "\\")) or ".." in Path(key).parts:
             raise ValueError(f"artifact key must be relative and stay inside the store: {key!r}")
         path = self.root / key
+        # Catches what the string check cannot, e.g. a drive-qualified key on Windows.
+        if not path.resolve().is_relative_to(self.root.resolve()):
+            raise ValueError(f"artifact key must stay inside the store: {key!r}")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(body, encoding="utf-8")
         return path.as_posix()

@@ -133,7 +133,8 @@ class OptionRecommender:
             f: sorted({e.intent.to_dict()[f] for e in clean}) for f in INTENT_FIELDS
         }
         x = np.array([self._encode(e.intent.to_dict()) for e in clean])
-        y = np.array([[o in estate_options(e) for o in self.candidates] for e in clean], dtype=int)
+        exhibited = [estate_options(e) for e in clean]
+        y = np.array([[o in opts for o in self.candidates] for opts in exhibited], dtype=int)
         self._model = MultiOutputClassifier(
             RandomForestClassifier(n_estimators=100, random_state=self._random_state)
         )

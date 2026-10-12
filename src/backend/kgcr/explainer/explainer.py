@@ -124,10 +124,16 @@ class ExplanationBundle:
 
 def _counterfactual(
     estate: Estate, finding: AdvisorFinding, patcher: TemplatePatcher
-) -> Counterfactual:
+) -> Counterfactual | None:
+    """An evaluated perturbation, or None when nothing can be re-evaluated (never a
+    NOT RESOLVED for a fix that was not actually tested)."""
     if len(finding.evidence_path) >= 2:
         source, sink = finding.evidence_path[0], finding.evidence_path[-1]
         hop = finding.evidence_path[-2]
+        change = f"remove the reference between {hop} and {sink}"
+        # A path the bounded traversal cannot see before the cut proves nothing after it.
+        if relational_path_exists(estate, source, sink) is None:
+            return None
         cut = tuple(
             replace(r, references=tuple(x for x in r.references if x != sink))
             if r.address == hop
@@ -138,25 +144,20 @@ def _counterfactual(
         )
         survivor = relational_path_exists(replace(estate, resources=cut), source, sink)
         return Counterfactual(
-            f"remove the reference between {hop} and {sink}",
+            change,
             survivor is None,
             "no path remains within 3 hops"
             if survivor is None
             else f"another path remains: {' -> '.join(survivor)}",
         )
     by_address = {r.address: r for r in estate.resources}
-    before = [by_address[a] for a in finding.affected_elements]
+    if not any(resource_findings(by_address[a]) for a in finding.affected_elements):
+        return None  # no single-resource rule backs it; re-evaluation needs the model
     after = patcher.patch(estate, (finding,))
     after_by_address = {r.address: r for r in after.resources}
     remaining = [
         f for a in finding.affected_elements for f in resource_findings(after_by_address[a])
     ]
-    if not any(resource_findings(r) for r in before):
-        return Counterfactual(
-            f"align {', '.join(finding.affected_elements)} with the compliant template",
-            False,
-            "no single-resource rule backs this finding; re-evaluation needs the advisor model",
-        )
     return Counterfactual(
         f"align {', '.join(finding.affected_elements)} with the compliant template",
         not remaining,
