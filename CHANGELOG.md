@@ -6,13 +6,13 @@ and what is deliberately deferred. It is maintained alongside the roadmap
 ([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-10-05.
+Last updated: 2026-10-12.
 
 ---
 
 ## LOOP_STATE (Review 2 push; updated in place, never stacked)
 
-Updated 2026-10-05. Branch `feature/udit`, local commits only, nothing pushed.
+Updated 2026-10-12. Branch `feature/udit`, pushed; PR #6 into `develop` is open.
 
 - **Done:**
   - **P7 recommender:** a one-vs-rest random forest with a hard CRITICAL mask.
@@ -26,9 +26,12 @@ Updated 2026-10-05. Branch `feature/udit`, local commits only, nothing pushed.
   - **Deck:** `presentation/KGCR_Review2.pptx`, 14 slides. The gate state is read from the report.
   - **Docs:** README, the report, the objectives and both diagrams updated.
   - **Citation fix:** DF-2 now cites PCI-DSS v4.0 3.5.1.
-  - **Gates:** 155 tests pass.
-- **Blocked (needs Udit): the sycophancy gate is NOT RUN.** No `GEMINI_API_KEY` is set. After
-  adding the key:
+  - **Dashboard:** `python src/frontend/build_dashboard.py` writes `results/dashboard.html` from the
+    reports; gate state is read, so rebuild it after the live run.
+  - **Gates:** 156 tests pass.
+- **Ready to run, not yet run: the sycophancy gate is NOT RUN.** `.env` holds the key and
+  `KGCR_LLM_LIVE=1`; the model id resolves. `run_advisor.py` and `kgcr review` load `.env`.
+  Steps (1 is already done):
   1. Install the advisor extra and enable live calls: `pip install -e ".[advisor]"`, then set
      `GEMINI_API_KEY` and `KGCR_LLM_LIVE=1` **for this shell only**.
   2. `python src/ml_model/run_advisor.py`. That is 16 calls: 4 specs × 3 passes plus 4 clean
@@ -53,14 +56,8 @@ Updated 2026-10-05. Branch `feature/udit`, local commits only, nothing pushed.
   any data exists.
 - **Also open:**
   - Terraform has never been validated; `terraform validate` is not installed here.
-  - Nothing is pushed. The PR from `feature/udit` into `develop` is not opened (needs Udit's
-    go-ahead).
 - **Awaiting Udit's review:**
   - The six draft L1 controls, all unverified.
-  - The FD-02/03/04/07 specs still cite "PCI-DSS 3.4" for encryption at rest; v4.0 numbers it
-    3.5.1.
-  - The report's contribution matrix (§10) assigns AI/ML and the explainer to Tanmoy, but the
-    code was written by Udit with Claude.
   - `docs/*.docx` were deleted from git on 2026-07-31. They are regenerated locally, not
     re-committed.
   - `make_docx.py` rewrote `dataset/dataset_description.docx`. The uncommitted pre-session version
