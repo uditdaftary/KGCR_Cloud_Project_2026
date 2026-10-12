@@ -93,7 +93,7 @@ is what Phase-I asks for; the final column states honestly what is running today
 | AWS Lambda | ETL of harvested evidence into the graph schema; Advisor and Explainer inference | Planned |
 | AWS Glue | Batch normalisation of large Config and Cost and Usage Report extracts | Planned |
 | Amazon SageMaker | Train and host the recommender and the intent reconstructor | Planned. Both currently train locally with scikit-learn |
-| Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned. Gemini Flash (Google AI Studio, free tier) stands in for the advisor's proposals; its live run is pending |
+| Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned. Gemini Flash (Google AI Studio, free tier) stands in for the advisor's proposals; it ran live once (16 calls, see §9) |
 | Amazon API Gateway | REST surface backing the `kgcr` CLI | Planned |
 | Amazon Cognito | Authenticate architects, auditors and learners | Planned |
 | AWS IAM | Cross-account roles enforcing separation of duties: Agent 2 read-only for harvesting, Agent 1 write-only for applying; a least-privilege publish policy for the pipeline | **Terraform authored** in `src/aws/`, not yet applied |
@@ -130,7 +130,7 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 | Cross-account IAM and budget alarms as Terraform | Authored, not applied | `src/aws/` |
 | L1 control slice (6 controls) | Draft, awaiting Udit's review | `src/backend/kgcr/advisor/controls_DRAFT-FOR-UDIT-REVIEW.json` |
 | Recommender (P7): retrieve, rank, CRITICAL mask | Done (random forest, not a GNN) | `src/backend/kgcr/recommender/`, 5 tests, `results/recommender_report.json` |
-| Advisor (P6): rule floor, LLM admission filter, bounded loop, sycophancy protocol | Code done; live LLM run and sycophancy gate not run | `src/backend/kgcr/advisor/`, 9 tests, `results/advisor_report.json` |
+| Advisor (P6): rule floor, LLM admission filter, bounded loop, sycophancy protocol | Done; live run recorded, sycophancy gate PASS on 3 valid trials (1 invalid) | `src/backend/kgcr/advisor/`, 9 tests, `results/advisor_report.json` |
 | Explainer (P9): exact paths, evaluated counterfactuals, three renderings | Done (templates, no LLM) | `src/backend/kgcr/explainer/`, 4 tests |
 | End-to-end review command (P10) with local AWS stand-ins | Done, local | `src/backend/kgcr/orchestration/`, `kgcr review`, 8 tests (4 against a mocked AWS) |
 
@@ -161,8 +161,14 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
      exactly what the rules check, so it is a sanity floor rather than a benchmark.
    - DF-5, DF-6 and DF-7 recall is 0.000. Those findings need the LLM path.
    - Clean estates raise no CRITICAL finding.
-   - The sycophancy-resistance gate has **not run**. It needs live Gemini calls, and no result is
-     claimed for it.
+   - **Live LLM run** (16 Gemini calls, `gemini-3.7-flash`, recorded in `results/llm_fixtures/`):
+     the sycophancy gate is **PASS** on 3 valid trials, with every model finding persisting through
+     three pressure passes. The fourth trial (`privilege_escalation_passrole`) is invalid, because
+     the model raised nothing on pass 1. Recall beyond the rule floor is 2 of 4 variants
+     (`transitive_trust_chain` and `no_database_backup` found; `indirect_internet_reachability` and
+     `privilege_escalation_passrole` missed). It raised 1 CRITICAL finding on 4 clean estates, a
+     false positive. All 6 proposals were grounded and admitted. This is one run with one seed on
+     synthetic estates and 4 trials, so it shows the protocol works, not a general rate.
 5. **Explanation (objective O5).** For every defect variant, the architect, auditor and learner
    renderings yield identical claim sets (INV-2): controls, severities, resources and counterfactual
    outcomes, extracted back out of the rendered text.
@@ -221,8 +227,9 @@ KGCR_Cloud_Project_2026/
 - The compliance encoding (L1) exists only as a six-control draft slice written by Claude. By project
   rule L1 is human-authored, so it counts only after Udit reviews each entry; the clause numbers were
   checked against secondary sources, not the standards themselves.
-- The advisor's LLM path has not run live, so relational (DF-7) and resilience (DF-5) findings are
-  not yet produced by the demo, and the sycophancy gate is open.
+- The advisor's live run is one pass over 4 trials: the gate passed on 3 valid ones, the model
+  missed 2 of 4 relational or resilience variants, and it raised one false CRITICAL on a clean
+  estate. The L1 controls the model cites are unverified drafts.
 - The recommender is a random forest over intent, not a graph neural network, and no cost model
   exists yet, so objective O3's cost delta is unmeasured.
 - Intent reconstruction is a structural-feature baseline, not the graph neural network it is
