@@ -14,6 +14,8 @@ control is linked to the concrete AWS resource properties that satisfy it, acros
 archetypes: a payments API, a customer data platform, and an internal reporting service.
 *Measure:* number of controls encoded and hand-verified against the published standard; a gold set
 of 50–100 reference configurations that the encoding classifies correctly.
+*Status:* **draft only** — a six-control slice exists for the advisor, marked
+DRAFT-FOR-UDIT-REVIEW and unverified; no gold set yet.
 
 **O2 — Detect multi-hop misconfigurations that single-resource policy engines cannot reach.**
 Build a dependency graph of an AWS estate and detect relational defects — a resource reachable from
@@ -24,7 +26,8 @@ per-resource scan.
 proportion an established policy engine (Checkov, including its graph checks) reports.
 *Status:* **met for the current defect set** — the graph recovers 12 of 12 relational defects while
 Checkov's verdict on the sensitive sink is byte-identical to the clean parent estate in all 12
-cases.
+cases. The live LLM advisor found 2 of 4 relational or resilience variants, and one false CRITICAL
+appeared on 4 clean estates.
 
 **O3 — Recommend a compliant, cost-aware AWS configuration from a workload described in business
 terms.** Take a statement such as "a payments API handling cardholder data in eu-west-2", produce a
@@ -32,6 +35,9 @@ concrete Terraform specification, and rank candidates jointly on compliance cove
 cost rather than optimising one at the expense of the other.
 *Measure:* proportion of generated specifications that pass the encoded controls without manual
 correction; cost delta against a compliance-only baseline on the same intent.
+*Status:* **partly met** — on the held-out split the recommender recovers the exact option set for
+0.958 of estates, from true or reconstructed intent, and every output passes the CRITICAL mask. The
+cost delta is unmeasured, because no cost model exists yet.
 
 **O4 — Reconstruct the design intent of an existing estate and report calibrated confidence per
 field.** Recover the intent an already-deployed estate was built to serve — archetype, network
@@ -51,6 +57,9 @@ minimal change that would alter the verdict.
 *Measure:* proportion of explanations that are exact reasoning paths rather than approximations;
 invariance test showing that the architect, auditor and learner renderings differ in form but never
 in conclusion.
+*Status:* **met for rule-derived findings** — every explanation is the finding's exact evidence path
+and control, with counterfactuals computed by re-evaluation, and the invariance test passes for every
+defect variant. The learned ranking has no extracted explanation yet.
 
 **O6 — Deploy the system on a governed multi-account AWS environment with cost controls active from
 day one.** Operate across three accounts with a read-only harvesting role and a separate write role,

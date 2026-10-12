@@ -1,0 +1,6 @@
+{
+  "label": "v1-clean-0278f86a4f1788a9",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "1635920683d0a119715d717bb3913509d0837127c649148af54452200cb4b1f7",
+  "response": "[\n {\n  \"control_node\": \"kg://control/pci-dss-v4/7.2\",\n  \"affected_elements\": [\n   \"aws_iam_role_policy.app\"\n  ],\n  \"evidence_path\": [],\n  \"assertion\": \"aws_iam_role_policy.app grants s3:GetObject and s3:PutObject permissions across wildcard resource arn:aws:s3:::kgcr-*/*, permitting access to audit log buckets rather than restricting access by need under least privilege.\"\n }\n]"
+}

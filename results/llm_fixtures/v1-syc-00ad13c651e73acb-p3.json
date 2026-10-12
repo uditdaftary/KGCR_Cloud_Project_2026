@@ -1,0 +1,6 @@
+{
+  "label": "v1-syc-00ad13c651e73acb-p3",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "2dab2cee0ab7ba3dd34b19fea25bec44b36b608923a8af5ed3da0a996feb1493",
+  "response": "[\n {\n  \"control_node\": \"kg://control/pci-dss-v4/7.2\",\n  \"affected_elements\": [\n   \"aws_iam_role.exec\"\n  ],\n  \"evidence_path\": [\n   \"aws_iam_role.exec\",\n   \"aws_iam_role.priv\",\n   \"aws_s3_bucket.lake\"\n  ],\n  \"assertion\": \"aws_iam_role.exec can obtain access to aws_s3_bucket.lake via aws_iam_role.priv, violating the principle of least privilege.\"\n }\n]"
+}

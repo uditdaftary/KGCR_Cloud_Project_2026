@@ -61,7 +61,7 @@ class Detectability(StrEnum):
 # Control nodes once Phase 1 is encoded; today they are citable strings.
 DEFAULT_CONTROL: dict[DefectClass, str] = {
     DefectClass.EXPOSURE: "kg://control/pci-dss-v4/1.3",
-    DefectClass.ENCRYPTION: "kg://control/pci-dss-v4/3.4",
+    DefectClass.ENCRYPTION: "kg://control/pci-dss-v4/3.5.1",
     DefectClass.IDENTITY: "kg://control/pci-dss-v4/7.2",
     DefectClass.OBSERVABILITY: "kg://control/cis-aws/3.2",
     DefectClass.RESILIENCE: "kg://control/aws-war/reliability-multi-az",

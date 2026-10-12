@@ -18,6 +18,7 @@ authors = [{ name = "KGCR project" }]
 # them, each pinned when introduced.
 dependencies = [
   "PyYAML==6.0.2",
+  "python-dotenv==1.2.2",
 ]
 
 # Phase-scoped heavy dependencies, pinned when introduced (see comment above).
@@ -32,8 +33,19 @@ reconstruction = [
 labelling = [
   "checkov==3.3.8",
 ]
+# P6 advisor's live Gemini calls. Not in ``dev``: CI replays committed fixtures.
+advisor = [
+  "google-genai==2.20.0",
+]
+# P10 S3/SNS adapters. In ``dev`` (with moto) so CI exercises them against an
+# in-process AWS mock; no test reaches real AWS.
+aws = [
+  "boto3==1.35.49",
+]
 dev = [
   "kgcr[reconstruction]",
+  "kgcr[aws]",
+  "moto[s3]==5.2.3",
   "pytest==8.3.4",
   "ruff==0.8.4",
   "mypy==1.13.0",
@@ -50,6 +62,10 @@ kgcr = "kgcr.cli:main"
 where = ["src/backend"]
 include = ["kgcr*"]
 
+# The draft L1 control slice ships with the advisor package.
+[tool.setuptools.package-data]
+kgcr = ["advisor/*.json"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
@@ -62,6 +78,10 @@ src = ["src/backend", "."]
 # A pragmatic, reproducibility-friendly rule set: pyflakes, pycodestyle,
 # isort, bugbear, comprehensions, pyupgrade.
 select = ["E", "F", "I", "B", "C4", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Inline CSS and HTML strings; wrapping them would only hurt readability.
+"src/frontend/build_dashboard.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -77,6 +97,8 @@ warn_unused_configs = true
 # numpy/torch are optional, probed defensively in kgcr.repro; they are not
 # installed in the scaffolding environment, so their stubs are not required.
 # scikit-learn ships no type stubs, so it is ignored here too (P8 reconstruction).
+# google-genai (advisor extra) is absent in CI; ignoring it keeps mypy identical
+# locally and in CI.
 [[tool.mypy.overrides]]
-module = ["numpy", "torch", "sklearn.*"]
+module = ["numpy", "torch", "sklearn.*", "google.*", "boto3", "boto3.*", "moto", "moto.*"]
 ignore_missing_imports = true

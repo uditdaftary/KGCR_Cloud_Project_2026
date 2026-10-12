@@ -1,0 +1,49 @@
+{
+  "corpus": "synthetic, self-generated (kgcr.corpus)",
+  "flagged_noncritical": [
+    [
+      "aws_cloudtrail",
+      "enable_log_file_validation",
+      "False"
+    ]
+  ],
+  "masked_critical": [
+    [
+      "aws_db_instance",
+      "storage_encrypted",
+      "False"
+    ]
+  ],
+  "model": "one-vs-rest RandomForestClassifier per option on one-hot intent",
+  "n_candidates": 44,
+  "n_estates": 180,
+  "n_fit": 156,
+  "n_pool_after_mask": 43,
+  "n_test": 24,
+  "rankers": {
+    "archetype_frequency": {
+      "exact_set": 0.2083,
+      "ndcg": 0.9973,
+      "p_at_10": 1.0,
+      "r_precision": 0.9404
+    },
+    "model_reconstructed_intent": {
+      "exact_set": 0.9583,
+      "ndcg": 1.0,
+      "p_at_10": 1.0,
+      "r_precision": 1.0
+    },
+    "model_true_intent": {
+      "exact_set": 0.9583,
+      "ndcg": 1.0,
+      "p_at_10": 1.0,
+      "r_precision": 1.0
+    },
+    "popularity": {
+      "exact_set": 0.0,
+      "ndcg": 0.986,
+      "p_at_10": 1.0,
+      "r_precision": 0.8582
+    }
+  }
+}

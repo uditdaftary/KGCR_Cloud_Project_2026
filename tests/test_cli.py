@@ -22,7 +22,7 @@ def test_no_command_prints_help_and_succeeds(capsys: pytest.CaptureFixture[str])
     assert "usage" in capsys.readouterr().out.lower()
 
 
-@pytest.mark.parametrize("command", ["design", "review", "explain", "plan", "apply", "history"])
+@pytest.mark.parametrize("command", ["design", "explain", "plan", "apply", "history"])
 def test_planned_commands_exit_not_implemented(
     command: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
