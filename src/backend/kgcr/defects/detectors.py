@@ -29,7 +29,16 @@ from kgcr.corpus.graph import EstateGraph, build_graph_from_estate
 from kgcr.corpus.resources import Resource
 from kgcr.defects.taxonomy import DefectClass
 
-__all__ = ["Finding", "single_resource_findings", "resource_findings", "relational_path_exists"]
+__all__ = [
+    "RELATIONAL_HOP_BOUND",
+    "Finding",
+    "single_resource_findings",
+    "resource_findings",
+    "relational_path_exists",
+]
+
+# The k of the FD-07 section 7 relational predicate: paths longer than this are not findings.
+RELATIONAL_HOP_BOUND = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,7 +195,7 @@ def relational_path_exists(
     source: str,
     sink: str,
     *,
-    hop_bound: int = 3,
+    hop_bound: int = RELATIONAL_HOP_BOUND,
 ) -> tuple[str, ...] | None:
     """Return a shortest ``source``→``sink`` path within ``hop_bound`` hops, or None.
 

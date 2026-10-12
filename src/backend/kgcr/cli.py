@@ -24,6 +24,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import asdict
 
 from kgcr._version import __version__
+from kgcr.advisor.llm import load_local_env
 from kgcr.repro import DEFAULT_SEED, seed_everything
 from kgcr.versions import tool_versions
 
@@ -221,8 +222,8 @@ def _cmd_review(args: argparse.Namespace) -> int:
         f"after {len(run.loop.passes)} pass(es)"
     )
     if run.llm_mode != "ok":
-        print("      rule floor only: relational (DF-7) and resilience (DF-5) findings need")
-        print("      the LLM advisor, so they are not reported in this run")
+        print("      rule floor only on at least one pass: relational (DF-7) and resilience")
+        print("      (DF-5) findings need the LLM advisor, so they are not reported on every pass")
     for f in run.reviewed_findings:
         where = ", ".join(f.affected_elements)
         print(f"      [{f.severity.value}] {f.control_node} on {where} ({f.origin})")
@@ -235,6 +236,8 @@ def _cmd_review(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    if argv is None:  # real CLI invocation; tests pass argv explicitly and skip .env
+        load_local_env()
     parser = build_parser()
     args = parser.parse_args(argv)
     if not getattr(args, "command", None):
