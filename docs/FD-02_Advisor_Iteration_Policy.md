@@ -157,8 +157,8 @@ Emitted when the loop halts with unresolved CRITICAL findings. This is a first-c
     {
       "finding_id": "F-014",
       "severity": "CRITICAL",
-      "control_ref": "PCI-DSS-3.4",
-      "control_source": "kg://control/pci-dss-v4/3.4",
+      "control_ref": "PCI-DSS-3.5.1",
+      "control_source": "kg://control/pci-dss-v4/3.5.1",
       "advisor_position": "Field-level encryption absent on the PAN column; clause requires rendering PAN unreadable at rest.",
       "generator_position": "Volume-level encryption applied; asserted as satisfying the clause.",
       "contested_point": "Whether volume-level encryption satisfies a clause specifying rendering PAN unreadable.",

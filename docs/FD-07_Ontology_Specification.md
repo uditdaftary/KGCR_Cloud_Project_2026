@@ -83,7 +83,7 @@ Every L1 node is addressable by a stable URI. Findings cite these (FD-04 §3 `co
 
 ```
 kg://framework/<framework-id>
-kg://control/<framework-id>/<clause-ref>          e.g. kg://control/pci-dss-v4/3.4
+kg://control/<framework-id>/<clause-ref>          e.g. kg://control/pci-dss-v4/3.5.1
 kg://predicate/<predicate-id>
 kg://service/<service-type>                        e.g. kg://service/aws-rds-dbinstance
 kg://property/<service-type>/<property-name>
@@ -98,13 +98,13 @@ L2 nodes (observed resources, edges) use `kg://resource/<id>` and `kg://edge/<ty
 
 ## 5. Worked encoding — one control, end to end
 
-The PCI-DSS 3.4 example threaded through FD-02 §6 and FD-04 §12, encoded:
+The PCI-DSS 3.5.1 example threaded through FD-02 §6 and FD-04 §12, encoded:
 
 ```
 (Framework  kg://framework/pci-dss-v4  {enforced: true})
    -[:GOVERNS]->
-(Control     kg://control/pci-dss-v4/3.4
-   { clause_ref: "3.4",
+(Control     kg://control/pci-dss-v4/3.5.1
+   { clause_ref: "3.5.1",
      title: "Render PAN unreadable anywhere it is stored",
      obligation_summary: "PAN must be rendered unreadable at rest by an approved method.",
      classification: "mandatory",
@@ -117,11 +117,11 @@ The PCI-DSS 3.4 example threaded through FD-02 §6 and FD-04 §12, encoded:
      expression: "for every store holding data:pan, a field-level unreadable-rendering method is applied",
      ... })
    -[:EVALUATED_OVER]-> (ServiceProperty kg://property/aws-rds-dbinstance/field-encryption)
-(Control kg://control/pci-dss-v4/3.4) -[:CROSS_REFERENCES]-> (ControlFamily kg://... SC)
+(Control kg://control/pci-dss-v4/3.5.1) -[:CROSS_REFERENCES]-> (ControlFamily kg://... SC)
 (DataClass kg://data/pan) -[:ALIGNS_WITH]-> (FIBOConcept kg://fibo/payment-card-number)
 ```
 
-A finding raised against a spec resolves its `control_node` to `kg://control/pci-dss-v4/3.4`, reads `severity: CRITICAL` **off the node**, and attaches the `evidence_path` traversed to establish the breach. Nothing about the severity is decided by the Advisor — this is the mechanism behind FD-04 §4 and FD-02 §4.
+A finding raised against a spec resolves its `control_node` to `kg://control/pci-dss-v4/3.5.1`, reads `severity: CRITICAL` **off the node**, and attaches the `evidence_path` traversed to establish the breach. Nothing about the severity is decided by the Advisor — this is the mechanism behind FD-04 §4 and FD-02 §4.
 
 ---
 
