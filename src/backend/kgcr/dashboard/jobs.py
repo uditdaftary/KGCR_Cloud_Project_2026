@@ -27,9 +27,10 @@ from typing import Any
 
 from kgcr.advisor.llm import DEFAULT_FIXTURE_DIR
 from kgcr.dashboard.db import Database, now_iso
+from kgcr.design.intake import AXES, axis_choices
 from kgcr.repro import DEFAULT_COUNT, DEFAULT_SEED
 
-__all__ = ["JOB_KINDS", "JobError", "JobKind", "Param", "Runner", "validate"]
+__all__ = ["JOB_KINDS", "JobError", "JobKind", "Param", "Runner", "is_cloud", "validate"]
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +47,7 @@ _SECRET_NAMES = (
 )
 _S3_BUCKET = re.compile(r"^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$")
 _SNS_ARN = re.compile(r"^arn:aws[a-z\-]*:sns:[a-z0-9\-]+:\d{12}:[A-Za-z0-9_\-]{1,256}$")
+_HEX16 = re.compile(r"[0-9a-f]{16}")  # matched with fullmatch: `$` would accept a trailing \n
 
 
 class JobError(ValueError):
@@ -54,13 +56,15 @@ class JobError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class Param:
-    kind: str  # "int" | "choice" | "bool" | "s3_bucket" | "sns_arn"
+    kind: str  # "int" | "choice" | "bool" | "s3_bucket" | "sns_arn" | "hex16" | "hex16_or_blank"
     default: Any = None
     low: int = 0
     high: int = 0
     choices: tuple[str, ...] = ()
     admin_only: bool = False
     label: str = ""
+    # Choices only an admin may pick (the param itself stays open to users).
+    admin_values: tuple[str, ...] = ()
 
     def coerce(self, name: str, value: Any) -> Any:
         if self.kind == "int":
@@ -80,6 +84,12 @@ class Param:
         if self.kind == "bool":
             if not isinstance(value, bool):
                 raise JobError(f"{name} must be true or false")
+            return value
+        if self.kind in ("hex16", "hex16_or_blank"):
+            if self.kind == "hex16_or_blank" and value in (None, ""):
+                return ""
+            if not isinstance(value, str) or not _HEX16.fullmatch(value):
+                raise JobError(f"{name} must be a 16 character lowercase hex id")
             return value
         if value in (None, ""):
             return None
@@ -115,6 +125,36 @@ def _review_argv(p: dict[str, Any], out: Path, store: Path) -> list[list[str]]:
     if p.get("sns_topic_arn"):
         argv += ["--sns-topic-arn", p["sns_topic_arn"]]
     return [argv]
+
+
+def _design_argv(p: dict[str, Any], out: Path, store: Path) -> list[list[str]]:
+    argv = _py("-m", "kgcr.cli", "design", "--audience", p["audience"])
+    for axis in AXES:
+        argv += [f"--{axis.replace('_', '-')}", p[axis]]
+    argv += ["--count", str(p["count"]), "--seed", str(p["seed"]), "--out", str(store)]
+    return [argv]
+
+
+def _plan_argv(p: dict[str, Any], out: Path, store: Path) -> list[list[str]]:
+    argv = _py("-m", "kgcr.cli", "plan", "--spec", p["spec"], "--backend", p["backend"])
+    return [[*argv, "--out", str(store)]]
+
+
+def _apply_argv(p: dict[str, Any], out: Path, store: Path) -> list[list[str]]:
+    argv = _py("-m", "kgcr.cli", "apply", "--plan", p["plan"], "--backend", p["backend"])
+    argv += ["--out", str(store)]
+    if p["confirm"]:
+        argv += ["--confirm", p["confirm"]]
+    if p["budgets_applied"]:
+        argv.append("--budgets-applied")
+    return [argv]
+
+
+def is_cloud(kind: str, params: dict[str, Any]) -> bool:
+    """Does this job reach a real cloud? Such a job needs live mode and gets AWS credentials."""
+    if params.get("s3_bucket") or params.get("sns_topic_arn"):
+        return True
+    return kind == "apply" and params.get("backend") == "terraform"
 
 
 def _gates_argv(_p: dict[str, Any], _out: Path, _store: Path) -> list[list[str]]:
@@ -158,6 +198,66 @@ JOB_KINDS: dict[str, JobKind] = {
         },
         admin_only=False,
         can_go_live=True,
+    ),
+    "design": JobKind(
+        label="Design a configuration",
+        summary="kgcr design: stated intent, a candidate spec audited by the recommender, "
+        "the advisor loop, and the explanation with a justification for each choice.",
+        writes="<store>/runs/<run id>/",
+        argv=_design_argv,
+        params={
+            # No defaults: an unstated axis is refused, never assumed (FD-01 S1a).
+            **{
+                axis: Param("choice", None, choices=choices, label=axis.replace("_", " "))
+                for axis, choices in axis_choices().items()
+            },
+            "audience": Param(
+                "choice", "architect", choices=("architect", "auditor", "learner"), label="Audience"
+            ),
+            "count": _COUNT,
+            "seed": _SEED,
+            "live": _LIVE,
+        },
+        admin_only=False,
+        can_go_live=True,
+    ),
+    "plan": JobKind(
+        label="Plan a run",
+        summary="kgcr plan: a dry-run diff with control coverage, blast radius and a cost "
+        "delta. Changes nothing. The Terraform backend runs the real binary offline.",
+        writes="<store>/runs/<run id>/plans/<plan id>/",
+        argv=_plan_argv,
+        params={
+            "spec": Param("hex16", None, label="Run id"),
+            "backend": Param(
+                "choice",
+                "local",
+                choices=("local", "terraform"),
+                label="Backend",
+                admin_values=("terraform",),
+            ),
+        },
+        admin_only=False,
+    ),
+    "apply": JobKind(
+        label="Apply a plan",
+        summary="kgcr apply: a local simulation by default. The Terraform backend reaches AWS "
+        "behind every gate, needs live mode, and has never been run by this project.",
+        writes="<store>/runs/<run id>/applied/<plan id>/",
+        argv=_apply_argv,
+        params={
+            "plan": Param("hex16", None, label="Plan id"),
+            "backend": Param(
+                "choice",
+                "local",
+                choices=("local", "terraform"),
+                label="Backend",
+                admin_values=("terraform",),
+            ),
+            "confirm": Param("hex16_or_blank", "", label="Plan id typed to confirm"),
+            "budgets_applied": Param("bool", False, label="Budget alarms are applied"),
+        },
+        admin_only=False,
     ),
     "corpus": JobKind(
         label="Generate corpus",
@@ -250,7 +350,9 @@ def validate(
         if name in raw and param.admin_only and role != "admin":
             raise JobError(f"{param.label or name} is admin only")
         params[name] = param.coerce(name, raw.get(name, param.default))
-    cloud = bool(params.get("s3_bucket") or params.get("sns_topic_arn"))
+        if params[name] in param.admin_values and role != "admin":
+            raise JobError(f"{param.label or name} {params[name]!r} is admin only")
+    cloud = is_cloud(kind, params)
     live = bool(params.get("live")) or cloud
     if live and not live_enabled:
         raise JobError("live calls and cloud targets are switched off; enable them in KG 026")
@@ -339,8 +441,14 @@ class Runner:
             return True
         return active  # picked up but not spawned yet: _run sees the flag before it launches
 
-    def child_env(self, live: bool, cloud: bool = False) -> dict[str, str]:
+    def child_env(
+        self, live: bool, cloud: bool = False, apply_real: bool = False
+    ) -> dict[str, str]:
         """Child environment. ``live`` grants the Gemini key, ``cloud`` the AWS credentials.
+
+        ``apply_real`` is the one switch that lets ``kgcr apply --backend terraform`` proceed
+        (``KGCR_APPLY_ENABLED``); every other job gets it forced to 0, whatever the server's
+        own environment holds.
 
         Withheld names are blanked, not deleted: the child's ``load_dotenv(override=False)``
         refills a missing name from ``.env`` but leaves an existing (empty) one alone.
@@ -352,6 +460,7 @@ class Runner:
                 env[name] = ""
         env.update(
             KGCR_LLM_LIVE="1" if live else "0",
+            KGCR_APPLY_ENABLED="1" if apply_real else "0",
             PYTHONHASHSEED="0",
             PYTHONUTF8="1",
             PYTHONUNBUFFERED="1",
@@ -399,7 +508,8 @@ class Runner:
         spec = JOB_KINDS[job["kind"]]
         params = job["params"]
         live = bool(params.get("live"))
-        cloud = bool(params.get("s3_bucket") or params.get("sns_topic_arn"))
+        cloud = is_cloud(job["kind"], params)
+        apply_real = job["kind"] == "apply" and params.get("backend") == "terraform"
         out = self.store_root / "jobs" / f"KG{job['catalog_no']}"
         out.mkdir(parents=True, exist_ok=True)
         before = set(FIXTURES.glob("*.json")) if job["live"] else set()
@@ -419,7 +529,7 @@ class Runner:
                 proc = subprocess.Popen(
                     argv,
                     cwd=ROOT,
-                    env=self.child_env(live, cloud),
+                    env=self.child_env(live, cloud, apply_real),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
@@ -461,8 +571,10 @@ class Runner:
 
 
 _STORED_BUNDLE = re.compile(r"stored bundle: .*?runs[\\/]([0-9a-f]{16})[\\/]bundle\.json")
+# `kgcr plan` and `kgcr apply` name their run on a "run <prefix>" line instead.
+_RUN_LINE = re.compile(r"^\s*(?:plan [0-9a-f]{16}\s+)?run ([0-9a-f]{16})\b", re.M)
 
 
 def _run_prefix(log: str) -> str | None:
-    match = _STORED_BUNDLE.search(log)
+    match = _STORED_BUNDLE.search(log) or _RUN_LINE.search(log)
     return match.group(1) if match else None

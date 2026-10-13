@@ -368,6 +368,7 @@ def _cmd_apply(args: argparse.Namespace) -> int:
         print(
             f"apply of plan {record['plan_id']}: {record['status']} ({record['backend']}, {kind})"
         )
+        print(f"  run {record['run_prefix']}")
         for step in record.get("steps", []):
             print(f"  {step['status']:<8} {step['action']:<8} {step['address']}")
         if record.get("error"):
