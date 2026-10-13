@@ -1,7 +1,8 @@
 """The dashboard's store, job validation, child environment and HTTP guards.
 
-No test here starts a job: the runner would spawn a subprocess. Validation and the
-environment a job would get are tested directly instead.
+Runner tests start real subprocesses, but only a stand-in ``python -c`` command registered
+under a fake job kind; no repo script (review, training, the CI gates) is ever launched.
+Validation and the environment a job would get are tested directly.
 """
 
 from __future__ import annotations
@@ -328,3 +329,68 @@ def test_shutdown_terminates_the_running_child(runner: Runner) -> None:
         time.sleep(0.05)
     runner.shutdown()
     assert _wait(runner.db, job_id, "cancelled", "done", "failed")["status"] == "cancelled"
+
+
+def test_cancelling_a_queued_job_takes_it_off_the_queue(runner: Runner) -> None:
+    blocker = _submit(runner, "slow")
+    _wait(runner.db, blocker, "running")
+    queued = _submit(runner, "fake")
+    assert runner.position(queued) == 1
+    assert runner.cancel(queued) is True
+    assert runner.position(queued) is None
+    assert runner.db.job(queued)["status"] == "cancelled"  # type: ignore[index]
+
+
+def test_job_outputs_are_read_only_when_finished_and_readable(tmp_path: Path, base: str) -> None:
+    from kgcr.dashboard.server import App, job_view
+
+    app = App(tmp_path)
+    session = app.db.create_session("admin")
+    job_id = app.db.create_job(session["id"], "gates", {}, live=False)
+    out = tmp_path / "jobs" / "KG101"
+    out.mkdir(parents=True)
+    (out / "half.json").write_text('{"a":')  # as a report looks mid-write
+    (out / "good.json").write_text('{"a": 1}')
+    app.db.update_job(job_id, status="running", output_dir=str(out))
+    assert (job_view(app, job_id) or {})["outputs"] == {}
+    app.db.update_job(job_id, status="done")
+    assert (job_view(app, job_id) or {})["outputs"] == {"good.json": {"a": 1}}
+    app.runner.shutdown()
+
+
+def test_environment_report_does_not_reseed_the_server(base: str) -> None:
+    import random
+
+    random.seed(5)
+    before = random.getstate()
+    status, env = call(f"{base}/api/environment")
+    assert status == 200 and env["seed_report"]["seed"] == DEFAULT_SEED
+    assert random.getstate() == before
+
+
+def test_repo_files_are_served_sandboxed(base: str) -> None:
+    with urllib.request.urlopen(f"{base}/repo/docs/Runbook.md", timeout=10) as res:
+        res.read()
+        assert res.status == 200 and res.headers["Content-Security-Policy"] == "sandbox"
+
+
+def test_local_store_retries_while_a_reader_holds_the_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import os
+
+    from kgcr.orchestration import aws as aws_module
+    from kgcr.orchestration.aws import LocalArtifactStore
+
+    real_replace, calls = os.replace, []
+
+    def flaky(src: Any, dst: Any) -> None:  # Windows: the dashboard has the file open
+        calls.append(1)
+        if len(calls) < 3:
+            raise PermissionError(5, "in use")
+        real_replace(src, dst)
+
+    monkeypatch.setattr(aws_module.os, "replace", flaky)
+    LocalArtifactStore(tmp_path).put("runs/x/bundle.json", "{}")
+    assert len(calls) == 3 and (tmp_path / "runs/x/bundle.json").read_text() == "{}"
+    assert not list((tmp_path / "runs/x").glob("*.partial"))

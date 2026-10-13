@@ -309,6 +309,8 @@ class Runner:
             active = job_id in self._active
             if queued or active:
                 self._cancelled.add(job_id)
+            if queued:  # off the queue now, so it stops reporting a place in it
+                self._pending.remove(job_id)
             proc = self._procs.get(job_id)
         if proc is not None:
             proc.terminate()

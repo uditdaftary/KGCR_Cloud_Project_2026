@@ -26,9 +26,8 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from kgcr._version import __version__
-from kgcr.advisor.llm import DEFAULT_FIXTURE_DIR
 from kgcr.dashboard.db import Database
-from kgcr.dashboard.jobs import JOB_KINDS, ROOT, JobError, Runner, validate
+from kgcr.dashboard.jobs import FIXTURES, JOB_KINDS, ROOT, JobError, Runner, validate
 from kgcr.repro import DEFAULT_COUNT, DEFAULT_SEED
 
 __all__ = ["make_server", "serve"]
@@ -37,7 +36,6 @@ logger = logging.getLogger(__name__)
 
 FRONTEND = ROOT / "src" / "frontend"
 RESULTS = ROOT / "results"
-FIXTURE_DIR = DEFAULT_FIXTURE_DIR
 # Read-only project files the dashboard may show, by directory and extension.
 REPO_FILES = {"architecture": {".png", ".svg"}, "docs": {".md"}, "dataset": {".md"}}
 MAX_BODY = 64 * 1024
@@ -95,7 +93,8 @@ def variant_roster(count: int, seed: int) -> list[dict[str, Any]]:
         seeded: list[str] = []
         try:
             target = select_target(test, inj.variant)
-        except ValueError:
+        except ValueError as exc:  # expected: no held-out estate admits some variants
+            logger.info("roster: no estate for %s (%s)", inj.variant, exc)
             target = None
         if target is not None:
             estate_id = target.estate.estate_id
@@ -105,7 +104,7 @@ def variant_roster(count: int, seed: int) -> list[dict[str, Any]]:
                 "edges": [[e.source, e.target] for e in g.edges],
             }
             seeded = list(target.defect.evidence_path or target.defect.injection_site)
-        fixture = estate_id is not None and any(FIXTURE_DIR.glob(f"v1-{estate_id}-loop-p*.json"))
+        fixture = estate_id is not None and any(FIXTURES.glob(f"v1-{estate_id}-loop-p*.json"))
         rows.append(
             {
                 "variant": inj.variant,
@@ -171,22 +170,32 @@ def job_view(app: App, job_id: int) -> dict[str, Any] | None:
         job["log"] = live
     job["queue_position"] = app.runner.position(job_id)
     outputs: dict[str, Any] = {}
-    if job.get("output_dir"):
+    # Only once finished: a running job may be mid-write, and nothing needs them earlier.
+    if job.get("output_dir") and job["status"] in ("done", "failed", "cancelled"):
         for path in sorted(Path(job["output_dir"]).glob("*.json")):
-            if path.stat().st_size < 1_000_000:
-                outputs[path.name] = _read_json(path)
+            try:
+                if path.stat().st_size < 1_000_000:
+                    outputs[path.name] = _read_json(path)
+            except (OSError, ValueError) as exc:
+                logger.warning("job %s output %s unreadable: %s", job_id, path.name, exc)
     job["outputs"] = outputs
     return job
 
 
 def environment() -> dict[str, Any]:
-    from dataclasses import asdict
-
-    from kgcr.repro import seed_everything
+    from kgcr.repro import hash_seed_is_fixed
     from kgcr.versions import tool_versions
 
+    # Reported, never applied: a GET must not reseed this process's RNGs or import torch.
+    # Jobs get PYTHONHASHSEED=0 from the runner whatever this process has.
     return {
-        "seed_report": asdict(seed_everything(DEFAULT_SEED)),
+        "seed_report": {
+            "seed": DEFAULT_SEED,
+            "python_random": True,
+            "pythonhashseed": hash_seed_is_fixed(),
+            "numpy": importlib.util.find_spec("numpy") is not None,
+            "torch": importlib.util.find_spec("torch") is not None,
+        },
         "tool_versions": tool_versions(),
         "dotenv_present": (ROOT / ".env").is_file(),
         "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
@@ -213,7 +222,7 @@ def cloud(app: App) -> dict[str, Any]:
 
 def fixtures() -> list[dict[str, Any]]:
     rows = []
-    for path in sorted(FIXTURE_DIR.glob("*.json")):
+    for path in sorted(FIXTURES.glob("*.json")):
         data = _read_json(path)
         kind = path.stem.split("-")[1]
         rows.append(
@@ -257,9 +266,11 @@ class Handler(BaseHTTPRequestHandler):
 
     # responses
 
-    def _send(self, status: int, body: bytes, ctype: str) -> None:
+    def _send(self, status: int, body: bytes, ctype: str, *, sandbox: bool = False) -> None:
         self.send_response(status)
         self.send_header("Content-Type", ctype)
+        if sandbox:  # opened on its own, a repo file gets no scripts and no dashboard origin
+            self.send_header("Content-Security-Policy", "sandbox")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Cache-Control", "no-store")
@@ -361,8 +372,13 @@ class Handler(BaseHTTPRequestHandler):
         if len(parts) == 2 and parts[0] == "runs":
             from kgcr.orchestration.runstore import RunNotFound, load_run
 
+            light = query.get("light") == ["1"]  # graph and findings only, no renderings
             try:
-                return self._json(load_run(app.store_root, parts[1]))
+                run = load_run(app.store_root, parts[1], render_explanations=not light)
+                run["jobs"] = [
+                    j for j in app.db.jobs_with_runs() if j["run_prefix"] == run["prefix"]
+                ]
+                return self._json(run)
             except RunNotFound as exc:
                 return self._error(HTTPStatus.NOT_FOUND, str(exc))
         if route == "reports":
@@ -377,7 +393,7 @@ class Handler(BaseHTTPRequestHandler):
         if len(parts) == 2 and parts[0] == "fixtures":
             if not _FIXTURE_LABEL.match(parts[1]):
                 return self._error(HTTPStatus.BAD_REQUEST, "not a fixture label")
-            data = _read_json(FIXTURE_DIR / f"{parts[1]}.json")
+            data = _read_json(FIXTURES / f"{parts[1]}.json")
             return (
                 self._json(data) if data else self._error(HTTPStatus.NOT_FOUND, "no such fixture")
             )
@@ -455,13 +471,13 @@ class Handler(BaseHTTPRequestHandler):
 
     # files
 
-    def _file(self, path: Path) -> None:
+    def _file(self, path: Path, *, sandbox: bool = False) -> None:
         ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         if ctype.startswith("text/") or ctype in ("application/javascript", "image/svg+xml"):
             ctype += "; charset=utf-8"
         if path.suffix == ".md":
             ctype = "text/plain; charset=utf-8"
-        self._send(HTTPStatus.OK, path.read_bytes(), ctype)
+        self._send(HTTPStatus.OK, path.read_bytes(), ctype, sandbox=sandbox)
 
     def _static(self, path: str) -> None:
         rel = "index.html" if path in ("", "/") else path.lstrip("/")
@@ -485,7 +501,7 @@ class Handler(BaseHTTPRequestHandler):
             or not target.is_file()
         ):
             return self._error(HTTPStatus.NOT_FOUND, "not found")
-        self._file(target)
+        self._file(target, sandbox=True)
 
 
 def make_server(port: int, store_root: Path, app: App | None = None) -> ThreadingHTTPServer:
