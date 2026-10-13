@@ -19,6 +19,7 @@ import re
 import subprocess
 import sys
 import threading
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -256,6 +257,24 @@ def validate(
     return params, live
 
 
+class _LogTail:
+    """The last ``MAX_LOG_CHARS`` characters of a job's output, so a chatty child stays bounded."""
+
+    def __init__(self) -> None:
+        self._lines: deque[str] = deque()
+        self._size = 0
+
+    def add(self, line: str) -> None:
+        line = line[-MAX_LOG_CHARS:]
+        self._lines.append(line)
+        self._size += len(line)
+        while self._size > MAX_LOG_CHARS and len(self._lines) > 1:
+            self._size -= len(self._lines.popleft())
+
+    def text(self) -> str:
+        return "".join(self._lines)[-MAX_LOG_CHARS:]
+
+
 class Runner:
     """A single worker thread that executes queued jobs in order."""
 
@@ -271,7 +290,7 @@ class Runner:
         self._live_allowed = live_allowed
         self._queue: queue.Queue[int] = queue.Queue()
         self._lock = threading.Lock()
-        self._logs: dict[int, list[str]] = {}
+        self._logs: dict[int, _LogTail] = {}
         self._procs: dict[int, subprocess.Popen[str]] = {}
         self._cancelled: set[int] = set()
         self._pending: list[int] = []
@@ -300,8 +319,8 @@ class Runner:
 
     def live_log(self, job_id: int) -> str | None:
         with self._lock:
-            lines = self._logs.get(job_id)
-            return None if lines is None else "".join(lines)
+            tail = self._logs.get(job_id)
+            return None if tail is None else tail.text()
 
     def cancel(self, job_id: int) -> bool:
         with self._lock:
@@ -320,7 +339,7 @@ class Runner:
             return True
         return active  # picked up but not spawned yet: _run sees the flag before it launches
 
-    def _env(self, live: bool, cloud: bool = False) -> dict[str, str]:
+    def child_env(self, live: bool, cloud: bool = False) -> dict[str, str]:
         """Child environment. ``live`` grants the Gemini key, ``cloud`` the AWS credentials.
 
         Withheld names are blanked, not deleted: the child's ``load_dotenv(override=False)``
@@ -386,7 +405,7 @@ class Runner:
         before = set(FIXTURES.glob("*.json")) if job["live"] else set()
         self.db.update_job(job_id, status="running", started_at=now_iso(), output_dir=str(out))
         with self._lock:
-            self._logs[job_id] = []
+            self._logs[job_id] = _LogTail()
         code = 0
         stopped_early = False
         for argv in spec.argv(params, out, self.store_root):
@@ -400,7 +419,7 @@ class Runner:
                 proc = subprocess.Popen(
                     argv,
                     cwd=ROOT,
-                    env=self._env(live, cloud),
+                    env=self.child_env(live, cloud),
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     text=True,
@@ -417,7 +436,8 @@ class Runner:
             if code != 0:
                 break
         with self._lock:
-            log = "".join(self._logs.pop(job_id, []))[-MAX_LOG_CHARS:]
+            tail = self._logs.pop(job_id, None)
+            log = tail.text() if tail else ""
             cancelled = job_id in self._cancelled
         # A cancel that arrived after the last step finished cleanly does not undo the result.
         status = (
@@ -437,7 +457,7 @@ class Runner:
 
     def _append(self, job_id: int, line: str) -> None:
         with self._lock:
-            self._logs.setdefault(job_id, []).append(line)
+            self._logs.setdefault(job_id, _LogTail()).add(line)
 
 
 _STORED_BUNDLE = re.compile(r"stored bundle: .*?runs[\\/]([0-9a-f]{16})[\\/]bundle\.json")

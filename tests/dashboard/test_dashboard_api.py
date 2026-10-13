@@ -115,14 +115,14 @@ def test_child_environment_blanks_secrets_unless_granted(
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
     monkeypatch.setenv("KGCR_LLM_LIVE", "1")  # what .env sets on the operator's machine
     runner = Runner(Database(tmp_path / "d.sqlite3"), tmp_path)
-    replay = runner._env(live=False)
+    replay = runner.child_env(live=False)
     assert replay["KGCR_LLM_LIVE"] == "0" and replay["PYTHONHASHSEED"] == "0"
     # Blank, not absent: the child's load_dotenv(override=False) would refill an absent name.
     assert replay["GEMINI_API_KEY"] == "" and replay["AWS_SECRET_ACCESS_KEY"] == ""
-    live = runner._env(live=True)
+    live = runner.child_env(live=True)
     assert live["KGCR_LLM_LIVE"] == "1" and live["GEMINI_API_KEY"] == "secret"
     assert live["AWS_SECRET_ACCESS_KEY"] == ""  # a Gemini job gets no AWS credentials
-    cloud = runner._env(live=False, cloud=True)
+    cloud = runner.child_env(live=False, cloud=True)
     assert cloud["KGCR_LLM_LIVE"] == "0" and cloud["GEMINI_API_KEY"] == ""
     assert cloud["AWS_SECRET_ACCESS_KEY"] == "secret"
 
@@ -358,14 +358,29 @@ def test_job_outputs_are_read_only_when_finished_and_readable(tmp_path: Path, ba
     app.runner.shutdown()
 
 
-def test_environment_report_does_not_reseed_the_server(base: str) -> None:
+def test_environment_report_comes_from_a_child_and_does_not_reseed_the_server(base: str) -> None:
     import random
 
     random.seed(5)
     before = random.getstate()
     status, env = call(f"{base}/api/environment")
-    assert status == 200 and env["seed_report"]["seed"] == DEFAULT_SEED
+    assert status == 200 and env["error"] is None
+    # What a job reports: the runner pins PYTHONHASHSEED for it, whatever this process has.
+    assert env["seed_report"]["seed"] == DEFAULT_SEED and env["seed_report"]["pythonhashseed"]
+    assert "kgcr" in env["tool_versions"]
     assert random.getstate() == before
+
+
+def test_live_log_keeps_only_a_bounded_tail() -> None:
+    from kgcr.dashboard.jobs import MAX_LOG_CHARS, _LogTail
+
+    tail = _LogTail()
+    for i in range(5000):
+        tail.add(f"line {i:05d} {'x' * 90}\n")
+    assert len(tail.text()) <= MAX_LOG_CHARS
+    assert tail.text().endswith(f"line 04999 {'x' * 90}\n")
+    tail.add("y" * (MAX_LOG_CHARS * 3))  # one enormous line is clipped too
+    assert len(tail.text()) <= MAX_LOG_CHARS
 
 
 def test_repo_files_are_served_sandboxed(base: str) -> None:

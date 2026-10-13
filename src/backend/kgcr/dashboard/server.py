@@ -17,6 +17,8 @@ import mimetypes
 import os
 import re
 import shutil
+import subprocess
+import sys
 import threading
 import webbrowser
 from http import HTTPStatus
@@ -182,21 +184,33 @@ def job_view(app: App, job_id: int) -> dict[str, Any] | None:
     return job
 
 
-def environment() -> dict[str, Any]:
-    from kgcr.repro import hash_seed_is_fixed
-    from kgcr.versions import tool_versions
+def environment(app: App) -> dict[str, Any]:
+    """What a job's child process reports for seeding and tool versions, read from a real one.
 
-    # Reported, never applied: a GET must not reseed this process's RNGs or import torch.
-    # Jobs get PYTHONHASHSEED=0 from the runner whatever this process has.
+    Asked of a short-lived ``kgcr repro-info`` run with the environment jobs get, so the page
+    matches the run records and this server process is never reseeded (nor imports torch).
+    """
+    report: dict[str, Any] = {}
+    error = None
+    try:
+        done = subprocess.run(
+            [sys.executable, "-m", "kgcr.cli", "repro-info", "--json"],
+            cwd=ROOT,
+            env=app.runner.child_env(live=False),
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=60,
+            check=True,
+        )
+        report = json.loads(done.stdout)
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        logger.exception("repro-info child failed")
+        error = f"could not read the report from a child process: {exc}"
     return {
-        "seed_report": {
-            "seed": DEFAULT_SEED,
-            "python_random": True,
-            "pythonhashseed": hash_seed_is_fixed(),
-            "numpy": importlib.util.find_spec("numpy") is not None,
-            "torch": importlib.util.find_spec("torch") is not None,
-        },
-        "tool_versions": tool_versions(),
+        "seed_report": report.get("seed_report", {}),
+        "tool_versions": report.get("tool_versions", {}),
+        "error": error,
         "dotenv_present": (ROOT / ".env").is_file(),
         "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
         "llm_live_in_env": os.environ.get("KGCR_LLM_LIVE") == "1",
@@ -402,7 +416,7 @@ class Handler(BaseHTTPRequestHandler):
 
             return self._json(_read_json(DRAFT_CONTROLS_PATH))
         if route == "environment":
-            return self._json(environment())
+            return self._json(environment(app))
         if route == "cloud":
             return self._json(cloud(app))
         if route == "project":
