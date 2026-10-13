@@ -272,9 +272,10 @@ async function renderCover(expired, ui) {
     ui.live();
     // The newest plotted run that has a multi-hop evidence path, else the newest plotted run.
     // light=1 skips the three audience renderings; the eight fetches run side by side.
-    const candidates = await Promise.all(runs.slice(0, 8).map((r) => api(`runs/${r.prefix}?light=1`)));
+    const settled = await Promise.allSettled(runs.slice(0, 8).map((r) => api(`runs/${r.prefix}?light=1`)));
     ui.live();
-    const plotted = candidates.filter((full) => full.summary);
+    for (const bad of settled.filter((x) => x.status === "rejected")) console.warn("cover skipped a run", bad.reason);
+    const plotted = settled.filter((x) => x.status === "fulfilled" && x.value.summary).map((x) => x.value);
     const full = plotted.find((x) => x.bundle.findings.some((f) => f.evidence_path.length)) || plotted[0];
     const shown = full && { r: { prefix: full.prefix, jobs: full.jobs }, full };
     const cap = document.getElementById("cover-caption");
@@ -401,7 +402,7 @@ async function viewReview(ui) {
     runBtn.disabled = true;
     try {
       const job = await post("jobs", body);
-      watchJob(ui, job.id, panel, runBtn);
+      if (ui.isLive()) watchJob(ui, job.id, panel, runBtn);
     } catch (err) {
       runBtn.disabled = false;
       panel.innerHTML = notice(esc(err.message), "error");
@@ -738,6 +739,7 @@ async function viewJobs(ui) {
       submit.disabled = true;
       try {
         const job = await post("jobs", { session: s.id, kind: form.dataset.kind, params });
+        if (!ui.isLive()) return;
         selected = job.id;
         toast(`${kg(job.catalog_no)} queued`, true);
         await refresh();
@@ -754,9 +756,10 @@ async function viewJobs(ui) {
     try {
       jobs = await api("jobs");
     } catch (err) {
-      document.getElementById("queue").innerHTML = notice(esc(err.message), "error");
+      if (ui.isLive()) document.getElementById("queue").innerHTML = notice(esc(err.message), "error");
       return;
     }
+    if (!ui.isLive()) return;
     const durations = jobs.map((j) => seconds(j.started_at, j.finished_at));
     const longest = Math.max(1, ...durations);
     const activeCount = jobs.filter((j) => j.status === "running" || j.status === "queued").length;
@@ -785,7 +788,8 @@ async function viewJobs(ui) {
   async function detail() {
     const box = document.getElementById("job-detail");
     let j;
-    try { j = await api(`jobs/${selected}`); } catch (err) { box.innerHTML = notice(esc(err.message), "error"); return; }
+    try { j = await api(`jobs/${selected}`); } catch (err) { if (ui.isLive()) box.innerHTML = notice(esc(err.message), "error"); return; }
+    if (!ui.isLive()) return;
     const outputs = Object.entries(j.outputs || {});
     box.innerHTML = `
       <div class="block-head"><h2>${kg(j.catalog_no)} ${esc(m.jobs[j.kind]?.label || j.kind)}</h2>${state(j.status)}</div>
@@ -872,6 +876,7 @@ async function viewFixtures(ui) {
       app.querySelectorAll("tr.link").forEach((x) => x.setAttribute("aria-selected", String(x === tr)));
       try {
         const f = await api(`fixtures/${tr.dataset.label}`);
+        if (!ui.isLive()) return;
         let pretty = f.response;
         try { pretty = JSON.stringify(JSON.parse(f.response), null, 2); } catch { /* stored as plain text; show verbatim */ }
         document.getElementById("fixture").innerHTML = `
@@ -913,7 +918,8 @@ async function viewEnvironment(ui) {
   const e = await api("environment");
   const yes = (b, y = "Yes", n = "No") => (b ? state("pass", y) : state("not_run", n));
   ui.mount(`
-    ${head(25, "Environment", "The seed report and version fingerprint that go into every run record, read live from this process.")}
+    ${head(25, "Environment", "The seed report and version fingerprint as a job's child process reports them, the same facts every run record carries.")}
+    ${e.error ? notice(esc(e.error), "error") : ""}
     <div class="two">
       <section><div class="block-head"><h2>Seed report</h2></div>
         <dl class="titleblock" style="border:1px solid var(--hair)">
@@ -998,8 +1004,12 @@ async function viewCloud(ui) {
   document.getElementById("cloud-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     const f = new FormData(e.target);
+    // With neither target the server would run an ordinary local review, not an AWS one.
+    if (!f.get("s3_bucket").trim() && !f.get("sns_topic_arn").trim()) {
+      return toast("Name an S3 bucket or an SNS topic ARN; with neither, nothing would go to AWS.");
+    }
     try {
-      const job = await post("jobs", { session: s.id, kind: "review", params: { variant: f.get("variant"), s3_bucket: f.get("s3_bucket"), sns_topic_arn: f.get("sns_topic_arn") } });
+      const job = await post("jobs", { session: s.id, kind: "review", params: { variant: f.get("variant"), s3_bucket: f.get("s3_bucket").trim(), sns_topic_arn: f.get("sns_topic_arn").trim() } });
       toast(`${kg(job.catalog_no)} queued; follow it in ${kg(21)}`, true);
     } catch (err) { toast(err.message); }
   });
