@@ -143,7 +143,7 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 | AWS Config harvest adapter | Built; **never run against an account** | `src/backend/kgcr/harvest/config.py` |
 | GNN against the forest | Done as an ablation | `src/ml_model/gnn_ablation.py`, `results/gnn_ablation.json` |
 
-**Test suite:** 474 tests passing on the build machine (Python 3.14, with Checkov, Trivy and Terraform installed); CI skips the tests that need those tools. Quality gates — `ruff check`, `ruff format --check`, `mypy`
+**Test suite:** 474 tests passing on the build machine (Python 3.14, with Checkov, Trivy and Terraform installed); a clean Python 3.12 venv with only the dev extra passes 457 and skips 4; CI itself has not run on these commits. Quality gates — `ruff check`, `ruff format --check`, `mypy`
 (strict) and `pytest` — run in CI on Python 3.11 and 3.12 on every push.
 
 ### Results obtained so far

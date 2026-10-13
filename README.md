@@ -30,7 +30,7 @@ source of truth.
 CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). Design mode now runs
 the same machinery forward: `kgcr design` builds a spec from an intent, `kgcr plan` turns a
 reviewed spec into an immutable plan with a cost delta, and `kgcr apply` applies it to a local
-simulation. `kgcr dashboard` drives all of it from a local browser page. 474 tests pass here (Python 3.14, with Checkov, Trivy and Terraform installed); CI runs the same gates on 3.11 and 3.12 and skips the tests that need those tools. What is
+simulation. `kgcr dashboard` drives all of it from a local browser page. 474 tests pass here (Python 3.14, with Checkov, Trivy and Terraform installed); the same gates pass in a clean Python 3.12 venv with only the dev extra (457 pass, 4 skip); CI itself and Python 3.11 have not run on these commits. What is
 not done:
 
 - Nothing has touched a real AWS account. The Terraform-backed apply and the AWS Config harvest

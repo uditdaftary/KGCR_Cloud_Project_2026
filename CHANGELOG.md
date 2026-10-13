@@ -41,7 +41,11 @@ pushed, no pull request opened** for this pass (spec decision D4: one local comm
   the overlay; free-text intake ran against live Gemini and three responses are recorded and replay
   (`results/llm_fixtures/intent-v1-*.json`); every list price in `aws_prices.json` was re-derived
   from freshly downloaded official files and matched.
-- **Gates:** 474 tests pass; ruff check, ruff format --check and mypy (82 source files) are clean. The CI gates run on Python 3.11 and 3.12; this machine runs 3.14.3.
+- **Gates:** on the build machine (Python 3.14.3, with Checkov, Trivy and Terraform) 474 tests
+  pass; ruff check, ruff format --check and mypy (82 source files) are clean. CI-parity check in a
+  fresh Python 3.12 venv with only `pip install -e ".[dev]"`: the same three static gates clean and
+  457 passed, 4 skipped (hcl2, google-genai and Checkov absent, as in CI). Python 3.11 and the CI
+  workflow itself were not run on these commits.
 - **Not done, and why** (the dashboard's Commands page lists the same six):
   - **Live harvest, real-AWS apply:** no AWS credentials on this machine. Both are authored and
     tested against fakes (botocore stubs, moto for S3) and have never touched an account.
