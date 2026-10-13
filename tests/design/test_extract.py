@@ -10,6 +10,7 @@ import pytest
 from kgcr.advisor.llm import MissingFixtureError, StaleFixtureError
 from kgcr.design.extract import (
     MAX_STATEMENT,
+    ExtractionUnavailable,
     extract_intent,
     fixture_label,
     render_prompt,
@@ -149,4 +150,20 @@ def test_cli_refuses_when_the_statement_leaves_axes_unstated(
     assert main(["design", "--statement", STATEMENT, "--out", str(tmp_path)]) == 2
     err = capsys.readouterr().err
     assert "missing:" in err and "logging" in err and "payments_api" not in err
+    assert not (tmp_path / "runs").exists()
+
+
+def test_a_model_failure_is_reported_not_guessed() -> None:
+    with pytest.raises(ExtractionUnavailable, match="model call failed"):
+        extract_intent(STATEMENT, Stub(RuntimeError("503 UNAVAILABLE")))
+
+
+def test_cli_reports_a_model_failure_and_exits_1(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from kgcr.cli import main
+
+    monkeypatch.setattr("kgcr.advisor.llm.default_llm", lambda: Stub(RuntimeError("503")))
+    assert main(["design", "--statement", STATEMENT, "--out", str(tmp_path)]) == 1
+    assert "model call failed" in capsys.readouterr().err
     assert not (tmp_path / "runs").exists()

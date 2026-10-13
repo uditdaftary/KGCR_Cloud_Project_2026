@@ -25,9 +25,21 @@ from typing import Any
 from kgcr.advisor.llm import LLMClient, MissingFixtureError, StaleFixtureError
 from kgcr.design.intake import AXES, axis_choices
 
-__all__ = ["MAX_STATEMENT", "PROMPT_VERSION", "Extraction", "FieldExtraction", "extract_intent"]
+__all__ = [
+    "MAX_STATEMENT",
+    "PROMPT_VERSION",
+    "Extraction",
+    "ExtractionUnavailable",
+    "FieldExtraction",
+    "extract_intent",
+]
 
 logger = logging.getLogger(__name__)
+
+
+class ExtractionUnavailable(RuntimeError):
+    """The model could not be reached or answered with an error; no values were guessed."""
+
 
 PROMPT_VERSION = "intent-v1"
 MAX_STATEMENT = 2000
@@ -134,6 +146,8 @@ def extract_intent(statement: str, llm: LLMClient | None) -> Extraction:
     except (MissingFixtureError, StaleFixtureError) as exc:
         logger.warning("no usable recorded extraction for %s (%s)", label, exc)
         return _all_null(statement, "missing_fixture")
+    except Exception as exc:  # unreachable or refusing model: report it, never guess a value
+        raise ExtractionUnavailable(f"the model call failed: {exc}") from exc
     parsed = _parse(response)
     if parsed is None:
         logger.warning("unparseable extraction response for %s", label)

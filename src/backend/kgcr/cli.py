@@ -278,13 +278,16 @@ def _cmd_design(args: argparse.Namespace) -> int:
         print("kgcr design: --extract-only needs --statement", file=sys.stderr)
         return 2
     if args.statement:
-        from kgcr.design.extract import extract_intent
+        from kgcr.design.extract import ExtractionUnavailable, extract_intent
 
         try:
             extraction = extract_intent(args.statement, default_llm())
         except ValueError as exc:
             print(f"kgcr design: {exc}", file=sys.stderr)
             return 2
+        except ExtractionUnavailable as exc:
+            print(f"kgcr design: {exc}", file=sys.stderr)
+            return 1
         if args.extract_only:
             print(json.dumps(extraction.to_dict(), indent=2, sort_keys=True))
             return 0
