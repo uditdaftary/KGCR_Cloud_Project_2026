@@ -116,3 +116,18 @@ def test_the_overlay_is_deterministic() -> None:
     assert terraform_document(estate.to_terraform_json(), offline=True) == terraform_document(
         estate.to_terraform_json(), offline=True
     )
+
+
+def test_a_security_group_rule_gets_every_key_the_provider_requires_and_keeps_its_meaning() -> None:
+    estate = _estate("payments_api", "two_az", "public_private")
+    spec = estate.to_terraform_json()
+    group = next(iter(spec["resource"]["aws_security_group"].values()))
+    group["ingress"] = [
+        {"from_port": 22, "to_port": 22, "protocol": "tcp", "cidr_blocks": ["0.0.0.0/0"]}
+    ]
+    out = terraform_document(spec, offline=True)
+    rule = next(iter(out.document["resource"]["aws_security_group"].values()))["ingress"][0]
+    assert rule["cidr_blocks"] == ["0.0.0.0/0"] and rule["from_port"] == 22
+    assert rule["self"] is False and rule["security_groups"] == [] and rule["description"] == ""
+    assert any("ingress rule keys completed" in o for o in out.overlay)
+    assert group["ingress"][0].keys() == {"from_port", "to_port", "protocol", "cidr_blocks"}

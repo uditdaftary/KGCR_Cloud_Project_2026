@@ -28,6 +28,14 @@ __all__ = ["PLACEHOLDER_AMI", "OverlaidDocument", "document_hash", "terraform_do
 # Not a real image. A document carrying it can be planned, never applied (see apply).
 PLACEHOLDER_AMI = "ami-00000000000000000"
 _AZ_LETTERS = "abc"
+_RULE_DEFAULTS: dict[str, Any] = {
+    "description": "",
+    "cidr_blocks": [],
+    "ipv6_cidr_blocks": [],
+    "prefix_list_ids": [],
+    "security_groups": [],
+    "self": False,
+}
 _OFFLINE_PROVIDER = {
     "access_key": "mock",
     "secret_key": "mock",
@@ -140,6 +148,18 @@ def terraform_document(spec: Mapping[str, Any], *, offline: bool) -> OverlaidDoc
         }
         overlay.append(f"aws_instance.{name}: ami = var.ami_id (placeholder {PLACEHOLDER_AMI})")
         caveats.append(f"aws_instance.{name}: the image is a placeholder and must be replaced")
+
+    for name, body in resources.get("aws_security_group", {}).items():
+        # The provider models ingress/egress as attributes, so every element must carry every
+        # key; absent ones take the empty value, which changes no rule.
+        for direction in ("ingress", "egress"):
+            rules = body.get(direction)
+            if not isinstance(rules, list):
+                continue
+            body[direction] = [
+                {**_RULE_DEFAULTS, **rule} for rule in rules if isinstance(rule, dict)
+            ]
+            overlay.append(f"aws_security_group.{name}: {direction} rule keys completed")
 
     for name in resources.get("aws_cloudtrail", {}):
         caveats.append(f"aws_cloudtrail.{name}: needs a bucket policy that lets CloudTrail write")
