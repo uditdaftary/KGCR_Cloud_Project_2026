@@ -207,8 +207,15 @@ The first real run is a verification step for Udit, not for this build. The cont
 `kgcr apply --plan <plan_id> [--backend local|terraform]`.
 
 **INV-3.** Apply takes a plan id, loads that plan, and recomputes the spec hash from the stored
-spec. A mismatch refuses. The Terraform backend applies the **saved planfile**
-(`terraform apply tfplan`) and never re-plans, so what is applied is what was reviewed.
+spec. A mismatch refuses. The Terraform backend applies a planfile, and what is applied must be
+what was reviewed.
+
+> **As built (2026-10-14), differing from the first draft of this paragraph.** The reviewed plan
+> is an *offline* plan made with mock credentials, so its planfile cannot be applied. The
+> Terraform-backed apply instead re-plans against the live provider with the assumed-role
+> credentials, compares the set of creates with the reviewed plan, refuses unless they are equal
+> (and unless every change is a create), and only then runs `terraform apply` on that fresh
+> planfile. The hash of the document Terraform would use must also equal the reviewed document's.
 
 **Local backend (default, open to both roles).** A simulated deploy into the artifact store:
 `runs/<id>/applied/<plan_id>/state.json` records the resources "created". A failure partway writes
