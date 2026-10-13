@@ -93,16 +93,16 @@ is what Phase-I asks for; the final column states honestly what is running today
 | AWS Lambda | ETL of harvested evidence into the graph schema; Advisor and Explainer inference | Planned |
 | AWS Glue | Batch normalisation of large Config and Cost and Usage Report extracts | Planned |
 | Amazon SageMaker | Train and host the recommender and the intent reconstructor | Planned. Both currently train locally with scikit-learn |
-| Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned. Gemini Flash (Google AI Studio, free tier) stands in for the advisor's proposals; it ran live once (16 calls, see §9) |
+| Amazon Bedrock | Structured intent extraction from a natural-language request, and verbalisation of an explanation. Never used to decide compliance | Planned. Gemini Flash (Google AI Studio, free tier) stands in for the advisor's proposals (one live run, 16 calls, see §9) and for free-text intent extraction (verified live; three responses recorded) |
 | Amazon API Gateway | REST surface backing the `kgcr` CLI | Planned |
 | Amazon Cognito | Authenticate architects, auditors and learners | Planned |
-| AWS IAM | Cross-account roles enforcing separation of duties: Agent 2 read-only for harvesting, Agent 1 write-only for applying; a least-privilege publish policy for the pipeline | **Terraform authored** in `src/aws/`, not yet applied |
-| AWS Config | Resource inventory and relationships — the primary input to the estate graph | Planned. The synthetic corpus stands in for harvest |
+| AWS IAM | Cross-account roles enforcing separation of duties: Agent 2 read-only for harvesting, Agent 1 write-only for applying; a least-privilege publish policy for the pipeline | **Terraform authored and validated** (v1.16.5) in `src/aws/`, not applied |
+| AWS Config | Resource inventory and relationships — the primary input to the estate graph | Planned. An adapter with an injected client (`kgcr.harvest.config`) reads five resource types and is tested against stubbed responses and moto; it has never read an account. The synthetic corpus stands in for harvest |
 | AWS CloudTrail | API audit events, supporting evidence-retention controls | Planned |
 | AWS Cost and Usage Reports | Per-resource cost attribution for the joint cost/compliance objective | Planned |
 | Amazon EventBridge | Scheduled and change-driven triggers for re-harvesting and drift detection | Planned |
 | Amazon CloudWatch | Logs, metrics and alarms across all three accounts | Planned |
-| AWS Budgets | Cost alarms, provisioned as code before any workload runs | **Terraform authored** in `src/aws/`, not yet applied |
+| AWS Budgets | Cost alarms, provisioned as code before any workload runs | **Terraform authored and validated** in `src/aws/`, not applied |
 | Amazon SNS | Deliver compliance findings and budget breach notifications | Contested-run topic **Terraform authored**, not applied; `kgcr review --sns-topic-arn` adapter tested against a mocked AWS (moto). Logged locally by default |
 | Amazon VPC, subnets, security groups, NAT, Internet Gateway | The network topology whose relationships the multi-hop defect analysis reasons over | Planned |
 | AWS KMS | Encryption keys for the evidence bucket and the estates under analysis | Planned |
@@ -112,8 +112,8 @@ is what Phase-I asks for; the final column states honestly what is running today
 **Stated plainly:** what runs today is a local Python pipeline (`src/backend/`, one command:
 `kgcr review`) plus authored but unapplied Terraform (`src/aws/`). The pipeline reaches S3 and SNS through two
 small interfaces. Local stand-ins are the default, and the AWS-backed adapters are tested against
-moto's in-process mock. Nothing is deployed, the Terraform has not been validated (Terraform is not
-installed on the build machine), and no AWS spend has been incurred. Phase-I asks for a service plan, and this is it; the gap between
+moto's in-process mock. Nothing is deployed, the Terraform in `src/aws/` validates under Terraform
+v1.16.5 but has not been applied, and no AWS spend has been incurred. Phase-I asks for a service plan, and this is it; the gap between
 plan and implementation is stated rather than concealed, and Diagram 1 carries the same note.
 
 ---
@@ -133,8 +133,17 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 | Advisor (P6): rule floor, LLM admission filter, bounded loop, sycophancy protocol | Done; live run recorded, sycophancy gate PASS on 3 valid trials (1 invalid) | `src/backend/kgcr/advisor/`, 9 tests, `results/advisor_report.json` |
 | Explainer (P9): exact paths, evaluated counterfactuals, three renderings | Done (templates, no LLM) | `src/backend/kgcr/explainer/`, 4 tests |
 | End-to-end review command (P10) with local AWS stand-ins | Done, local | `src/backend/kgcr/orchestration/`, `kgcr review`, 8 tests (4 against a mocked AWS) |
+| Design mode: a generated spec audited by the recommender, per-choice justifications, free-text intake | Done; free-text intake verified live | `src/backend/kgcr/design/`, `kgcr design`, `results/llm_fixtures/intent-v1-*.json` |
+| Plan: immutable plans, diff, coverage, blast radius, monthly cost delta, Terraform backend | Done; Terraform validates and plans offline | `src/backend/kgcr/plan/`, `kgcr plan`, `plan/aws_prices.json` |
+| Apply: local simulated, and a gated Terraform-backed path | Local done; **Terraform path never run** | `src/backend/kgcr/apply/`, `kgcr apply` |
+| Authoring tools for the L1 controls and the gold register | Built; **no control signed off** | `src/backend/kgcr/gold/`, `dashboard/authoring.py` |
+| Corpus D (TerraGoat, CloudGoat) against the rule floor | Done | `src/backend/kgcr/adversarial/`, `results/corpus_d_report.json` |
+| Second labeller (Trivy) and inter-engine agreement | Done | `src/backend/kgcr/labelling/trivy_engine.py`, `results/labeller_agreement.json` |
+| Automated explainer evaluation (FD-06 §9.1 and §9.2) | Done; the human study (§9.3) is not run | `src/backend/kgcr/explainer/evaluate.py`, `results/explainer_report.json` |
+| AWS Config harvest adapter | Built; **never run against an account** | `src/backend/kgcr/harvest/config.py` |
+| GNN against the forest | Done as an ablation | `src/ml_model/gnn_ablation.py`, `results/gnn_ablation.json` |
 
-**Test suite:** 155 tests passing. Quality gates — `ruff check`, `ruff format --check`, `mypy`
+**Test suite:** 474 tests passing on the build machine (Python 3.14, with Checkov, Trivy and Terraform installed); CI skips the tests that need those tools. Quality gates — `ruff check`, `ruff format --check`, `mypy`
 (strict) and `pytest` — run in CI on Python 3.11 and 3.12 on every push.
 
 ### Results obtained so far
@@ -153,8 +162,9 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
    P8-reconstructed intent. Baselines: per-archetype frequency 0.208, global popularity 0.000.
    R-precision is 1.000, against 0.940 and 0.858 for the baselines. The generator is a function of
    intent, so this measures recovery of the generator's mapping, not real-world recommendation
-   quality. That is also why a random forest was used rather than a GNN: a GNN had no headroom to
-   show. The CRITICAL mask removes the one illegal option in the pool even when it is forced to
+   quality. That is why a random forest was used rather than a GNN; a later ablation (result 10)
+   found a small exact-set gain for a graph network, which an edge-free control reproduces.
+   The CRITICAL mask removes the one illegal option in the pool even when it is forced to
    rank first.
 4. **Advisor, rule floor (objective O2).**
    - DF-1 to DF-4 recall is 1.000. This holds by construction, because the injectors produce
@@ -172,6 +182,35 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 5. **Explanation (objective O5).** For every defect variant, the architect, auditor and learner
    renderings yield identical claim sets (INV-2): controls, severities, resources and counterfactual
    outcomes, extracted back out of the rendered text.
+
+6. **Independent configurations (Corpus D).** CloudGoat (740 AWS resources) and TerraGoat (63),
+   both deliberately vulnerable and written by others, parsed and never executed. The rule floor's
+   seven rules cover 31 of the 787 checks Checkov fails in CloudGoat and 5 of 215 in TerraGoat, so
+   they describe a small slice of what is wrong in real configurations. Where it can read the
+   values it agrees with Checkov: database encryption (all 4 that Checkov fails in CloudGoat, 1 of 1 in TerraGoat),
+   CloudTrail validation (2 of 2). It misses where an argument is an unresolved expression: 16 of
+   the 36 CloudGoat security groups and 2 IAM policies. There are no per-resource labels, so this
+   is agreement and coverage, not accuracy.
+7. **Second labeller (Trivy).** On 6 seeded estates per family (24 seeded defects and their 24 clean parents), with Checkov reading Terraform plan JSON and Trivy 0.75.0 reading `.tf.json`: the rule floor recalls all 24 by construction. Checkov recalls DF-2, DF-3 and DF-4 (18 of 18) and none of DF-1; Trivy recalls DF-2 and DF-4 and neither DF-1 nor DF-3. No engine flagged a clean parent. DF-1 is the injector's world-open port 443, which neither tool treats as a defect, so that disagreement is about the definition, not an engine error. Cohen's kappa between Checkov and Trivy is 1.0 on DF-2 and DF-4, 0.0 on DF-3 and undefined on DF-1 (neither flags anything). Checkov reading `.tf.json` recalled 0 of 24, which is why plan JSON is the input. With 6 estates a family these are indications, not rates.
+8. **Explainer evaluation (objective O5, FD-06 §9.1 and §9.2).** Over 12 stored bundles (the nine
+   seeded variants and three designed estates): cross-audience invariance holds for 12 of 12;
+   counterfactual validity, checked against the outcome the advisor loop observed after applying
+   the repair rather than recomputed, is 4 of 4; sparsity is a mean of 0.078 of the estate's
+   resources (n = 7 findings); Fidelity+ and Fidelity- hold for the one relational finding. The
+   samples are small because recorded model responses exist for only two variants, so most
+   bundles carry rule-floor findings only. The human study (§9.3) is not run.
+9. **Cost delta.** A plan prices the resources it creates from AWS list prices (45 items, three
+   regions, retrieved 2026-10-13), at 730 hours a month, and lists what it cannot price (data
+   transfer, requests, S3 volume) instead of counting it as zero. A Haiku subagent collected the
+   prices from the official price files; the main thread then re-derived every EC2, RDS, load
+   balancer, KMS and S3 value from freshly downloaded files and CloudTrail and Glue by SKU, and all
+   matched. It is a list-price estimate, not a bill.
+10. **Graph network against the forest.** The expectation, recorded before running, was no gain.
+    On 99 test estates across four corpus seeds the forest recovers the exact option set for 0.941
+    of estates and a two-layer network over the resource-type graph for 0.991; the same network with
+    its edges removed scores 0.984. R-precision and NDCG are saturated for every model. So a neural
+    ranker is a little better at exact-set recovery here, but the graph structure is not shown to
+    be the reason.
 
 ---
 
@@ -220,18 +259,28 @@ KGCR_Cloud_Project_2026/
 
 ## 12. Limitations stated up front
 
-- The corpus is synthetic. No real financial-sector estate is used, and results have not yet been
-  checked against human-authored insecure configurations (Corpus D is planned, not present).
-- The AWS deployment is planned, not built. The Terraform for budget alarms and cross-account IAM is
-  authored but has not been applied to live accounts.
+- The corpus is synthetic. No real financial-sector estate is used. Corpus D (TerraGoat, CloudGoat)
+  shows the rule floor covers 2 to 4% of what Checkov fails in independently written
+  configurations; it has no per-resource labels, so it measures agreement, not accuracy.
+- The AWS deployment is planned, not built. The Terraform for budget alarms and cross-account IAM
+  validates under Terraform v1.16.5 but has not been applied to live accounts. The Terraform-backed
+  apply and the AWS Config harvest adapter have never touched an account: they are tested against
+  fakes. A valid offline plan does not mean an apply would succeed, and the shipped write role
+  (`ec2`, `s3`) would refuse every generated estate at the permission preflight.
 - The compliance encoding (L1) exists only as a six-control draft slice written by Claude. By project
   rule L1 is human-authored, so it counts only after Udit reviews each entry; the clause numbers were
   checked against secondary sources, not the standards themselves.
 - The advisor's live run is one pass over 4 trials: the gate passed on 3 valid ones, the model
   missed 2 of 4 relational or resilience variants, and it raised one false CRITICAL on a clean
   estate. The L1 controls the model cites are unverified drafts.
-- The recommender is a random forest over intent, not a graph neural network, and no cost model
-  exists yet, so objective O3's cost delta is unmeasured.
+- The recommender is a random forest over intent. A graph network scored slightly higher on
+  exact-set recovery in an ablation, and not because of the graph. The cost delta is an on-demand
+  list-price estimate at 730 hours a month; it excludes data transfer, requests and storage volume
+  and has not been compared with a bill.
+- Free-text intake was verified live and three responses are recorded. Gemini responses for seven
+  of the nine review variants are not recorded, because the free-tier daily quota was spent.
+- The human study is not run: it needs ethics approval and participants. The L1 authoring tools
+  are built and no control has been signed off.
 - Intent reconstruction is a structural-feature baseline, not the graph neural network it is
   intended to become, and its calibration on the weakest axis is poor by design of the experiment
   rather than by accident.

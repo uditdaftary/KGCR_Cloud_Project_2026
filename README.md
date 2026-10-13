@@ -25,19 +25,26 @@ One-line framing: an experienced cloud architect who has read every compliance s
 Each is also generated as `.docx` for submission (`python docs/make_docx.py`); the Markdown is the
 source of truth.
 
-**Implementation status (Review 2).** Review mode runs end to end locally as one command,
+**Implementation status.** Review mode runs end to end locally as one command,
 `kgcr review`: estate, dependency graph, intent reconstruction (P8), recommendation with a hard
-CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). `kgcr dashboard` drives
-all of it from a local browser page. 207 tests run in CI on
-Python 3.11 and 3.12. What is not done yet:
+CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). Design mode now runs
+the same machinery forward: `kgcr design` builds a spec from an intent, `kgcr plan` turns a
+reviewed spec into an immutable plan with a cost delta, and `kgcr apply` applies it to a local
+simulation. `kgcr dashboard` drives all of it from a local browser page. 474 tests pass here (Python 3.14, with Checkov, Trivy and Terraform installed); CI runs the same gates on 3.11 and 3.12 and skips the tests that need those tools. What is
+not done:
 
+- Nothing has touched a real AWS account. The Terraform-backed apply and the AWS Config harvest
+  adapter are built and tested against fakes only (no credentials here). `src/aws/` validates
+  under Terraform v1.16.5 and is not applied.
 - The advisor's live run happened once: sycophancy gate PASS on 3 valid trials (1 invalid), 2 of 4
   relational or resilience variants found, 1 false CRITICAL on 4 clean estates. Recorded responses
-  replay offline from `results/llm_fixtures/`.
-- The L1 control slice is a draft awaiting Udit's review.
-- The corpus is synthetic.
-- AWS is represented by local stand-ins by default. S3/SNS adapters are tested against a mocked
-  AWS (moto), and the Terraform is authored but not applied; nothing is deployed.
+  replay offline from `results/llm_fixtures/`; the other seven variants have no recording because
+  the free-tier quota was spent (`src/ml_model/record_variants.py` is ready).
+- The L1 control slice is a draft awaiting Udit's review; the dashboard has the review tools, and
+  no control has been signed off.
+- The human study (P11) needs ethics approval and participants.
+- The corpus is synthetic. Corpus D (TerraGoat and CloudGoat) checks the rule floor against
+  independently written configurations: it covers 2 to 4% of what Checkov fails there.
 
 The `docs/` FD set remains the controlling specification.
 
@@ -92,18 +99,18 @@ Working today (local, synthetic corpus):
 kgcr dashboard [--port 8765] [--open]                     # the local dashboard, below
 kgcr review [--variant <defect>] [--audience architect|auditor|learner] [--out <dir>]
             [--s3-bucket <name>] [--sns-topic-arn <arn>]    # AWS targets, opt-in
-kgcr history [--out <dir>] [--json]                       # stored review runs
+kgcr design  --archetype <a> --region <r> --az-spread <s> --network-layout <n> --logging <l>
+             --iam-shape <i> --tagging <t> --scale <c> [--audience <a>] [--out <dir>]
+kgcr design  --statement "<free text>" [--extract-only]    # Gemini extracts; unresolved fields stay empty
+kgcr plan    --spec <run-id prefix> [--backend local|terraform] [--json] [--out <dir>]
+kgcr apply   --plan <plan-id> [--backend local|terraform] [--confirm <plan-id>] [--budgets-applied]
+                                                          # terraform: gated, never run
+kgcr history [--out <dir>] [--json]                       # stored runs
 kgcr explain --run <run-id prefix> [--audience <a>]       # re-render a stored run
 ```
 
-Planned:
-
-```
-kgcr design  --intent "<statement>" [--audience=<a>] [--plan-only] [--budget=<n>]
-kgcr review  --account <id> [--audience=<a>] [--attest-only]
-kgcr plan    --spec <spec-id>
-kgcr apply   --plan <plan-id>
-```
+Not built: `kgcr review --account <id>`. The AWS Config adapter behind it exists
+(`kgcr.harvest.config`) and is not wired into review or run against an account.
 
 ### Dashboard
 
@@ -114,11 +121,15 @@ login by design. Sessions, jobs and run history live in `runs-local/dashboard.sq
 - **User side:** pick one of the nine seeded defect variants and an audience, run a review, then
   read the estate graph, each finding's evidence path and counterfactual, the measured pipeline
   timings, and the three audience renderings with their shared claims pinned. History lists every
-  stored run.
+  stored run. A design page builds a spec from the eight intent axes or from a sentence (the model
+  extracts, the operator confirms the form); a plan page shows a run's lifecycle, makes a plan with
+  a cost delta, and applies it to the local simulation.
 - **Admin side:** gates and reports, a job launcher and queue (corpus, advisor evaluation,
   reconstructor training, recommender evaluation, intent prediction, the CI gates, the static
-  results page), sessions, recorded model fixtures, the draft controls, the environment
-  fingerprint, cloud and spend, the command surface, and the project files.
+  results page), sessions, recorded model fixtures, the controls review and gold set pages
+  (append-only; the reviewer is never the author; the model may read the controls but never
+  writes them), the environment fingerprint, cloud and spend, the command surface (including what
+  is not built), and the project files.
 - **Spend gate:** every dashboard job replays recorded model responses (`KGCR_LLM_LIVE=0` is forced
   in the child process). Live Gemini calls and real S3/SNS targets need an admin to enable live
   mode, which resets on every server restart.
@@ -166,11 +177,10 @@ The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
 `dataset/`, `src/{frontend,backend,ml_model,aws}`, `results/`, `presentation/`);
 [CLAUDE.md](CLAUDE.md) is the governing document.
 
-- `src/backend/kgcr/` — the package. Today it provides the reproducibility spine
+- `src/backend/kgcr/` — the package. It provides the reproducibility spine
   (`repro`, `hashing`, `runrecord`, `versions`) that keys every result to
-  `(spec_hash, graph_version, model_version)`, plus the `kgcr` CLI whose
-  subcommands mirror the [planned interface](#planned-interface) (declared now,
-  implemented by the phases that own them).
+  `(spec_hash, graph_version, model_version)`, plus the `kgcr` CLI described under
+  [Interface](#interface).
 - `src/ml_model/` — entry points for the P8 intent reconstructor:
   `preprocessing.py` (generate the corpus into `dataset/processed/`), `train.py`
   (fit, write `model.pkl` and the evaluation report), `predict.py` (reconstruct
@@ -196,8 +206,14 @@ The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
   re-evaluation, three audience renderings, and the INV-2 claim-extraction test.
 - `src/backend/kgcr/orchestration/` — P10: the `kgcr review` pipeline and the
   local stand-ins for the S3 run bucket and the SNS topic.
+- `src/backend/kgcr/design/`, `plan/`, `apply/` — design mode, plans with a cost delta
+  (`plan/aws_prices.json` holds verified AWS list prices), and the local and Terraform-backed apply.
+  `harvest/` is the AWS Config adapter (never run against an account). `gold/` and
+  `dashboard/authoring.py` are the human-only authoring tools. `adversarial/` reads Corpus D.
+- `src/ml_model/` also holds `run_corpus_d.py`, `run_labeller_agreement.py`,
+  `run_explainer_eval.py`, `gnn_ablation.py` (optional `gnn` extra) and `record_variants.py`.
 - `src/aws/` — the FD-08 §8 bootstrap Terraform: day-one budget alarms and
-  the cross-account read/write role split. Authored, not yet applied.
+  the cross-account read/write role split. Validated with Terraform v1.16.5, not applied.
 - `.github/workflows/ci.yml` — ruff, mypy, and pytest on every push.
 
 ## Context

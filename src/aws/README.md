@@ -11,11 +11,12 @@ important Phase 0 facts true and un-forgettable:
 - **The read/write split is structural** (`iam_cross_account.tf`): the harvest
   role holds zero write actions, so INV-5 holds by construction (FD-08 §4.1).
 
-> **Status: authored, not yet applied.** Terraform is not installed in the
-> environment where this was written, so it has **not** been run through
-> `terraform init/validate/plan`. Treat it as a reviewed starting point:
-> validate against real account IDs before applying. Applying it is a live-AWS
-> step that belongs to Student A during Phase 0.
+> **Status: validated, not applied.** `terraform init -backend=false` and `terraform validate`
+> pass under Terraform v1.16.5 (checked 2026-10-14). It has not been planned against a real
+> account or applied: validate against real account IDs before applying. Applying it is a
+> live-AWS step that belongs to Student A during Phase 0. `provision_services` (default `ec2`,
+> `s3`) widens the write role for generated estates; the preflight in `kgcr apply` reads the same
+> list.
 
 ## Layout
 
