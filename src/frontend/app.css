@@ -199,7 +199,8 @@ th { text-align: left; font-weight: 400; color: var(--ink-3); font-size: 12.5px;
 td { padding: 12px 14px 12px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 tr.link { cursor: pointer; transition: background 0.15s var(--ease); }
-tr.link:hover, tr.link:focus-visible { background: var(--sleeve); outline: none; }
+tr.link:hover, tr.link:focus-visible { background: var(--sleeve); }
+tr.link:focus-visible { outline-offset: -2px; } /* the global ring, kept inside the row */
 tr.link[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--ink); background: var(--sleeve); }
 .bar { height: 8px; background: #252523; position: relative; min-width: 80px; }
 .bar b { position: absolute; inset: 0 auto 0 0; background: var(--ink); }
@@ -289,7 +290,8 @@ tr.link[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--ink); background
 .findings { display: grid; }
 .finding { appearance: none; background: transparent; border: 0; border-top: 1px solid var(--hair); text-align: left; padding: 18px 16px 18px 0; display: grid; grid-template-columns: 30px minmax(0, 1fr) 220px; gap: 16px; cursor: pointer; transition: background 0.2s var(--ease), box-shadow 0.2s var(--ease); }
 .finding:last-child { border-bottom: 1px solid var(--hair); }
-.finding:hover, .finding:focus-visible, .finding[aria-pressed="true"] { background: var(--sleeve); outline: none; }
+.finding:hover, .finding:focus-visible, .finding[aria-pressed="true"] { background: var(--sleeve); }
+.finding:focus-visible { outline-offset: -2px; }
 .finding[aria-pressed="true"] { box-shadow: inset 2px 0 0 var(--ink); }
 .finding .sev { margin: 6px 0 0 8px; width: 14px; }
 .finding h3 { font-size: 15px; font-weight: 500; line-height: 1.45; }
