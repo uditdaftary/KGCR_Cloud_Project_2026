@@ -30,8 +30,11 @@ source of truth.
 CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). Design mode now runs
 the same machinery forward: `kgcr design` builds a spec from an intent, `kgcr plan` turns a
 reviewed spec into an immutable plan with a cost delta, and `kgcr apply` applies it to a local
-simulation. `kgcr dashboard` drives all of it from a local browser page. 474 tests pass here (Python 3.14, with Checkov, Trivy and Terraform installed); the same gates pass in a clean Python 3.12 venv with only the dev extra (457 pass, 4 skip); CI itself and Python 3.11 have not run on these commits. What is
-not done:
+simulation. `kgcr dashboard` drives all of it from a local browser page.
+
+Verification: 474 tests pass on the build machine (Python 3.14, with Checkov, Trivy and Terraform
+installed). In a clean Python 3.12 venv with only the dev extra the same gates are clean and 457
+pass, 4 skip. CI runs the gates on Python 3.11 and 3.12 for every push. What is not done:
 
 - Nothing has touched a real AWS account. The Terraform-backed apply and the AWS Config harvest
   adapter are built and tested against fakes only (no credentials here). `src/aws/` validates
@@ -140,17 +143,20 @@ login by design. Sessions, jobs and run history live in `runs-local/dashboard.sq
 
 ## Roadmap
 
-The milestone plan (PMD §10) is dependency-ordered and phase-based. The near-term critical path:
+The milestone plan (PMD §10) is dependency-ordered and phase-based. The generator, labelling
+pipeline, Advisor, Recommender, intent reconstructor, Explainer, and design, plan and apply are
+built locally (see the status above). What is left is what needs a person or an account:
 
-1. **Phase 0 — environment** (FD-08): three accounts wired, budget alarms live, cross-account read working.
-2. **Phase 1 — ontology** (FD-07): encode the L1 controls for PCI-DSS and CIS across the three archetypes. This is the foundation every compliance claim rests on, and the phase most likely to be underestimated.
-3. **Phase 2 — gold set** (FD-05 §4C): 50 to 100 hand-verified reference configurations that validate the L1 encoding.
-
-Later phases build the generator, labelling pipeline, Advisor, Recommender, intent reconstructor, and Explainer, then the evaluation suite and human study.
+1. **Phase 0 — environment** (FD-08): three accounts wired, budget alarms live, cross-account read working. The Terraform validates and is not applied; the harvest and the real apply wait on this.
+2. **Phase 1 — ontology** (FD-07): the six draft L1 controls need Udit's review. The dashboard has the review tools; no control has been signed off. This is the foundation every compliance claim rests on, and the phase most likely to be underestimated.
+3. **Phase 2 — gold set** (FD-05 §4C): 50 to 100 hand-verified reference configurations that validate the L1 encoding. The register exists and freezes on instructor sign-off; it holds none yet.
+4. **Evaluation and human study** (P11): the automated half is in `results/explainer_report.json`; the human study needs ethics approval and participants.
 
 ## Development
 
-Requires Python 3.11+.
+Requires Python 3.11+. [docs/Runbook.md](docs/Runbook.md) is the step-by-step version of this
+section: setup, gates, every demo with its expected output, the optional tools, and
+troubleshooting.
 
 ```bash
 pip install -e ".[dev]"     # install with dev tooling (pinned versions)
@@ -165,13 +171,26 @@ Run the demo and regenerate the results:
 ```bash
 kgcr review --variant unencrypted_database --audience auditor   # end-to-end review, ~15 s
 kgcr review --variant transitive_trust_chain   # DF-7: found only with recorded LLM fixtures
+kgcr design --archetype payments_api --region eu-west-1 --az-spread two_az \
+    --network-layout public_private --logging full --iam-shape least_privilege \
+    --tagging strict --scale small                # a designed spec, audited by the recommender
+kgcr plan --spec <run-id prefix>               # diff, coverage, blast radius, monthly cost delta
+kgcr apply --plan <plan-id>                    # local simulation; one apply per plan
 python src/ml_model/train_recommender.py       # results/recommender_report.json
 python src/ml_model/run_advisor.py             # results/advisor_report.json
+python src/ml_model/run_explainer_eval.py      # results/explainer_report.json
 ```
+
+Needing more than the dev extra, none of it in CI: `run_corpus_d.py` (`.[adversarial]` and
+`acquire_corpus_d.py`), `run_labeller_agreement.py` (Checkov, Trivy and Terraform),
+`gnn_ablation.py` (`.[gnn]`), and `kgcr plan --backend terraform` (Terraform). Terraform is
+found even when PATH predates its install.
 
 Live Gemini calls (`gemini-3.7-flash`) need `pip install -e ".[advisor]"`, `GEMINI_API_KEY`, and
 `KGCR_LLM_LIVE=1`. They are capped at 24 per run and recorded under `results/llm_fixtures/`, so
-tests and later runs replay them offline. Put both in a git-ignored `.env` (copy `.env.example`) or export them; the key is never written.
+tests and later runs replay them offline. The free tier allows about 20 requests a day;
+`python src/ml_model/record_variants.py` records the seven variants that have no recording yet and
+stops at the first quota refusal. Put both in a git-ignored `.env` (copy `.env.example`) or export them; the key is never written.
 
 The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
 `dataset/`, `src/{frontend,backend,ml_model,aws}`, `results/`, `presentation/`);
