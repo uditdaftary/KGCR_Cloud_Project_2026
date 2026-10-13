@@ -134,7 +134,26 @@ const stopTimers = () => { timers.forEach(clearInterval); timers = []; };
 
 function go(path) { location.hash = `#${path}`; }
 
+// Navigations run one at a time: a slow view finishes (and its timers are registered) before
+// the next route clears them, so a stale view can never paint over, or outlive, a newer one.
+let routeId = 0;
+let viewDone = Promise.resolve();
+
 async function route() {
+  const id = ++routeId;
+  const previous = viewDone;
+  let finish;
+  viewDone = new Promise((resolve) => { finish = resolve; });
+  try {
+    await previous;
+    if (id !== routeId) return; // a newer navigation superseded this one while it waited
+    await showRoute();
+  } finally {
+    finish();
+  }
+}
+
+async function showRoute() {
   stopTimers();
   const path = location.hash.replace(/^#/, "") || "/";
   const session = getSession();
@@ -772,8 +791,8 @@ async function viewJobs() {
 
   await refresh();
   every(async () => {
-    const active = document.querySelector("#queue .state.running, #queue .state.queued");
-    if (active || selected) await refresh();
+    // Poll only while something is in flight; the render that shows it finishing is the last one.
+    if (document.querySelector("#queue .state.running, #queue .state.queued")) await refresh();
   }, 1500);
 }
 
