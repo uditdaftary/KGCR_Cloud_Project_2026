@@ -134,30 +134,39 @@ const stopTimers = () => { timers.forEach(clearInterval); timers = []; };
 
 function go(path) { location.hash = `#${path}`; }
 
-// Navigations run one at a time: a slow view finishes (and its timers are registered) before
-// the next route clears them, so a stale view can never paint over, or outlive, a newer one.
+// Every navigation gets a handle. A view that was superseded while it awaited the API is
+// stopped at its next mount/every/go (it throws STALE, which showRoute swallows), so it can
+// neither paint over the newer view nor register a timer nothing will clear. Nothing waits
+// for a slow view.
 let routeId = 0;
-let viewDone = Promise.resolve();
+const STALE = Symbol("superseded navigation");
+
+function routeHandle(id) {
+  const isLive = () => id === routeId;
+  const live = () => { if (!isLive()) throw STALE; };
+  return {
+    isLive,
+    live,
+    mount: (html) => { live(); return mount(html); },
+    every: (fn, ms) => { live(); every(fn, ms); },
+    go: (path) => { live(); go(path); },
+  };
+}
 
 async function route() {
   const id = ++routeId;
-  const previous = viewDone;
-  let finish;
-  viewDone = new Promise((resolve) => { finish = resolve; });
+  stopTimers();
   try {
-    await previous;
-    if (id !== routeId) return; // a newer navigation superseded this one while it waited
-    await showRoute();
-  } finally {
-    finish();
+    await showRoute(routeHandle(id));
+  } catch (err) {
+    if (err !== STALE) throw err;
   }
 }
 
-async function showRoute() {
-  stopTimers();
+async function showRoute(ui) {
   const path = location.hash.replace(/^#/, "") || "/";
   const session = getSession();
-  if (path === "/" || !session) return renderCover(path !== "/" && !session);
+  if (path === "/" || !session) return renderCover(path !== "/" && !session, ui);
   const [base, arg] = path.startsWith("/run/") ? ["/run", path.slice(5)] : [path, null];
   const view = VIEWS[base];
   if (!view) return go(session.role === "admin" ? "/admin/gates" : "/review");
@@ -167,10 +176,11 @@ async function showRoute() {
   }
   renderShell(base);
   try {
-    await view(arg);
+    await view(ui, arg);
   } catch (err) {
+    if (err === STALE) throw err;
     console.error("view failed", base, err);
-    mount(notice(esc(err.message || "Something went wrong rendering this view."), "error"));
+    ui.mount(notice(esc(err.message || "Something went wrong rendering this view."), "error"));
   }
 }
 
@@ -210,7 +220,7 @@ const head = (no, title, lede = "") =>
 
 // ---------- cover ----------
 
-async function renderCover(expired) {
+async function renderCover(expired, ui) {
   stopTimers();
   const session = getSession();
   app.innerHTML = `
@@ -255,17 +265,18 @@ async function renderCover(expired) {
   );
   try {
     const m = await meta(true);
+    ui.live();
     document.getElementById("cover-version").textContent = `kgcr ${m.version}`;
     if (m.live_enabled) document.getElementById("cover-mode").textContent = "Live calls are enabled by an admin.";
     const runs = await api("runs");
+    ui.live();
     // The newest plotted run that has a multi-hop evidence path, else the newest plotted run.
-    let shown = null;
-    for (const r of runs.slice(0, 8)) {
-      const full = await api(`runs/${r.prefix}`);
-      if (!full.summary) continue;
-      if (!shown) shown = { r, full };
-      if (full.bundle.findings.some((x) => x.evidence_path.length)) { shown = { r, full }; break; }
-    }
+    // light=1 skips the three audience renderings; the eight fetches run side by side.
+    const candidates = await Promise.all(runs.slice(0, 8).map((r) => api(`runs/${r.prefix}?light=1`)));
+    ui.live();
+    const plotted = candidates.filter((full) => full.summary);
+    const full = plotted.find((x) => x.bundle.findings.some((f) => f.evidence_path.length)) || plotted[0];
+    const shown = full && { r: { prefix: full.prefix, jobs: full.jobs }, full };
     const cap = document.getElementById("cover-caption");
     if (!shown) {
       cap.innerHTML = `<span>No estate plotted yet. Continue as user and run a review.</span>`;
@@ -278,6 +289,7 @@ async function renderCover(expired) {
     const no = shown.r.jobs.length ? kg(shown.r.jobs[0].catalog_no) : `run ${shown.r.prefix}`;
     cap.innerHTML = `<span>Plotted run ${esc(no)}, estate <span class="mono">${esc(shown.full.bundle.estate_id)}</span></span><span>${plot.nodeCount} resources, ${plot.edgeCount} dependencies</span>`;
   } catch (err) {
+    if (err === STALE) throw err;
     console.error("cover data failed", err);
     document.getElementById("cover-caption").innerHTML = `<span>${esc(err.message)}</span>`;
   }
@@ -285,14 +297,14 @@ async function renderCover(expired) {
 
 // ---------- KG 010 new review ----------
 
-async function viewReview() {
+async function viewReview(ui) {
   const s = getSession();
   const [m, variants, jobs] = await Promise.all([meta(true), api("variants"), api(`jobs?session=${s.id}`)]);
   const params = m.jobs.review.params;
   let chosen = variants.find((v) => v.replay && v.defect_class === "DF-7") || variants[0];
   let audience = m.audiences[0];
   const canLive = s.role === "admin" && m.live_enabled;
-  mount(`
+  ui.mount(`
     ${head(10, "New review", "Pick a seeded defect, run review mode on a held-out synthetic estate, and read how each finding is justified.")}
     <div class="run-form">
       <div>
@@ -371,7 +383,7 @@ async function viewReview() {
   const panel = document.getElementById("job-panel");
   const runBtn = document.getElementById("run-btn");
   const active = jobs.find((j) => j.kind === "review" && (j.status === "running" || j.status === "queued"));
-  if (active) watchJob(active.id, panel, runBtn);
+  if (active) watchJob(ui, active.id, panel, runBtn);
 
   runBtn.addEventListener("click", async () => {
     const live = document.getElementById("f-live");
@@ -389,7 +401,7 @@ async function viewReview() {
     runBtn.disabled = true;
     try {
       const job = await post("jobs", body);
-      watchJob(job.id, panel, runBtn);
+      watchJob(ui, job.id, panel, runBtn);
     } catch (err) {
       runBtn.disabled = false;
       panel.innerHTML = notice(esc(err.message), "error");
@@ -397,7 +409,8 @@ async function viewReview() {
   });
 }
 
-function watchJob(id, panel, runBtn) {
+function watchJob(ui, id, panel, runBtn) {
+  ui.live();
   runBtn.disabled = true;
   runBtn.classList.add("busy");
   const tick = async () => {
@@ -405,9 +418,10 @@ function watchJob(id, panel, runBtn) {
     try {
       job = await api(`jobs/${id}`);
     } catch (err) {
-      panel.innerHTML = notice(esc(err.message), "error");
+      if (ui.isLive()) panel.innerHTML = notice(esc(err.message), "error");
       return;
     }
+    if (!ui.isLive()) return; // the operator moved on while this request was in flight
     const tail = (job.log || "").split("\n").slice(-14).join("\n");
     const where = job.queue_position ? `Queued, position ${job.queue_position}` : job.status === "running" ? `Running for ${dur(seconds(job.started_at))}` : "";
     panel.innerHTML = `
@@ -423,33 +437,32 @@ function watchJob(id, panel, runBtn) {
       stopTimers();
       runBtn.disabled = false;
       runBtn.classList.remove("busy");
-      if (job.status === "done" && job.run_prefix) go(`/run/${job.run_prefix}`);
+      if (job.status === "done" && job.run_prefix) ui.go(`/run/${job.run_prefix}`);
       else if (job.status === "failed") panel.insertAdjacentHTML("afterbegin", notice(`The review failed with exit code ${esc(job.exit_code)}. The log below shows where.`, "error"));
     }
   };
   tick();
-  every(tick, 1000);
+  ui.every(tick, 1000);
 }
 
 // ---------- KG 011 run sleeve ----------
 
-async function viewRun(prefix) {
-  const runs = await api("runs");
+async function viewRun(ui, prefix) {
   if (!prefix) {
+    const runs = await api("runs");
     if (!runs.length) {
-      return mount(`${head(11, "Run sleeve")}<div class="empty"><p>No review has been stored yet. Runs appear here once a review finishes.</p>${btn("Start a review", { kind: "primary", attrs: 'data-go="/review"' })}</div>`);
+      return ui.mount(`${head(11, "Run sleeve")}<div class="empty"><p>No review has been stored yet. Runs appear here once a review finishes.</p>${btn("Start a review", { kind: "primary", attrs: 'data-go="/review"' })}</div>`);
     }
-    return go(`/run/${runs[0].prefix}`);
+    return ui.go(`/run/${runs[0].prefix}`);
   }
   const [run, m] = await Promise.all([api(`runs/${prefix}`), meta()]);
-  const row = runs.find((r) => r.prefix === run.prefix) || {};
-  const job = (row.jobs || [])[0];
+  const job = (run.jobs || [])[0];
   const b = run.bundle, sum = run.summary;
   const variantName = sum ? (await api("variants")).find((v) => v.variant === sum.variant)?.name || sum.variant : "Variant not recorded";
   const llm = sum ? sum.llm_mode : (run.record.model_version.includes("gemini") ? "ok" : "disabled");
   const llmLabel = { ok: "Model reviewed every pass", partial: "Model on some passes, rule floor on others", disabled: "Rule floor only", missing_fixture: "Rule floor only, no recorded response" }[llm] || llm;
 
-  mount(`
+  ui.mount(`
     ${head(job ? job.catalog_no : `Run ${run.prefix}`, variantName, `Estate <span class="mono">${esc(b.estate_id)}</span> from the held-out synthetic split. Run ${esc(run.prefix)}.`)}
     ${b.scope_note ? notice(esc(b.scope_note), "attention") : ""}
     <section class="block" style="margin-top:${b.scope_note ? "24px" : "0"}">
@@ -576,7 +589,7 @@ function pipelineBlock(sum, timings) {
 
 // ---------- KG 012 history ----------
 
-async function viewHistory() {
+async function viewHistory(ui) {
   const s = getSession();
   const [runs, mine] = await Promise.all([api("runs"), api(`jobs?session=${s.id}`)]);
   const minePrefixes = new Set(mine.filter((j) => j.run_prefix).map((j) => j.run_prefix));
@@ -603,7 +616,7 @@ async function viewHistory() {
       tr.addEventListener("keydown", (e) => e.key === "Enter" && open());
     });
   };
-  mount(`
+  ui.mount(`
     ${head(12, "History", "Every review stored in the local artifact store, including runs made from the CLI.")}
     <div class="segmented" role="group" aria-label="Scope" style="margin-bottom:20px">
       <button data-scope="mine" aria-pressed="${scope === "mine"}">This session</button>
@@ -622,7 +635,7 @@ async function viewHistory() {
 
 // ---------- KG 020 gates and reports ----------
 
-async function viewGates() {
+async function viewGates(ui) {
   const { advisor: adv, recommender: rec, reconstruction: recon } = await api("reports");
   const llm = adv && typeof adv.llm === "object" ? adv.llm : null;
   const trials = (adv && adv.sycophancy_trials) || [];
@@ -632,7 +645,7 @@ async function viewGates() {
   const rankers = rec ? rec.rankers : {};
   const bestBaseline = Object.entries(rankers).filter(([k]) => !k.startsWith("model")).sort(([, a], [, b]) => b.exact_set - a.exact_set)[0];
   const gate = adv ? adv.sycophancy_gate : "NOT_RUN";
-  mount(`
+  ui.mount(`
     ${head(20, "Gates and reports", "Read from results/*.json, the committed evidence. Jobs write their own copies and never overwrite these.")}
     <div class="gate-list">
       <div class="gate-line lead"><span class="mono faint">advisor</span><span>Sycophancy gate</span><span class="v ${gate === "PASS" ? "" : "fail"}">${esc(titleCase(gate.replace("_", " ")))}</span><p>${valid} valid of ${trials.length} trials. The advisor must keep every valid finding under pushback.</p></div>
@@ -682,12 +695,12 @@ async function viewGates() {
 
 // ---------- KG 021 jobs ----------
 
-async function viewJobs() {
+async function viewJobs(ui) {
   const s = getSession();
   const m = await meta(true);
   const kinds = Object.entries(m.jobs);
   let selected = null;
-  mount(`
+  ui.mount(`
     ${head(21, "Jobs", "Every job runs as a subprocess, one at a time, and writes into its own directory under runs-local/jobs.")}
     <div class="jobs-grid">
       <section>
@@ -790,7 +803,7 @@ async function viewJobs() {
   }
 
   await refresh();
-  every(async () => {
+  ui.every(async () => {
     // Poll only while something is in flight; the render that shows it finishing is the last one.
     if (document.querySelector("#queue .state.running, #queue .state.queued")) await refresh();
   }, 1500);
@@ -817,10 +830,10 @@ function durationPlot(jobs, durations, longest, selected) {
 
 // ---------- KG 022 sessions ----------
 
-async function viewSessions() {
+async function viewSessions(ui) {
   const [sessions, jobs] = await Promise.all([api("sessions"), api("jobs")]);
   const me = getSession();
-  mount(`
+  ui.mount(`
     ${head(22, "Sessions", "Every role choice on the cover opens a session in the local database. There is no login by design.")}
     ${sessions.length ? `<div class="table-wrap"><table>
       <thead><tr><th>Entry</th><th>Role</th><th>Started</th><th>Last seen</th><th class="num">Jobs</th><th class="num">Reviews</th></tr></thead>
@@ -843,9 +856,9 @@ async function viewSessions() {
 
 // ---------- KG 023 fixtures ----------
 
-async function viewFixtures() {
+async function viewFixtures(ui) {
   const rows = await api("fixtures");
-  mount(`
+  ui.mount(`
     ${head(23, "Model fixtures", "Recorded Gemini responses. Replay reads these instead of calling the model; a live call records a new one.")}
     <div class="two">
       <div class="table-wrap"><table>
@@ -877,11 +890,11 @@ async function viewFixtures() {
 
 // ---------- KG 024 controls ----------
 
-async function viewControls() {
+async function viewControls(ui) {
   const d = await api("controls");
   const sevOf = (c) => d.classification_to_severity[c.classification] || "ADVISORY";
   const unverified = d.controls.filter((c) => !c.verified).length;
-  mount(`
+  ui.mount(`
     ${head(24, "Draft controls", "The L1 control slice the advisor grounds every finding in.")}
     ${notice(`<b>${esc(d.status)}.</b> ${unverified} of ${d.controls.length} controls are unverified. ${esc(d.note)}`, "attention")}
     <div class="table-wrap" style="margin-top:28px"><table>
@@ -896,10 +909,10 @@ async function viewControls() {
 
 // ---------- KG 025 environment ----------
 
-async function viewEnvironment() {
+async function viewEnvironment(ui) {
   const e = await api("environment");
   const yes = (b, y = "Yes", n = "No") => (b ? state("pass", y) : state("not_run", n));
-  mount(`
+  ui.mount(`
     ${head(25, "Environment", "The seed report and version fingerprint that go into every run record, read live from this process.")}
     <div class="two">
       <section><div class="block-head"><h2>Seed report</h2></div>
@@ -921,12 +934,12 @@ async function viewEnvironment() {
 
 // ---------- KG 026 cloud and spend ----------
 
-async function viewCloud() {
+async function viewCloud(ui) {
   const s = getSession();
   const [c, m, jobs, variants] = await Promise.all([api("cloud"), meta(true), api("jobs"), api("variants")]);
   const lastLive = jobs.find((j) => j.live && j.live_calls !== null && j.live_calls !== undefined);
   const used = lastLive ? Math.min(lastLive.live_calls, m.live_call_cap) : 0;
-  mount(`
+  ui.mount(`
     ${head(26, "Cloud and spend", "Nothing here runs by default. Live model calls and real AWS targets need an explicit admin switch, reset on every server restart.")}
     <section class="block">
       <div class="block-head"><h2>Live switch</h2><p>${m.gemini_key_present ? "Gemini key present" : "No Gemini key set; live review calls would fall back to replay"}</p></div>
@@ -995,7 +1008,7 @@ const viewCloudRefresh = () => route();
 
 // ---------- KG 027 commands ----------
 
-async function viewCommands() {
+async function viewCommands(ui) {
   const m = await meta();
   const working = [
     ["kgcr review", "Review an estate end to end, locally", "/review", 10],
@@ -1005,7 +1018,7 @@ async function viewCommands() {
     ["kgcr repro-info", "Seed report and version fingerprint", "/admin/environment", 25],
     ["kgcr dashboard", "Serve this dashboard", "/", 0],
   ];
-  mount(`
+  ui.mount(`
     ${head(27, "Commands", "The kgcr command surface: what runs today and what is planned, with the phase it lands in.")}
     <div class="table-wrap"><table>
       <thead><tr><th>Command</th><th>What it does</th><th>Status</th><th>In the dashboard</th></tr></thead>
@@ -1018,9 +1031,9 @@ async function viewCommands() {
 
 // ---------- KG 028 project ----------
 
-async function viewProject() {
+async function viewProject(ui) {
   const p = await api("project");
-  mount(`
+  ui.mount(`
     ${head(28, "Project files", "The Phase-I deliverables as the README lists them, and both mandated diagrams.")}
     <div class="table-wrap"><table>
       <thead><tr><th>Deliverable</th><th>File</th></tr></thead>
