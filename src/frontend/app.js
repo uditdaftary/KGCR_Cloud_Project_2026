@@ -4,6 +4,7 @@
 import { drawEstate, drawIntent, drawMark, drawRidges, severityColour } from "./plot.js";
 import { makeDesignView } from "./design.js";
 import { makePlanView } from "./plan.js";
+import { makeAuthoringViews } from "./authoring.js";
 
 const app = document.getElementById("app");
 
@@ -109,11 +110,12 @@ const NAV = [
     { path: "/admin/jobs", no: 21, label: "Jobs" },
     { path: "/admin/sessions", no: 22, label: "Sessions" },
     { path: "/admin/fixtures", no: 23, label: "Model fixtures" },
-    { path: "/admin/controls", no: 24, label: "Draft controls" },
+    { path: "/admin/controls", no: 24, label: "Controls review" },
     { path: "/admin/environment", no: 25, label: "Environment" },
     { path: "/admin/cloud", no: 26, label: "Cloud and spend" },
     { path: "/admin/commands", no: 27, label: "Commands" },
     { path: "/admin/project", no: 28, label: "Project files" },
+    { path: "/admin/gold", no: 29, label: "Gold set" },
   ] },
 ];
 
@@ -125,7 +127,6 @@ const VIEWS = {
   "/admin/jobs": viewJobs,
   "/admin/sessions": viewSessions,
   "/admin/fixtures": viewFixtures,
-  "/admin/controls": viewControls,
   "/admin/environment": viewEnvironment,
   "/admin/cloud": viewCloud,
   "/admin/commands": viewCommands,
@@ -940,23 +941,6 @@ async function viewFixtures(ui) {
 
 // ---------- KG 024 controls ----------
 
-async function viewControls(ui) {
-  const d = await api("controls");
-  const sevOf = (c) => d.classification_to_severity[c.classification] || "ADVISORY";
-  const unverified = d.controls.filter((c) => !c.verified).length;
-  ui.mount(`
-    ${head(24, "Draft controls", "The L1 control slice the advisor grounds every finding in.")}
-    ${notice(`<b>${esc(d.status)}.</b> ${unverified} of ${d.controls.length} controls are unverified. ${esc(d.note)}`, "attention")}
-    <div class="table-wrap" style="margin-top:28px"><table>
-      <thead><tr><th>Control</th><th>Classification</th><th>Summary</th><th>Verified</th></tr></thead>
-      <tbody>${d.controls.map((c) => `<tr>
-        <td class="mono" style="white-space:nowrap">${esc(c.control_ref)}</td>
-        <td style="white-space:nowrap">${sev(sevOf(c))} ${esc(c.classification)}</td>
-        <td style="max-width:70ch">${esc(c.summary)}${c.checked_against ? `<br><span class="faint" style="font-size:12.5px">Checked against ${esc(c.checked_against)}</span>` : ""}</td>
-        <td>${c.verified ? state("pass", "Verified") : state("not_run", "Pending review")}</td></tr>`).join("")}</tbody>
-    </table></div>`);
-}
-
 // ---------- KG 025 environment ----------
 
 async function viewEnvironment(ui) {
@@ -1119,6 +1103,9 @@ const viewContext = {
 };
 VIEWS["/design"] = makeDesignView(viewContext);
 VIEWS["/plan"] = makePlanView(viewContext);
+const authoring = makeAuthoringViews(viewContext);
+VIEWS["/admin/controls"] = authoring.viewControls;
+VIEWS["/admin/gold"] = authoring.viewGold;
 
 // Buttons that only navigate carry data-go; one delegated listener serves every view.
 app.addEventListener("click", (e) => {

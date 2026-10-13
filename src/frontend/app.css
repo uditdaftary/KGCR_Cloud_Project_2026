@@ -439,3 +439,19 @@ tr.link[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--ink); background
   .lifecycle li:last-child { border-bottom: 0; }
 }
 @media (max-width: 600px) { .axes { grid-template-columns: 1fr; } }
+
+/* ---------- controls review and gold set (KG 024, KG 029) ---------- */
+.controls-list { border-top: 1px solid var(--hair); }
+.control { padding: 18px 0; border-bottom: 1px solid var(--hair); display: grid; gap: 8px; }
+.control-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; font-size: 13.5px; }
+.control-summary { max-width: 78ch; font-size: 14.5px; }
+form.decision { display: grid; gap: 14px; padding: 16px 0 4px; max-width: 72ch; }
+.field textarea.mono-area { font: 12.5px/1.55 var(--mono); font-stretch: 90%; max-width: none; }
+.control-picks { border: 1px solid var(--hair); padding: 12px 16px; margin: 16px 0 0; display: grid; gap: 10px; }
+.control-picks legend { padding: 0 8px; font-size: 13px; color: var(--ink-2); }
+.gold-progress { display: grid; grid-template-columns: repeat(25, minmax(0, 1fr)); gap: 3px; max-width: 640px; }
+.gold-progress i { height: 18px; border: 1px solid var(--hair-2); display: block; }
+.gold-progress i.authored { background: var(--hair-2); }
+.gold-progress i.reviewed { background: var(--ink); border-color: var(--ink); }
+.entry { border: 1px solid var(--hair); padding: 18px 20px; }
+@media (max-width: 600px) { .gold-progress { grid-template-columns: repeat(10, minmax(0, 1fr)); } }
