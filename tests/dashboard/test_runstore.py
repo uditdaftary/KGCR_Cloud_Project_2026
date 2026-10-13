@@ -72,3 +72,10 @@ def test_cli_history_and_explain(store: Path, capsys: pytest.CaptureFixture[str]
     )
     assert "PCI-DSS-4.0-3.5.1" in capsys.readouterr().out
     assert main(["explain", "--run", "ffff", "--out", str(store)]) == 2
+
+
+def test_light_load_skips_the_renderings(store: Path) -> None:
+    prefix = list_runs(store)[0]["prefix"]
+    light = load_run(store, prefix, render_explanations=False)
+    assert light["explanations"] == {} and light["claims"] == {}
+    assert light["summary"] is not None and light["bundle"]["findings"] is not None

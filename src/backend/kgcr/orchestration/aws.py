@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -25,6 +26,8 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+_REPLACE_ATTEMPTS = 20  # about a second in total
 
 
 class ArtifactStore(Protocol):
@@ -55,8 +58,20 @@ class LocalArtifactStore:
         # truncated file, and a re-run replaces a complete run only with a complete one.
         partial = path.with_name(path.name + ".partial")
         partial.write_text(body, encoding="utf-8")
-        os.replace(partial, path)
+        _replace_when_free(partial, path)
         return path.as_posix()
+
+
+def _replace_when_free(source: Path, target: Path) -> None:
+    """``os.replace``, retried: Windows refuses while a reader (the dashboard) has it open."""
+    for attempt in range(_REPLACE_ATTEMPTS):
+        try:
+            os.replace(source, target)
+            return
+        except PermissionError:
+            if attempt == _REPLACE_ATTEMPTS - 1:
+                raise
+            time.sleep(0.05)
 
 
 class LogNotifier:

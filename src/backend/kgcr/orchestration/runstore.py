@@ -76,8 +76,12 @@ def resolve_run(root: Path, run: str) -> Path:
     return matches[0]
 
 
-def load_run(root: Path, run: str) -> dict[str, Any]:
-    """Everything stored for one run, explanations re-rendered from its bundle."""
+def load_run(root: Path, run: str, *, render_explanations: bool = True) -> dict[str, Any]:
+    """Everything stored for one run, explanations re-rendered from its bundle.
+
+    ``render_explanations=False`` skips the three renderings and the claim extraction, for
+    callers that only draw the graph and findings.
+    """
     run_dir = resolve_run(root, run)
     try:
         bundle_dict = _read(run_dir / "bundle.json")
@@ -86,7 +90,7 @@ def load_run(root: Path, run: str) -> dict[str, Any]:
         bundle = ExplanationBundle.from_dict(bundle_dict)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise RunNotFound(f"run {run_dir.name} is damaged: {exc}") from exc
-    explanations = {a: render(bundle, a) for a in AUDIENCES}
+    explanations = {a: render(bundle, a) for a in AUDIENCES} if render_explanations else {}
     return {
         "prefix": run_dir.name,
         "record": _read(run_dir / "run_record.json"),
