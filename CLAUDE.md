@@ -35,7 +35,9 @@ have branches and own their sections; nothing is written or committed on their b
 
 Non-negotiable — from the guidelines, p.5. **Every deliverable file goes into one of these
 directories.** Repository governance, build configuration, and the test suite (`CLAUDE.md`,
-`CHANGELOG.md`, `MIGRATION_PLAN.md`, `pyproject.toml`, `tests/`) stay at the root.
+`CHANGELOG.md`, `MIGRATION_PLAN.md`, `pyproject.toml`, `tests/`) stay at the root. So do
+`PRODUCT.md` and `DESIGN.md`, the dashboard's design briefs: the Impeccable design tool reads
+them from the repository root, and they are working notes, not Phase-I deliverables.
 
 ```
 KGCR_Cloud_Project_2026/

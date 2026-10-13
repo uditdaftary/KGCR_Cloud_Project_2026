@@ -28,7 +28,7 @@ source of truth.
 **Implementation status (Review 2).** Review mode runs end to end locally as one command,
 `kgcr review`: estate, dependency graph, intent reconstruction (P8), recommendation with a hard
 CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). `kgcr dashboard` drives
-all of it from a local browser page. 206 tests run in CI on
+all of it from a local browser page. 207 tests run in CI on
 Python 3.11 and 3.12. What is not done yet:
 
 - The advisor's live run happened once: sycophancy gate PASS on 3 valid trials (1 invalid), 2 of 4
