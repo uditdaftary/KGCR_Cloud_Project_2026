@@ -333,9 +333,19 @@ class Handler(BaseHTTPRequestHandler):
 
     # responses
 
-    def _send(self, status: int, body: bytes, ctype: str, *, sandbox: bool = False) -> None:
+    def _send(
+        self,
+        status: int,
+        body: bytes,
+        ctype: str,
+        *,
+        sandbox: bool = False,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", ctype)
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         if sandbox:  # opened on its own, a repo file gets no scripts and no dashboard origin
             self.send_header("Content-Security-Policy", "sandbox")
         self.send_header("Content-Length", str(len(body)))
@@ -343,6 +353,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
+
+    def _download(self, payload: Any, filename: str) -> None:
+        """JSON as a file the browser saves: authoring exports are committed by a person."""
+        body = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        self._send(
+            HTTPStatus.OK,
+            body,
+            "application/json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
     def _json(self, payload: Any, status: int = 200) -> None:
         self._send(status, json.dumps(payload).encode("utf-8"), "application/json")
@@ -436,6 +456,29 @@ class Handler(BaseHTTPRequestHandler):
             for r in runs:
                 r["jobs"] = jobs_by_prefix.get(r["prefix"], [])
             return self._json(runs)
+        if route == "authoring/controls":
+            from kgcr.dashboard import authoring
+
+            return self._json(authoring.controls_view(app.db))
+        if route == "authoring/controls/export":
+            from kgcr.dashboard import authoring
+
+            return self._download(authoring.controls_export(app.db), "controls_review.json")
+        if route == "gold":
+            from kgcr.dashboard import authoring
+
+            return self._json(authoring.gold_list(app.db))
+        if route == "gold/export":
+            from kgcr.dashboard import authoring
+
+            return self._download(authoring.gold_export(app.db), "gold_set.json")
+        if len(parts) == 2 and parts[0] == "gold" and parts[1].isdigit():
+            from kgcr.dashboard import authoring
+
+            try:
+                return self._json(authoring.gold_get(app.db, int(parts[1])))
+            except authoring.AuthoringError as exc:
+                return self._error(HTTPStatus.NOT_FOUND, str(exc))
         if len(parts) == 3 and parts[0] == "runs" and parts[2] == "plans":
             return self._run_plans(parts[1])
         if len(parts) == 2 and parts[0] == "plans":
@@ -540,6 +583,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"cancelled": app.runner.cancel(job["id"])})
         if route == "/api/design/extract":
             return self._extract(data, session)
+        if route.startswith(("/api/authoring/", "/api/gold")):
+            return self._authoring(route, data, session)
         if route == "/api/admin/live":
             if session["role"] != "admin":
                 return self._error(HTTPStatus.FORBIDDEN, "only an admin can change live mode")
@@ -577,6 +622,60 @@ class Handler(BaseHTTPRequestHandler):
                 "plans": plans,
             }
         )
+
+    def _authoring(self, route: str, data: dict[str, Any], session: dict[str, Any]) -> None:
+        """Controls review and the gold set register. Admin only, and every write is a human
+        act: a typed reviewer or author name, and where it signs something off, confirm."""
+        from kgcr.dashboard import authoring
+
+        if session["role"] != "admin":
+            return self._error(HTTPStatus.FORBIDDEN, "authoring is for admins")
+        db = self.app.db
+        parts = route.strip("/").split("/")  # api, then authoring/controls/decision or gold...
+        needs_confirm = route == "/api/authoring/controls/decision" or route.endswith("/review")
+        if needs_confirm and data.get("confirm") is not True:
+            return self._error(HTTPStatus.BAD_REQUEST, "this is your own decision: confirm: true")
+        try:
+            if route == "/api/authoring/controls/decision":
+                result = authoring.record_decision(
+                    db,
+                    data.get("control_node"),
+                    data.get("decision"),
+                    data.get("reviewer"),
+                    data.get("note", ""),
+                    data.get("proposed_summary"),
+                )
+                logger.warning("control decision recorded for %s", data.get("control_node"))
+                return self._json(result, HTTPStatus.CREATED)
+            if route == "/api/gold":
+                fields = {
+                    k: data.get(k)
+                    for k in ("title", "framework", "source_ref", "config", "controls", "author")
+                }
+                return self._json(authoring.gold_create(db, **fields), HTTPStatus.CREATED)
+            if len(parts) in (3, 4) and parts[1] == "gold" and parts[2].isdigit():
+                entry = int(parts[2])
+                action = parts[3] if len(parts) == 4 else ""
+                if action == "":
+                    edits = {
+                        k: data[k]
+                        for k in ("title", "framework", "source_ref", "config", "controls")
+                        if k in data
+                    }
+                    return self._json(authoring.gold_update(db, entry, **edits))
+                if action == "authored":
+                    return self._json(authoring.gold_mark_authored(db, entry))
+                if action == "check":
+                    return self._json(authoring.gold_check(db, entry))
+                if action == "review":
+                    result = authoring.gold_review(
+                        db, entry, data.get("reviewer"), data.get("note", "")
+                    )
+                    logger.warning("gold entry %s signed off", entry)
+                    return self._json(result)
+        except authoring.AuthoringError as exc:
+            return self._error(HTTPStatus.BAD_REQUEST, str(exc))
+        return self._error(HTTPStatus.NOT_FOUND, f"no API route {route!r}")
 
     def _extract(self, data: dict[str, Any], session: dict[str, Any]) -> None:
         """Ground a plain-English statement in the eight intent axes.
