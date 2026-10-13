@@ -1,0 +1,216 @@
+{
+ "SchemaVersion": 2,
+ "ArtifactName": ".",
+ "ArtifactType": "filesystem",
+ "Results": [
+  {
+   "Target": ".",
+   "Class": "config",
+   "Type": "terraform",
+   "Misconfigurations": []
+  },
+  {
+   "Target": "main.tf.json",
+   "Class": "config",
+   "Type": "terraform",
+   "Misconfigurations": [
+    {
+     "ID": "AWS-0052",
+     "AVDID": null,
+     "Title": "Load balancers should drop invalid headers",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_lb.api",
+      "Provider": "AWS",
+      "Service": "elb"
+     }
+    },
+    {
+     "ID": "AWS-0077",
+     "AVDID": null,
+     "Title": "RDS Cluster and RDS instance should have backup retention longer than default 1 day",
+     "Severity": "MEDIUM",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_db_instance.cardholder",
+      "Provider": "AWS",
+      "Service": "rds"
+     }
+    },
+    {
+     "ID": "AWS-0080",
+     "AVDID": null,
+     "Title": "RDS encryption has not been enabled at a DB Instance level.",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_db_instance.cardholder",
+      "Provider": "AWS",
+      "Service": "rds"
+     }
+    },
+    {
+     "ID": "AWS-0086",
+     "AVDID": null,
+     "Title": "S3 Access block should block public ACL",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0087",
+     "AVDID": null,
+     "Title": "S3 Access block should block public policy",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0089",
+     "AVDID": null,
+     "Title": "S3 Bucket Logging",
+     "Severity": "LOW",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0090",
+     "AVDID": null,
+     "Title": "S3 Data should be versioned",
+     "Severity": "MEDIUM",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0091",
+     "AVDID": null,
+     "Title": "S3 Access Block should Ignore Public ACL",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0093",
+     "AVDID": null,
+     "Title": "S3 Access block should restrict public bucket to limit access",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0094",
+     "AVDID": null,
+     "Title": "S3 buckets should each define an aws_s3_bucket_public_access_block",
+     "Severity": "LOW",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0132",
+     "AVDID": null,
+     "Title": "S3 encryption should use Customer Managed Keys",
+     "Severity": "HIGH",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_s3_bucket_server_side_encryption_configuration.logs",
+      "Provider": "AWS",
+      "Service": "s3"
+     }
+    },
+    {
+     "ID": "AWS-0133",
+     "AVDID": null,
+     "Title": "Enable Performance Insights to detect potential problems",
+     "Severity": "LOW",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_db_instance.cardholder",
+      "Provider": "AWS",
+      "Service": "rds"
+     }
+    },
+    {
+     "ID": "AWS-0176",
+     "AVDID": null,
+     "Title": "RDS IAM Database Authentication Disabled",
+     "Severity": "MEDIUM",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_db_instance.cardholder",
+      "Provider": "AWS",
+      "Service": "rds"
+     }
+    },
+    {
+     "ID": "AWS-0177",
+     "AVDID": null,
+     "Title": "RDS Deletion Protection Disabled",
+     "Severity": "MEDIUM",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_db_instance.cardholder",
+      "Provider": "AWS",
+      "Service": "rds"
+     }
+    },
+    {
+     "ID": "AWS-0178",
+     "AVDID": null,
+     "Title": "VPC Flow Logs is a feature that enables you to capture information about the IP traffic going to and from network interfaces in your VPC. After you've created a flow log, you can view and retrieve its data in Amazon CloudWatch Logs. It is recommended that VPC Flow Logs be enabled for packet \"Rejects\" for VPCs.",
+     "Severity": "MEDIUM",
+     "Status": "FAIL",
+     "CauseMetadata": {
+      "Resource": "aws_vpc.main",
+      "Provider": "AWS",
+      "Service": "ec2"
+     }
+    },
+    {
+     "ID": "AWS-9999",
+     "Title": "no resource",
+     "Severity": "LOW",
+     "Status": "FAIL",
+     "CauseMetadata": {}
+    },
+    {
+     "ID": "AWS-9998",
+     "Title": "a pass",
+     "Severity": "LOW",
+     "Status": "PASS",
+     "CauseMetadata": {
+      "Resource": "aws_vpc.main"
+     }
+    }
+   ]
+  }
+ ]
+}

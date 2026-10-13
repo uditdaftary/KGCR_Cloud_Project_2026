@@ -15,9 +15,11 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -28,6 +30,7 @@ __all__ = [
     "CheckovFinding",
     "checkov_available",
     "run_checkov",
+    "run_checkov_on_plan",
     "parse_checkov_json",
     "resource_verdict",
 ]
@@ -61,22 +64,33 @@ def run_checkov(estate: Estate) -> list[CheckovFinding]:
     with tempfile.TemporaryDirectory() as directory:
         body = {"resource": estate.to_terraform_json()["resource"]}
         Path(directory, "main.tf.json").write_text(json.dumps(body), encoding="utf-8")
-        proc = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "checkov.main",
-                "-d",
-                directory,
-                "-o",
-                "json",
-                "--compact",
-                "--soft-fail",
-            ],
-            capture_output=True,
-            text=True,
-        )
+        return _invoke(["-d", directory])
 
+
+def run_checkov_on_plan(plan_json: Mapping[str, Any]) -> list[CheckovFinding]:
+    """Run Checkov over ``terraform show -json`` output (its ``terraform_plan`` framework).
+
+    The plan form evaluates single-resource checks reliably where the ``.tf.json`` form does
+    not (see :func:`run_checkov`), so it is the fair input for a recall figure.
+    """
+    if not checkov_available():
+        raise RuntimeError("checkov is not installed; install the 'labelling' extra")
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory, "plan.json")
+        path.write_text(json.dumps(plan_json), encoding="utf-8")
+        return _invoke(["-f", str(path), "--framework", "terraform_plan"])
+
+
+def _invoke(source: list[str]) -> list[CheckovFinding]:
+    # --soft-fail so a non-zero exit means a real error, not merely that checks failed; UTF-8
+    # forced because Checkov reads files with the platform default encoding on Windows.
+    proc = subprocess.run(
+        [sys.executable, "-m", "checkov.main", *source, "-o", "json", "--compact", "--soft-fail"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        env={**os.environ, "PYTHONUTF8": "1"},
+    )
     stdout = proc.stdout.strip()
     if not stdout:
         raise RuntimeError(

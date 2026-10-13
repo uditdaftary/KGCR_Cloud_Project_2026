@@ -64,3 +64,26 @@ def test_live_checkov_scores_the_estate() -> None:
     findings = run_checkov(estate)
     assert findings, "checkov should return findings for a real estate"
     assert any(f.resource == "aws_db_instance.cardholder" for f in findings)
+
+
+def test_plan_json_goes_to_checkovs_plan_framework_as_a_file(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import subprocess
+
+    from kgcr.labelling import checkov_engine
+
+    seen: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        seen["cmd"] = cmd
+        seen["body"] = [Path(cmd[cmd.index("-f") + 1]).read_text(encoding="utf-8")]
+        out = {"results": {"failed_checks": [{"check_id": "CKV_AWS_16", "resource": "r.x"}]}}
+        return subprocess.CompletedProcess(cmd, 0, json.dumps(out), "")
+
+    monkeypatch.setattr(checkov_engine, "checkov_available", lambda: True)
+    monkeypatch.setattr(checkov_engine.subprocess, "run", fake_run)
+    findings = checkov_engine.run_checkov_on_plan({"resource_changes": []})
+    assert [(f.check_id, f.resource, f.passed) for f in findings] == [("CKV_AWS_16", "r.x", False)]
+    assert seen["cmd"][seen["cmd"].index("--framework") + 1] == "terraform_plan"
+    assert json.loads(seen["body"][0]) == {"resource_changes": []}
