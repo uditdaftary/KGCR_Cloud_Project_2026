@@ -51,6 +51,8 @@ def list_runs(root: Path) -> list[dict[str, Any]]:
                     "loop_status": bundle["loop_status"],
                     "loop_reason": bundle["loop_reason"],
                     "severities": [f["severity"] for f in bundle["findings"]],
+                    # Runs stored before design mode existed carry no mode: they are reviews.
+                    "mode": summary.get("mode", "review"),
                     "variant": summary.get("variant"),
                     "llm_mode": summary.get("llm_mode"),
                 }
