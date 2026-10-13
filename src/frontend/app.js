@@ -1,7 +1,9 @@
 // KGCR dashboard: a hash-routed single page over the `kgcr dashboard` JSON API.
 // Every figure on screen is read from the API; this file renders, it never invents.
 
-import { drawEstate, drawMark, drawRidges, severityColour } from "./plot.js";
+import { drawEstate, drawIntent, drawMark, drawRidges, severityColour } from "./plot.js";
+import { makeDesignView } from "./design.js";
+import { makePlanView } from "./plan.js";
 
 const app = document.getElementById("app");
 
@@ -99,6 +101,8 @@ const NAV = [
     { path: "/review", no: 10, label: "New review" },
     { path: "/run", no: 11, label: "Run sleeve" },
     { path: "/history", no: 12, label: "History" },
+    { path: "/design", no: 13, label: "New design" },
+    { path: "/plan", no: 14, label: "Plan and apply" },
   ] },
   { group: "Admin side", admin: true, items: [
     { path: "/admin/gates", no: 20, label: "Gates and reports" },
@@ -167,7 +171,11 @@ async function showRoute(ui) {
   const path = location.hash.replace(/^#/, "") || "/";
   const session = getSession();
   if (path === "/" || !session) return renderCover(path !== "/" && !session, ui);
-  const [base, arg] = path.startsWith("/run/") ? ["/run", path.slice(5)] : [path, null];
+  const [base, arg] = path.startsWith("/run/")
+    ? ["/run", path.slice(5)]
+    : path.startsWith("/plan/")
+      ? ["/plan", path.slice(6)]
+      : [path, null];
   const view = VIEWS[base];
   if (!view) return go(session.role === "admin" ? "/admin/gates" : "/review");
   if (base.startsWith("/admin") && session.role !== "admin") {
@@ -410,7 +418,9 @@ async function viewReview(ui) {
   });
 }
 
-function watchJob(ui, id, panel, runBtn) {
+// `onDone(job)` replaces the default of opening the run a finished job stored (plan and apply
+// jobs stay on their page and reload it).
+function watchJob(ui, id, panel, runBtn, onDone) {
   ui.live();
   runBtn.disabled = true;
   runBtn.classList.add("busy");
@@ -438,8 +448,9 @@ function watchJob(ui, id, panel, runBtn) {
       stopTimers();
       runBtn.disabled = false;
       runBtn.classList.remove("busy");
-      if (job.status === "done" && job.run_prefix) ui.go(`/run/${job.run_prefix}`);
-      else if (job.status === "failed") panel.insertAdjacentHTML("afterbegin", notice(`The review failed with exit code ${esc(job.exit_code)}. The log below shows where.`, "error"));
+      if (job.status === "done" && onDone) onDone(job);
+      else if (job.status === "done" && job.run_prefix) ui.go(`/run/${job.run_prefix}`);
+      else if (job.status === "failed") panel.insertAdjacentHTML("afterbegin", notice(`The job failed with exit code ${esc(job.exit_code)}. The log below shows where.`, "error"));
     }
   };
   tick();
@@ -459,12 +470,17 @@ async function viewRun(ui, prefix) {
   const [run, m] = await Promise.all([api(`runs/${prefix}`), meta()]);
   const job = (run.jobs || [])[0];
   const b = run.bundle, sum = run.summary;
-  const variantName = sum ? (await api("variants")).find((v) => v.variant === sum.variant)?.name || sum.variant : "Variant not recorded";
+  const isDesign = Boolean(sum && sum.mode === "design");
+  const variantName = isDesign
+    ? `Design: ${titleCase(String(sum.intent.fields.archetype.value).replace(/_/g, " "))}`
+    : sum ? (await api("variants")).find((v) => v.variant === sum.variant)?.name || sum.variant : "Variant not recorded";
   const llm = sum ? sum.llm_mode : (run.record.model_version.includes("gemini") ? "ok" : "disabled");
   const llmLabel = { ok: "Model reviewed every pass", partial: "Model on some passes, rule floor on others", disabled: "Rule floor only", missing_fixture: "Rule floor only, no recorded response" }[llm] || llm;
 
   ui.mount(`
-    ${head(job ? job.catalog_no : `Run ${run.prefix}`, variantName, `Estate <span class="mono">${esc(b.estate_id)}</span> from the held-out synthetic split. Run ${esc(run.prefix)}.`)}
+    ${head(job ? job.catalog_no : `Run ${run.prefix}`, variantName, isDesign
+      ? `Candidate spec <span class="mono">${esc(b.estate_id)}</span> for a stated intent. Run ${esc(run.prefix)}.`
+      : `Estate <span class="mono">${esc(b.estate_id)}</span> from the held-out synthetic split. Run ${esc(run.prefix)}.`)}
     ${b.scope_note ? notice(esc(b.scope_note), "attention") : ""}
     <section class="block" style="margin-top:${b.scope_note ? "24px" : "0"}">
       <div class="sleeve">
@@ -477,7 +493,9 @@ async function viewRun(ui, prefix) {
           <div><dt>Loop</dt><dd>${state(b.loop_status)} <span class="faint">${esc(titleCase(b.loop_reason))}</span></dd></div>
           <div><dt>Advisor</dt><dd>${state(llm === "ok" ? "ok" : llm === "partial" ? "partial" : "not_run", llmLabel)}</dd></div>
           <div><dt>Findings</dt><dd>${b.findings.length ? `<span class="strip">${b.findings.map((f) => sev(f.severity)).join("")}</span> ${esc(countBySeverity(b.findings))}` : '<span class="faint">None</span>'}</dd></div>
-          ${sum ? `<div><dt>Defect class</dt><dd>${esc(sum.defect_class)}, single-resource engines: ${esc(sum.detectability)}</dd></div>` : ""}
+          ${isDesign ? "<div><dt>Intent</dt><dd>Stated by the operator, not reconstructed</dd></div>"
+            : sum ? `<div><dt>Defect class</dt><dd>${esc(sum.defect_class)}, single-resource engines: ${esc(sum.detectability)}</dd></div>` : ""}
+          <div><dt>Next</dt><dd><a href="#/plan/${esc(run.prefix)}">${kg(14)} Plan and apply</a></dd></div>
           <div><dt>Seed</dt><dd class="mono">${esc(run.record.seed)}</dd></div>
           <div><dt>Model version</dt><dd class="mono">${esc(run.record.model_version)}</dd></div>
           <div><dt>Graph version</dt><dd class="mono">${esc(run.record.graph_version)}</dd></div>
@@ -500,8 +518,10 @@ async function viewRun(ui, prefix) {
             <span><span class="k">Control</span><br><span class="mono">${esc(f.control_ref)}</span>${f.control_verified ? "" : ' <span class="faint">(draft)</span>'}</span>
             <span><span class="k">Counterfactual</span><br>${f.counterfactual ? `${state(f.counterfactual.outcome === "RESOLVED" ? "pass" : "fail", titleCase(f.counterfactual.outcome))} <span class="faint">${esc(f.counterfactual.detail)}</span>` : '<span class="faint">None evaluated</span>'}</span>
           </aside>
-        </button>`).join("")}</div>` : `<div class="empty"><p>The advisor raised no findings on this estate.</p></div>`}
+        </button>`).join("")}</div>` : `<div class="empty"><p>The advisor raised no findings on this ${isDesign ? "spec" : "estate"}.</p></div>`}
     </section>
+
+    ${b.design ? choicesBlock(b.design) : ""}
 
     ${sum ? pipelineBlock(sum, run.timings) : ""}
 
@@ -566,11 +586,30 @@ function countBySeverity(findings) {
   return ["CRITICAL", "HIGH", "MEDIUM", "ADVISORY"].filter((s) => n[s]).map((s) => `${n[s]} ${s.toLowerCase()}`).join(", ");
 }
 
+// Design mode: each constrained choice, with what its rejected alternatives would violate.
+function choicesBlock(design) {
+  return `
+    <section class="block">
+      <div class="block-head"><h2>Why these choices</h2><p>${design.justifications.length} constrained by the controls, ${design.unconstrained_choices} not</p></div>
+      ${design.justifications.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Resource</th><th>Setting</th><th>Chosen</th><th>The alternative would raise</th></tr></thead>
+        <tbody>${design.justifications.map((j) => `
+          <tr>
+            <td class="mono">${esc(j.element)}</td>
+            <td class="mono">${esc(j.attribute)}</td>
+            <td class="mono">${esc(j.chosen)}</td>
+            <td>${j.alternatives.map((a) => `${sev(a.severity)}<span class="mono">${esc(a.control_ref)}</span>${a.control_verified ? "" : ' <span class="faint">(draft)</span>'} <span class="faint">if ${esc(a.value)}, rule ${esc(a.rule_id)}</span>`).join("<br>")}</td>
+          </tr>`).join("")}</tbody></table></div>`
+        : '<div class="empty"><p>No choice in this spec is constrained by the controls in scope.</p></div>'}
+    </section>`;
+}
+
 function pipelineBlock(sum, timings) {
   const total = (timings || []).reduce((a, t) => a + t.seconds, 0);
   const longest = Math.max(0, ...(timings || []).map((t) => t.seconds));
   const fields = Object.entries(sum.intent.fields).sort(([a], [b]) => a.localeCompare(b));
   const chosen = sum.recommended.filter((r) => r.score >= 0.5).length;
+  const stated = sum.intent.source === "stated";
   return `
     <section class="block">
       <div class="block-head"><h2>Pipeline</h2><p>${timings ? `Measured wall-clock, ${dur(total)} in total; widths to scale` : "No timings recorded"}</p></div>
@@ -578,10 +617,16 @@ function pipelineBlock(sum, timings) {
         <p class="mono faint" style="font-size:11.5px;margin:8px 0 0">${timings.map((t) => `${esc(t.stage)} ${t.seconds.toFixed(2)} s`).join(", ")}</p>` : ""}
       <div class="stages">
         <div class="stage"><h3>Graph</h3><div class="kv"><span>Resources</span><span class="num">${sum.graph.nodes.length}</span><span>Dependencies</span><span class="num">${sum.graph.edges.length}</span><span>Region</span><span class="mono">${esc(sum.intent.region)}</span></div></div>
-        <div class="stage"><h3>Reconstructed intent</h3><div class="kv">${fields.map(([name, f]) => `<span>${esc(name)} <span class="mono faint">${esc(f.value)}</span></span><span class="bar ${f.confidence < sum.escalation_threshold ? "hi" : ""}" title="confidence ${f.confidence.toFixed(2)}"><b style="width:${pct(f.confidence)}"></b></span>`).join("")}</div>
-          <span class="faint" style="font-size:12.5px">${sum.escalated.length ? `Below ${sum.escalation_threshold}, confirm with the user: ${esc(sum.escalated.join(", "))}` : `Every axis above the ${sum.escalation_threshold} escalation threshold`}</span></div>
-        <div class="stage"><h3>Recommendation</h3><div class="kv"><span>Recommended (score 0.5 or more)</span><span class="num">${chosen}</span><span>Ranked after the critical mask</span><span class="num">${sum.recommended.length}</span><span>Recommended, not in estate</span><span class="num">${sum.missing_from_estate.length}</span><span>In estate, not recommended</span><span class="num">${sum.unexpected_in_estate.length}</span></div>
-          ${sum.missing_from_estate.length ? `<span class="mono faint" style="font-size:11.5px">${sum.missing_from_estate.map((o) => esc(o.join(" "))).join("<br>")}</span>` : ""}</div>
+        ${stated
+          ? `<div class="stage"><h3>Stated intent</h3><div class="kv">${fields.map(([name, f]) => `<span>${esc(name)}</span><span class="mono">${esc(f.value)}</span>`).join("")}</div>
+          <span class="faint" style="font-size:12.5px">Stated by the operator, so there is no confidence to report.</span></div>`
+          : `<div class="stage"><h3>Reconstructed intent</h3><div class="kv">${fields.map(([name, f]) => `<span>${esc(name)} <span class="mono faint">${esc(f.value)}</span></span><span class="bar ${f.confidence < sum.escalation_threshold ? "hi" : ""}" title="confidence ${f.confidence.toFixed(2)}"><b style="width:${pct(f.confidence)}"></b></span>`).join("")}</div>
+          <span class="faint" style="font-size:12.5px">${sum.escalated.length ? `Below ${sum.escalation_threshold}, confirm with the user: ${esc(sum.escalated.join(", "))}` : `Every axis above the ${sum.escalation_threshold} escalation threshold`}</span></div>`}
+        ${sum.design
+          ? `<div class="stage"><h3>Recommender audit</h3><div class="kv"><span>Recommended (score 0.5 or more)</span><span class="num">${chosen}</span><span>Ranked after the critical mask</span><span class="num">${sum.recommended.length}</span><span>Options applied to the spec</span><span class="num">${sum.design.applied.length}</span><span>Recommended, not added</span><span class="num">${sum.design.reported_missing.length}</span><span>In the spec, not recommended</span><span class="num">${sum.design.reported_unexpected.length}</span></div>
+          <span class="faint" style="font-size:12.5px">The topology comes from the generator and the recommender audits it; on this synthetic corpus the two agree almost by construction.</span></div>`
+          : `<div class="stage"><h3>Recommendation</h3><div class="kv"><span>Recommended (score 0.5 or more)</span><span class="num">${chosen}</span><span>Ranked after the critical mask</span><span class="num">${sum.recommended.length}</span><span>Recommended, not in estate</span><span class="num">${sum.missing_from_estate.length}</span><span>In estate, not recommended</span><span class="num">${sum.unexpected_in_estate.length}</span></div>
+          ${sum.missing_from_estate.length ? `<span class="mono faint" style="font-size:11.5px">${sum.missing_from_estate.map((o) => esc(o.join(" "))).join("<br>")}</span>` : ""}</div>`}
         <div class="stage"><h3>Advisor loop</h3><div class="kv">${sum.loop.passes.map((p, i) => `<span>Pass ${i + 1} <span class="faint">${esc(p.llm_status.replace(/_/g, " "))}</span></span><span class="strip">${p.findings.map((f) => sev(f.severity)).join("") || '<span class="faint">clean</span>'}</span>`).join("")}</div>
           <span class="faint" style="font-size:12.5px">${esc(titleCase(sum.loop.status))} after ${sum.loop.passes.length} pass${sum.loop.passes.length === 1 ? "" : "es"}, ${esc(sum.loop.reason.toLowerCase())}</span></div>
       </div>
@@ -604,7 +649,7 @@ async function viewHistory(ui) {
           <tr class="link" tabindex="0" data-prefix="${esc(r.prefix)}">
             <td class="mono">${r.jobs.length ? kg(r.jobs[0].catalog_no) : '<span class="faint">CLI</span>'}</td>
             <td>${esc(when(r.created_at))}</td>
-            <td>${esc(r.variant || "not recorded")}</td>
+            <td>${esc(r.mode === "design" ? "Design" : r.variant || "not recorded")}</td>
             <td>${state(r.loop_status)}</td>
             <td><span class="strip">${r.severities.map(sev).join("") || '<span class="faint">none</span>'}</span></td>
             <td>${esc(r.llm_mode || (r.model_version.includes("gemini") ? "ok" : "rule floor"))}</td>
@@ -972,7 +1017,8 @@ async function viewCloud(ui) {
       <div class="block-head"><h2>AWS footprint</h2><p>${c.deployed ? "" : "Authored, not applied. Nothing is deployed."}</p></div>
       <dl class="titleblock" style="border:1px solid var(--hair);margin-bottom:20px">
         <div><dt>S3 and SNS adapters (boto3)</dt><dd>${c.boto3_installed ? state("pass", "Installed, tested against moto") : state("not_run", "Not installed")}</dd></div>
-        <div><dt>terraform on PATH</dt><dd>${c.terraform_installed ? state("pass", "Installed") : state("not_run", "Not installed; the Terraform has never been validated here")}</dd></div>
+        <div><dt>terraform on PATH</dt><dd>${c.terraform_installed ? state("pass", `Installed${c.terraform_version ? `, ${c.terraform_version}` : ""}`) : state("not_run", "Not installed; the plan backend and src/aws validation need it")}</dd></div>
+        <div><dt>Real apply (Terraform backend)</dt><dd>${state("not_run", "Authored, tested against fakes, never run")} <span class="faint">Write role ${c.apply.role_configured ? "configured" : "not configured"}, account ${c.apply.account_configured ? "configured" : "not configured"}, grants ${esc(c.apply.granted_services.join(", "))}</span></dd></div>
       </dl>
       <div class="table-wrap"><table><thead><tr><th>File</th><th>Resource</th><th>Name</th></tr></thead><tbody>
         ${c.resources.map((r) => `<tr><td class="mono">${esc(r.file)}</td><td class="mono">${esc(r.type)}</td><td>${esc(r.name)}</td></tr>`).join("")}
@@ -1022,6 +1068,9 @@ async function viewCommands(ui) {
   const m = await meta();
   const working = [
     ["kgcr review", "Review an estate end to end, locally", "/review", 10],
+    ["kgcr design", "Design a configuration from a stated intent, with a reason for each choice", "/design", 13],
+    ["kgcr plan", "Dry-run diff of a stored run's spec, with coverage, blast radius and cost", "/plan", 14],
+    ["kgcr apply", "Apply a plan: simulated locally, or a gated Terraform path never run by this project", "/plan", 14],
     ["kgcr history", "List stored review runs", "/history", 12],
     ["kgcr explain", "Re-render a stored run for an audience", "/run", 11],
     ["kgcr corpus", "Generate Corpus A synthetic estates", "/admin/jobs", 21],
@@ -1029,14 +1078,21 @@ async function viewCommands(ui) {
     ["kgcr dashboard", "Serve this dashboard", "/", 0],
   ];
   ui.mount(`
-    ${head(27, "Commands", "The kgcr command surface: what runs today and what is planned, with the phase it lands in.")}
+    ${head(27, "Commands", "The kgcr command surface: what runs today, and what is not built with what would unblock it.")}
     <div class="table-wrap"><table>
       <thead><tr><th>Command</th><th>What it does</th><th>Status</th><th>In the dashboard</th></tr></thead>
       <tbody>
         ${working.map(([c, d, p, n]) => `<tr><td class="mono">${esc(c)}</td><td>${esc(d)}</td><td>${state("pass", "Working")}</td><td><a href="#${p}">${kg(n)}</a></td></tr>`).join("")}
         ${m.planned.map((p) => `<tr><td class="mono">kgcr ${esc(p.command)}</td><td>${esc(p.help)}</td><td>${state("planned", `Planned, ${p.phase}`)}</td><td>${btn(`Not built, ${p.phase}`, { icon: "lock", attrs: "disabled" })}</td></tr>`).join("")}
       </tbody>
-    </table></div>`);
+    </table></div>
+    ${m.deferred.length ? `<section class="block">
+      <div class="block-head"><h2>Not built</h2><p>Each item names what it is waiting for</p></div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Item</th><th>Why it is not built</th><th>What unblocks it</th></tr></thead>
+        <tbody>${m.deferred.map((d) => `<tr><td>${esc(d.item)}</td><td>${esc(d.why)}</td><td>${esc(d.unblocks)}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </section>` : ""}`);
 }
 
 // ---------- KG 028 project ----------
@@ -1055,6 +1111,14 @@ async function viewProject(ui) {
 }
 
 // ---------- boot ----------
+
+// The new views are built here, after every helper exists, from one context object.
+const viewContext = {
+  esc, btn, state, sev, notice, head, api, post, toast, getSession, meta, kg, when, titleCase,
+  drawEstate, drawIntent, watchJob, app, ICON, reload: () => route(),
+};
+VIEWS["/design"] = makeDesignView(viewContext);
+VIEWS["/plan"] = makePlanView(viewContext);
 
 // Buttons that only navigate carry data-go; one delegated listener serves every view.
 app.addEventListener("click", (e) => {

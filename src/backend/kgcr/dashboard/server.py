@@ -139,6 +139,7 @@ def meta(app: App) -> dict[str, Any]:
         "gemini_model": GEMINI_MODEL,
         "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
         "planned": [{"command": k, "help": h, "phase": p} for k, (h, p) in _PLANNED.items()],
+        "deferred": DEFERRED,
         "jobs": {
             k: {
                 "label": s.label,
@@ -298,6 +299,27 @@ def project() -> dict[str, Any]:
     }
 
 
+def preflight(plan: dict[str, Any]) -> dict[str, Any] | None:
+    """Does the write role's grant cover a Terraform plan? None for any other plan.
+
+    Computed here, from the same module the CLI uses, so the page never carries its own copy
+    of the service mapping.
+    """
+    from kgcr.apply import preflight as grant
+
+    section = plan.get("terraform")
+    if not section:
+        return None
+    granted = grant.allowed_services(os.environ)
+    types = {address.split(".", 1)[0] for address in section["creates"]}
+    return {"granted": list(granted), "offenders": grant.check(types, granted)}
+
+
+# Items the project lists as not built, with what would unblock each. One list, served to the
+# Commands page; kept short and kept true (CHANGELOG records the evidence).
+DEFERRED: list[dict[str, str]] = []
+
+
 # --- HTTP ----------------------------------------------------------------------------
 
 
@@ -426,7 +448,7 @@ class Handler(BaseHTTPRequestHandler):
             applied = _read_json(
                 app.store_root / "runs" / plan["run_prefix"] / "applied" / parts[1] / "apply.json"
             )
-            return self._json({"plan": plan, "apply": applied})
+            return self._json({"plan": plan, "apply": applied, "preflight": preflight(plan)})
         if len(parts) == 2 and parts[0] == "runs":
             from kgcr.orchestration.runstore import RunNotFound, load_run
 
@@ -543,6 +565,7 @@ class Handler(BaseHTTPRequestHandler):
             {
                 "plan": _read_json(path),
                 "apply": _read_json(run_dir / "applied" / path.parent.name / "apply.json"),
+                "preflight": preflight(_read_json(path) or {}),
             }
             for path in sorted((run_dir / "plans").glob("*/plan.json"))
         ]
