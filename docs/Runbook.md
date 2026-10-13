@@ -45,8 +45,8 @@ Scripts directory is on PATH, or keep using `python -m kgcr.cli`.
 
 ## 3. Quality gates
 
-These are what CI runs. Last run: ruff clean, ruff format clean (88 files), mypy clean (46 files),
-**156 passed in ~3 min**.
+These are what CI runs. Last run: ruff clean, ruff format clean (96 files), mypy clean (51 files),
+**200 passed in ~3 min**.
 
 ```powershell
 python -m ruff check .
@@ -110,7 +110,8 @@ A variant that no held-out estate admits raises `ValueError: no held-out estate 
 
 ### 4.6 Outputs
 
-Under `<out>/runs/<run-id>/`: `run_record.json`, `bundle.json`, `patched_spec.tf.json`,
+Under `<out>/runs/<run-id>/`: `run_record.json`, `bundle.json`, `summary.json`, `timings.json`,
+`patched_spec.tf.json`,
 `explanation_architect.md`, `explanation_auditor.md`, `explanation_learner.md`. The three
 explanations differ only in rendering; the conclusions are identical (tested).
 
@@ -149,8 +150,8 @@ python -m kgcr.cli review --s3-bucket <bucket> --sns-topic-arn <arn>   # needs "
 ```
 
 Tested only against moto. The Terraform in `src/aws/` (budget alarms, cross-account read/write
-roles) is authored, not applied. Planned, not working: `design`, `explain`, `plan`, `apply`,
-`history`.
+roles) is authored, not applied. Planned, not working: `design`, `plan`, `apply`.
+Working: `history` and `explain` read stored runs back; `dashboard` serves them locally.
 
 ## 8. Troubleshooting
 
