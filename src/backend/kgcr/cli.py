@@ -118,6 +118,17 @@ def build_parser() -> argparse.ArgumentParser:
     design.add_argument(
         "--audience", choices=("architect", "auditor", "learner"), default="architect"
     )
+    design.add_argument(
+        "--statement",
+        default=None,
+        help="Describe the workload in words; the model fills only axes it can quote from the "
+        "text, and flags you give win. Any axis left unstated is refused, never defaulted",
+    )
+    design.add_argument(
+        "--extract-only",
+        action="store_true",
+        help="With --statement: print the grounded extraction as JSON and stop",
+    )
     design.add_argument("--out", default="runs-local", help="Artifact store root (S3 stand-in)")
     design.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
     design.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
@@ -262,8 +273,33 @@ def _cmd_design(args: argparse.Namespace) -> int:
     from kgcr.orchestration.design import run_design
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    stated = {axis: getattr(args, axis) for axis in AXES}
+    if args.extract_only and not args.statement:
+        print("kgcr design: --extract-only needs --statement", file=sys.stderr)
+        return 2
+    if args.statement:
+        from kgcr.design.extract import extract_intent
+
+        try:
+            extraction = extract_intent(args.statement, default_llm())
+        except ValueError as exc:
+            print(f"kgcr design: {exc}", file=sys.stderr)
+            return 2
+        if args.extract_only:
+            print(json.dumps(extraction.to_dict(), indent=2, sort_keys=True))
+            return 0
+        print(f"[0/5] extract     model status: {extraction.llm_status}")
+        for axis in AXES:
+            got = extraction.fields[axis]
+            if got.value is None:
+                why = extraction.rejected.get(axis, "not stated")
+                print(f"      {axis:<15} none ({why})")
+            else:
+                print(f'      {axis:<15} {got.value}  <- "{got.evidence}"')
+            if stated[axis] is None:  # a flag you gave always wins over the statement
+                stated[axis] = got.value
     try:
-        intent = build_intent({axis: getattr(args, axis) for axis in AXES})
+        intent = build_intent(stated)
     except IntakeError as exc:
         # No defaults: an unstated requirement must be stated, not assumed (FD-01 S1a).
         print(f"kgcr design: {exc}", file=sys.stderr)
