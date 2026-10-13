@@ -155,7 +155,6 @@ def test_meta_offers_the_axes_and_the_open_choices(served: tuple[str, Path]) -> 
     base, _ = served
     _, meta = call(f"{base}/api/meta")
     assert meta["design_axes"]["scale"] == ["small", "medium", "large"]
-    assert meta["planned"] == []
     backend = meta["jobs"]["plan"]["params"]["backend"]
     assert backend["choices"] == ["local", "terraform"] and backend["admin_values"] == ["terraform"]
     assert meta["jobs"]["design"]["params"]["archetype"]["default"] is None

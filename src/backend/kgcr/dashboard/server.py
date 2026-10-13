@@ -124,7 +124,6 @@ def variant_roster(count: int, seed: int) -> list[dict[str, Any]]:
 
 def meta(app: App) -> dict[str, Any]:
     from kgcr.advisor.llm import GEMINI_MODEL, LIVE_CALL_CAP
-    from kgcr.cli import _PLANNED
     from kgcr.design.intake import axis_choices
     from kgcr.explainer.explainer import AUDIENCES
 
@@ -138,7 +137,6 @@ def meta(app: App) -> dict[str, Any]:
         "live_call_cap": LIVE_CALL_CAP,
         "gemini_model": GEMINI_MODEL,
         "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
-        "planned": [{"command": k, "help": h, "phase": p} for k, (h, p) in _PLANNED.items()],
         "deferred": DEFERRED,
         "jobs": {
             k: {
@@ -317,7 +315,52 @@ def preflight(plan: dict[str, Any]) -> dict[str, Any] | None:
 
 # Items the project lists as not built, with what would unblock each. One list, served to the
 # Commands page; kept short and kept true (CHANGELOG records the evidence).
-DEFERRED: list[dict[str, str]] = []
+DEFERRED: list[dict[str, str]] = [
+    {
+        "item": "Harvest from a live account (kgcr review --account)",
+        "why": "The AWS Config adapter is built and tested against stubbed responses and moto. "
+        "It has never read a real account (no credentials here), reads five resource types and "
+        "no tags, and is not wired into review.",
+        "unblocks": "An account with AWS Config recording and the read-only role applied, then "
+        "wiring the adapter into review and adding networks and IAM so relational defects "
+        "can be evaluated.",
+    },
+    {
+        "item": "Apply to a real account",
+        "why": "The Terraform-backed apply and its refusal gates are built and tested against "
+        "fakes. It has never assumed a role or called AWS. The shipped write role (ec2, s3) "
+        "does not cover what generated estates create.",
+        "unblocks": "Credentials, the write role applied with provision_services widened, "
+        "KGCR_APPLY_ENABLED set, and a real image id in place of the placeholder.",
+    },
+    {
+        "item": "Recorded Gemini reviews for seven variants",
+        "why": "Replay covers two variants. The free tier allows 20 requests a day and the day's "
+        "quota was spent verifying free-text intake.",
+        "unblocks": "Run src/ml_model/record_variants.py once the quota resets; it is idempotent "
+        "and stops at the first refusal.",
+    },
+    {
+        "item": "Instructor sign-off of controls and the gold set",
+        "why": "The review and sign-off tools are built. No control has been reviewed: sign-off "
+        "is a human act and the six draft controls are unverified.",
+        "unblocks": "A named reviewer and the instructor, working through the Controls and "
+        "Gold set pages.",
+    },
+    {
+        "item": "Human study (P11)",
+        "why": "It needs ethics approval and participants. The automated half of the evaluation "
+        "is in results/explainer_report.json.",
+        "unblocks": "Ethics approval and recruited participants.",
+    },
+    {
+        "item": "Weak-supervision label model (P4)",
+        "why": "Checkov and Trivy now both run, but they agree with the rule floor on two of four "
+        "defect families and the family mapping is this project's own.",
+        "unblocks": "A decision that a label model is worth building on two engines, or a third "
+        "engine (Prowler needs a live account).",
+    },
+]
 
 
 # --- HTTP ----------------------------------------------------------------------------

@@ -1067,7 +1067,6 @@ async function viewCommands(ui) {
       <thead><tr><th>Command</th><th>What it does</th><th>Status</th><th>In the dashboard</th></tr></thead>
       <tbody>
         ${working.map(([c, d, p, n]) => `<tr><td class="mono">${esc(c)}</td><td>${esc(d)}</td><td>${state("pass", "Working")}</td><td><a href="#${p}">${kg(n)}</a></td></tr>`).join("")}
-        ${m.planned.map((p) => `<tr><td class="mono">kgcr ${esc(p.command)}</td><td>${esc(p.help)}</td><td>${state("planned", `Planned, ${p.phase}`)}</td><td>${btn(`Not built, ${p.phase}`, { icon: "lock", attrs: "disabled" })}</td></tr>`).join("")}
       </tbody>
     </table></div>
     ${m.deferred.length ? `<section class="block">

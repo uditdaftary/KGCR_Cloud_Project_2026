@@ -1,10 +1,7 @@
 """``kgcr`` command-line surface.
 
-The subcommands mirror the planned interface in the README
-(``design``/``review``/``explain``/``plan``/``apply``/``history``). At Phase 0
-they are declared but not implemented: each exits with a clear "planned for
-Phase N" message so the interface shape is real and testable while the
-subsystems behind it are built.
+The subcommands are the interface in the README
+(``design``/``review``/``explain``/``plan``/``apply``/``history``), all built.
 
 Working today:
 
@@ -22,7 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import asdict
 from typing import Any
 
@@ -30,14 +27,6 @@ from kgcr._version import __version__
 from kgcr.advisor.llm import load_local_env
 from kgcr.repro import DEFAULT_SEED, seed_everything
 from kgcr.versions import tool_versions
-
-# Exit code used for a command that exists in the interface but is not yet
-# implemented. Distinct from argparse's usage error (2) so scripts can tell the
-# difference between "you typed it wrong" and "not built yet".
-EXIT_NOT_IMPLEMENTED = 3
-
-# subcommand -> (help text, phase it lands in)
-_PLANNED: dict[str, tuple[str, str]] = {}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -182,22 +171,7 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard.add_argument("--open", action="store_true", help="Open the browser on start")
     dashboard.set_defaults(func=_cmd_dashboard)
 
-    for name, (help_text, phase) in _PLANNED.items():
-        p = sub.add_parser(name, help=f"{help_text} (planned, {phase})")
-        p.set_defaults(func=_make_not_implemented(name, phase))
-
     return parser
-
-
-def _make_not_implemented(name: str, phase: str) -> Callable[[argparse.Namespace], int]:
-    def _run(_args: argparse.Namespace) -> int:
-        print(
-            f"kgcr {name}: not implemented yet — planned for Phase {phase}.",
-            file=sys.stderr,
-        )
-        return EXIT_NOT_IMPLEMENTED
-
-    return _run
 
 
 def _cmd_repro_info(args: argparse.Namespace) -> int:
