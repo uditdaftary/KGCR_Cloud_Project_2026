@@ -48,6 +48,7 @@ __all__ = [
     "INTENT_FIELDS",
     "IDENTITY_ATTRIBUTES",
     "estate_options",
+    "resource_options",
     "intent_from_reconstruction",
     "OptionRecommender",
 ]
@@ -70,18 +71,23 @@ class RankedOption:
     score: float
 
 
+def resource_options(res: Resource) -> Iterable[tuple[Option, Any]]:
+    """Each option one resource exhibits, with the raw attribute value behind it."""
+    yield (res.type, "present", "true"), True
+    for key, value in res.attributes.items():
+        # Nested values (ingress blocks, policy documents) are not scalar
+        # choices; DF-1/DF-3 live there and are covered by the advisor.
+        if key in IDENTITY_ATTRIBUTES or key.startswith("__ref__"):
+            continue
+        if isinstance(value, dict | list) or key in {"policy", "assume_role_policy"}:
+            continue
+        yield (res.type, key, str(value)), value
+
+
 def _option_values(estate: Estate) -> Iterable[tuple[Option, Any]]:
     """Each option in ``estate`` with the raw attribute value behind it."""
     for res in estate.resources:
-        yield (res.type, "present", "true"), True
-        for key, value in res.attributes.items():
-            # Nested values (ingress blocks, policy documents) are not scalar
-            # choices; DF-1/DF-3 live there and are covered by the advisor.
-            if key in IDENTITY_ATTRIBUTES or key.startswith("__ref__"):
-                continue
-            if isinstance(value, dict | list) or key in {"policy", "assume_role_policy"}:
-                continue
-            yield (res.type, key, str(value)), value
+        yield from resource_options(res)
 
 
 def estate_options(estate: Estate) -> frozenset[Option]:

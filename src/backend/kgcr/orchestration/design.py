@@ -9,7 +9,7 @@ scores, its options, its audit) reaches the advisor prompt (INV-7).
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +22,7 @@ from kgcr.corpus.pipeline import generate_corpus
 from kgcr.corpus.splits import split_estates
 from kgcr.defects.pipeline import inject_corpus
 from kgcr.design.synthesize import Candidate, intent_values, synthesize
+from kgcr.explainer.design import build_justifications
 from kgcr.explainer.explainer import AUDIENCES, ExplanationBundle, build_bundle, bundle_json, render
 from kgcr.orchestration.aws import ArtifactStore, LocalArtifactStore, Notifier
 from kgcr.orchestration.common import StageClock, graph_version, to_json
@@ -101,6 +102,10 @@ def run_design(
         else "rule floor only on at least one pass; relational (DF-7) and resilience (DF-5) "
         "findings need the LLM advisor and were not evaluated on every pass",
     )
+    # A design has few or no findings to explain, so each choice is justified by what its
+    # rejected alternatives would violate (D1).
+    justifications, unconstrained = build_justifications(estate, recommender, advisor.controls)
+    bundle = replace(bundle, justifications=justifications, unconstrained_choices=unconstrained)
     model_version = f"rf-recommender+{GEMINI_MODEL if llm_mode == 'ok' else 'rules-only'}"
     record = RunRecord(
         spec_hash=spec_hash(estate),

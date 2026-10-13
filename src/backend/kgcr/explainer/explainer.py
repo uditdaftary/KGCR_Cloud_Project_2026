@@ -40,9 +40,11 @@ from kgcr.defects.taxonomy import Severity
 __all__ = [
     "AUDIENCES",
     "MAX_COUNTERFACTUALS",
+    "Alternative",
     "Counterfactual",
     "ExplainedFinding",
     "ExplanationBundle",
+    "Justification",
     "build_bundle",
     "render",
     "extract_claims",
@@ -83,6 +85,27 @@ class ExplainedFinding:
 
 
 @dataclass(frozen=True, slots=True)
+class Alternative:
+    """A value the design did not choose, and the finding choosing it would raise."""
+
+    value: str
+    control_ref: str
+    control_verified: bool
+    severity: Severity
+    rule_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class Justification:
+    """Why a design choice stands: what its rejected alternatives would violate (FD-06)."""
+
+    element: str
+    attribute: str
+    chosen: str
+    alternatives: tuple[Alternative, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class ExplanationBundle:
     """Everything any rendering may say. Renderings add no facts (INV-2)."""
 
@@ -92,8 +115,38 @@ class ExplanationBundle:
     findings: tuple[ExplainedFinding, ...]
     cost_note: str = COST_NOTE
     scope_note: str = ""
+    # Design mode only. Empty for a review, and then absent from the stored JSON, so every
+    # bundle stored before design mode existed still round-trips byte for byte.
+    justifications: tuple[Justification, ...] = ()
+    unconstrained_choices: int = 0
 
     def to_dict(self) -> dict[str, Any]:
+        out = self._base_dict()
+        if self.justifications or self.unconstrained_choices:
+            out["design"] = {
+                "unconstrained_choices": self.unconstrained_choices,
+                "justifications": [
+                    {
+                        "element": j.element,
+                        "attribute": j.attribute,
+                        "chosen": j.chosen,
+                        "alternatives": [
+                            {
+                                "value": a.value,
+                                "control_ref": a.control_ref,
+                                "control_verified": a.control_verified,
+                                "severity": a.severity.value,
+                                "rule_id": a.rule_id,
+                            }
+                            for a in j.alternatives
+                        ],
+                    }
+                    for j in self.justifications
+                ],
+            }
+        return out
+
+    def _base_dict(self) -> dict[str, Any]:
         return {
             "estate_id": self.estate_id,
             "loop_status": self.loop_status,
@@ -124,12 +177,32 @@ class ExplanationBundle:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ExplanationBundle:
         """Inverse of :meth:`to_dict`, so a stored ``bundle.json`` re-renders exactly."""
+        design = data.get("design") or {}
         return cls(
             estate_id=data["estate_id"],
             loop_status=data["loop_status"],
             loop_reason=data["loop_reason"],
             cost_note=data.get("cost_note", COST_NOTE),
             scope_note=data.get("scope_note", ""),
+            unconstrained_choices=design.get("unconstrained_choices", 0),
+            justifications=tuple(
+                Justification(
+                    element=j["element"],
+                    attribute=j["attribute"],
+                    chosen=j["chosen"],
+                    alternatives=tuple(
+                        Alternative(
+                            value=a["value"],
+                            control_ref=a["control_ref"],
+                            control_verified=a["control_verified"],
+                            severity=Severity(a["severity"]),
+                            rule_id=a["rule_id"],
+                        )
+                        for a in j["alternatives"]
+                    ),
+                )
+                for j in design.get("justifications", [])
+            ),
             findings=tuple(
                 ExplainedFinding(
                     control_ref=f["control_ref"],
@@ -310,7 +383,46 @@ def render(bundle: ExplanationBundle, audience: str) -> str:
         lines.append("No findings.")
     for n, f in enumerate(bundle.findings, start=1):
         lines.extend(_render_finding(f, audience, n))
+    lines.extend(_render_justifications(bundle, audience))
     return "\n".join(lines) + "\n"
+
+
+def _render_justifications(bundle: ExplanationBundle, audience: str) -> list[str]:
+    """Design mode: the choices the controls constrain, then a count of the rest."""
+    if not (bundle.justifications or bundle.unconstrained_choices):
+        return []
+    heading = {
+        "architect": "Why these choices",
+        "auditor": "Basis for the design choices",
+        "learner": "Why the design picked these settings, explained",
+    }[audience]
+    lines = ["", f"{heading}:"]
+    for j in bundle.justifications:
+        lines.append(f"- {j.element}: {j.attribute} = {j.chosen}")
+        for a in j.alternatives:
+            draft = "" if a.control_verified else " (control text is a draft pending review)"
+            if audience == "architect":
+                lines.append(
+                    f"    not {a.value}: it would raise [{a.severity.value}] {a.control_ref}"
+                    f"{draft}, rule {a.rule_id}"
+                )
+            elif audience == "auditor":
+                lines.append(
+                    f"    Rejected value {a.value} fails control {a.control_ref}{draft} at "
+                    f"severity {a.severity.value} (rule {a.rule_id})."
+                )
+            else:
+                lines.append(
+                    f"    Choosing {a.value} instead would be flagged with severity "
+                    f"{a.severity.value} under {_expand(a.control_ref)}{draft}, "
+                    f"by rule {a.rule_id}."
+                )
+    if bundle.unconstrained_choices:
+        lines.append(
+            f"{bundle.unconstrained_choices} further choices are not constrained by the "
+            "controls in scope."
+        )
+    return lines
 
 
 _CLAIM_PATTERNS = (
