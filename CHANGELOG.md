@@ -6,13 +6,13 @@ and what is deliberately deferred. It is maintained alongside the roadmap
 ([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-10-12.
+Last updated: 2026-10-13.
 
 ---
 
 ## LOOP_STATE (Review 2 push; updated in place, never stacked)
 
-Updated 2026-10-12. Branch `feature/udit`, pushed; PR #6 into `develop` is open.
+Updated 2026-10-13. Branch `feature/udit`; PRs #6 and #8 are merged into `develop`; the dashboard goes up as a new PR.
 
 - **Done:**
   - **P7 recommender:** a one-vs-rest random forest with a hard CRITICAL mask.
@@ -28,7 +28,20 @@ Updated 2026-10-12. Branch `feature/udit`, pushed; PR #6 into `develop` is open.
   - **Citation fix:** DF-2 now cites PCI-DSS v4.0 3.5.1.
   - **Dashboard:** `python src/frontend/build_dashboard.py` writes `results/dashboard.html` from the
     reports; gate state is read, so rebuild it after the live run.
-  - **Gates:** 156 tests pass.
+  - **Local dashboard (2026-10-13):** `kgcr dashboard` serves a single-page app on 127.0.0.1 that
+    drives every working command. Stdlib only: `http.server`, `sqlite3`
+    (`runs-local/dashboard.sqlite3` for sessions, jobs and the catalog sequence), allow-listed
+    subprocess jobs run one at a time. The design world, "catalog sleeve", was chosen on the
+    Impeccable decision page and the scheme approved before code; the result is recorded in
+    `DESIGN.md`, product truth in `PRODUCT.md`.
+  - **New CLI:** `kgcr history` and `kgcr explain` (re-renders from the stored bundle via
+    `ExplanationBundle.from_dict`; byte-equal to the stored renderings for every stored run).
+  - **Review artifacts:** each run also stores `summary.json` (graph, intent, recommendation, loop
+    passes) and `timings.json` (wall-clock per stage, kept apart so the summary stays deterministic).
+  - **Spend gate:** dashboard jobs force `KGCR_LLM_LIVE=0` and withhold `GEMINI_*`/`AWS_*` unless an
+    admin enables live mode (in memory, off on restart). Jobs write to `runs-local/jobs/KG<no>/`,
+    never to `results/` or `dataset/processed/`.
+  - **Gates:** 190 tests pass.
 - **Ready to run, not yet run: the sycophancy gate is NOT RUN.** `.env` holds the key and
   `KGCR_LLM_LIVE=1`; the model id resolves. `run_advisor.py` and `kgcr review` load `.env`.
   Steps (1 is already done):
@@ -56,6 +69,10 @@ Updated 2026-10-12. Branch `feature/udit`, pushed; PR #6 into `develop` is open.
   any data exists.
 - **Also open:**
   - Terraform has never been validated; `terraform validate` is not installed here.
+  - Dashboard JavaScript has no lint or test gate; it is verified by driving it in a browser
+    (headless Edge captures at 1440 and 390 wide, one review run end to end from the UI).
+  - Replay covers only two variants at seed 1729, size 180 (DF-5 no_database_backup, DF-7
+    transitive_trust_chain); the roster labels the other seven as rule floor only.
 - **Awaiting Udit's review:**
   - The six draft L1 controls, all unverified.
   - `docs/*.docx` were deleted from git on 2026-07-31. They are regenerated locally, not

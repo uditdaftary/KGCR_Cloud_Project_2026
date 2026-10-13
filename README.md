@@ -27,7 +27,8 @@ source of truth.
 
 **Implementation status (Review 2).** Review mode runs end to end locally as one command,
 `kgcr review`: estate, dependency graph, intent reconstruction (P8), recommendation with a hard
-CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). 156 tests run in CI on
+CRITICAL mask (P7), the bounded advisor loop (P6), and the explainer (P9). `kgcr dashboard` drives
+all of it from a local browser page. 190 tests run in CI on
 Python 3.11 and 3.12. What is not done yet:
 
 - The advisor's live run happened once: sycophancy gate PASS on 3 valid trials (1 invalid), 2 of 4
@@ -88,8 +89,11 @@ Deliberately narrow, to demonstrate depth rather than breadth:
 Working today (local, synthetic corpus):
 
 ```
+kgcr dashboard [--port 8765] [--open]                     # the local dashboard, below
 kgcr review [--variant <defect>] [--audience architect|auditor|learner] [--out <dir>]
             [--s3-bucket <name>] [--sns-topic-arn <arn>]    # AWS targets, opt-in
+kgcr history [--out <dir>] [--json]                       # stored review runs
+kgcr explain --run <run-id prefix> [--audience <a>]       # re-render a stored run
 ```
 
 Planned:
@@ -97,11 +101,29 @@ Planned:
 ```
 kgcr design  --intent "<statement>" [--audience=<a>] [--plan-only] [--budget=<n>]
 kgcr review  --account <id> [--audience=<a>] [--attest-only]
-kgcr explain --run <run-id> [--audience=<a>]
 kgcr plan    --spec <spec-id>
 kgcr apply   --plan <plan-id>
-kgcr history [--account <id>]
 ```
+
+### Dashboard
+
+`kgcr dashboard` serves a local single-page dashboard on `127.0.0.1:8765` that drives every
+working command without a terminal. The cover offers two roles, user and admin; there is no
+login by design. Sessions, jobs and run history live in `runs-local/dashboard.sqlite3`.
+
+- **User side:** pick one of the nine seeded defect variants and an audience, run a review, then
+  read the estate graph, each finding's evidence path and counterfactual, the measured pipeline
+  timings, and the three audience renderings with their shared claims pinned. History lists every
+  stored run.
+- **Admin side:** gates and reports, a job launcher and queue (corpus, advisor evaluation,
+  reconstructor training, recommender evaluation, intent prediction, the CI gates, the static
+  results page), sessions, recorded model fixtures, the draft controls, the environment
+  fingerprint, cloud and spend, the command surface, and the project files.
+- **Spend gate:** every dashboard job replays recorded model responses (`KGCR_LLM_LIVE=0` is forced
+  in the child process). Live Gemini calls and real S3/SNS targets need an admin to enable live
+  mode, which resets on every server restart.
+- Jobs write into `runs-local/jobs/KG<no>/`; nothing the dashboard runs overwrites `results/` or
+  `dataset/processed/`.
 
 `--audience` (`architect` / `auditor` / `learner`) changes only how a result is rendered. The underlying reasoning and conclusions are identical across renderings; this invariant is tested, not asserted.
 
@@ -124,6 +146,7 @@ pip install -e ".[dev]"     # install with dev tooling (pinned versions)
 ruff check . && ruff format --check . && mypy && PYTHONHASHSEED=0 pytest   # the CI gates
 kgcr repro-info             # print the seed + version fingerprint for this env
 kgcr corpus --count 500     # [dev] generate Corpus A and parse it into the graph
+kgcr dashboard --open       # drive everything from the browser
 ```
 
 Run the demo and regenerate the results:
@@ -153,7 +176,9 @@ The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,
   (fit, write `model.pkl` and the evaluation report), `predict.py` (reconstruct
   one estate's intent with per-field confidence). Thin wrappers over
   `kgcr.reconstruction`; the library is where the logic and its tests live.
-- `src/frontend/` — Phase-II scope; the Phase-I interface is the CLI.
+- `src/frontend/` — the dashboard page (`index.html`, `app.js`, `plot.js`, `app.css`, self-hosted
+  OFL fonts) served by `src/backend/kgcr/dashboard/`, plus `build_dashboard.py`, which writes the
+  static offline results page `results/dashboard.html` for the submission.
 - `src/backend/kgcr/corpus/` — Phase 3 (FD-05 §4A): the **intent-first** synthetic estate
   generator. An intent is sampled first (`intent`, `sampler`), an estate is
   rendered from it (`generator`, `estate`) carrying that intent as ground truth,

@@ -48,3 +48,6 @@ node_modules/
 
 # Local secrets (GEMINI_API_KEY etc.); copy .env.example to .env
 .env
+
+# Impeccable design-tool working state (the surface brief is PRODUCT.md / DESIGN.md at root)
+.impeccable/
