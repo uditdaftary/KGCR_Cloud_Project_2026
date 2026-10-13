@@ -24,6 +24,7 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 from dataclasses import asdict
+from typing import Any
 
 from kgcr._version import __version__
 from kgcr.advisor.llm import load_local_env
@@ -37,7 +38,6 @@ EXIT_NOT_IMPLEMENTED = 3
 
 # subcommand -> (help text, phase it lands in)
 _PLANNED: dict[str, tuple[str, str]] = {
-    "plan": ("Produce a terraform plan for a spec", "P3/P10"),
     "apply": ("Apply a previously produced plan", "P10"),
 }
 
@@ -134,6 +134,20 @@ def build_parser() -> argparse.ArgumentParser:
     design.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
     design.set_defaults(func=_cmd_design)
     assert set(AXES) == set(axis_choices())  # the flags above cover every intent axis
+
+    plan = sub.add_parser(
+        "plan", help="Plan a stored run's spec: a dry-run diff, nothing is changed"
+    )
+    plan.add_argument("--spec", required=True, help="Run id or unique prefix (see history)")
+    plan.add_argument(
+        "--backend",
+        choices=("local", "terraform"),
+        default="local",
+        help="local diff (default), or the real terraform binary, offline, for design runs",
+    )
+    plan.add_argument("--out", default="runs-local", help="Artifact store root")
+    plan.add_argument("--json", action="store_true", help="Emit the plan as JSON")
+    plan.set_defaults(func=_cmd_plan)
 
     history = sub.add_parser("history", help="List review runs in the local artifact store")
     history.add_argument("--out", default="runs-local", help="Artifact store root")
@@ -260,6 +274,70 @@ def _cmd_dashboard(args: argparse.Namespace) -> int:
     from kgcr.dashboard.server import serve
 
     return serve(port=args.port, store_root=Path(args.out), open_browser=args.open)
+
+
+def _format_plan(plan: dict[str, Any]) -> str:
+    """The plan as an operator reads it; every figure comes from the stored plan."""
+    cov, cost, tf = plan["coverage"], plan["cost"], plan["terraform"]
+    lines = [
+        f"plan {plan['plan_id']}  run {plan['run_prefix']}  backend {plan['backend']}  "
+        f"baseline {plan['baseline_kind']}",
+        f"  create {len(plan['creates'])}  modify {len(plan['modifies'])}  "
+        f"destroy {len(plan['destroys'])}",
+    ]
+    lines += [f"  + {address}" for address in plan["creates"]]
+    for change in plan["modifies"]:
+        lines.append(f"  ~ {change['address']}")
+        for item in change["changes"]:
+            lines.append(f"      {item['attribute']}: {item['before']!r} -> {item['after']!r}")
+    lines += [f"  - {address}" for address in plan["destroys"]]
+
+    def tally(counts: dict[str, int]) -> str:
+        return ", ".join(f"{n} {s.lower()}" for s, n in counts.items() if n) or "none"
+
+    lines.append(f"  findings before: {tally(cov['before'])}; after: {tally(cov['after'])}")
+    for address, dependents in plan["blast_radius"].items():
+        lines.append(
+            f"  blast radius of {address}: {', '.join(dependents) or 'nothing depends on it'}"
+        )
+    if cost["available"]:
+        lines.append(
+            f"  cost delta: {cost['delta_usd']:+.2f} USD a month (list price, priced items only)"
+        )
+        grouped: dict[str, list[str]] = {}
+        for note in (*cost["spec"]["not_priced"], *cost["spec"]["excluded"]):
+            address, _, reason = note.partition(": ")
+            grouped.setdefault(reason, []).append(address)
+        for reason, addresses in grouped.items():
+            lines.append(f"    not in the figure: {reason} ({', '.join(addresses)})")
+    else:
+        lines.append(f"  cost delta: not available ({cost['reason']})")
+    if tf:
+        lines.append(
+            f"  terraform {tf['version']} validated and planned offline: "
+            f"{len(tf['creates'])} creates"
+        )
+        lines += [f"    added to make it valid: {item}" for item in tf["overlay"]]
+        lines += [f"    may still fail to apply: {item}" for item in tf["caveats"]]
+    return "\n".join(lines)
+
+
+def _cmd_plan(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from kgcr.orchestration.runstore import RunNotFound
+    from kgcr.plan.local import PlanRefused, make_plan
+
+    try:
+        plan = make_plan(Path(args.out), args.spec, backend=args.backend)
+    except RunNotFound as exc:
+        print(f"kgcr plan: {exc}", file=sys.stderr)
+        return 2
+    except PlanRefused as exc:
+        print(f"kgcr plan: refused: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(plan, indent=2, sort_keys=True) if args.json else _format_plan(plan))
+    return 0
 
 
 def _cmd_design(args: argparse.Namespace) -> int:
