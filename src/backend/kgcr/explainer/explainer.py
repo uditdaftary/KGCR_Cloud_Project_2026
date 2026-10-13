@@ -121,6 +121,36 @@ class ExplanationBundle:
             ],
         }
 
+    @classmethod
+    def from_dict(cls, data: Mapping[str, Any]) -> ExplanationBundle:
+        """Inverse of :meth:`to_dict`, so a stored ``bundle.json`` re-renders exactly."""
+        return cls(
+            estate_id=data["estate_id"],
+            loop_status=data["loop_status"],
+            loop_reason=data["loop_reason"],
+            cost_note=data.get("cost_note", COST_NOTE),
+            scope_note=data.get("scope_note", ""),
+            findings=tuple(
+                ExplainedFinding(
+                    control_ref=f["control_ref"],
+                    control_summary=f["control_summary"],
+                    control_verified=f["control_verified"],
+                    severity=Severity(f["severity"]),
+                    affected_elements=tuple(f["affected_elements"]),
+                    evidence_path=tuple(f["evidence_path"]),
+                    assertion=f["assertion"],
+                    counterfactual=None
+                    if f.get("counterfactual") is None
+                    else Counterfactual(
+                        change=f["counterfactual"]["change"],
+                        resolved=f["counterfactual"]["outcome"] == "RESOLVED",
+                        detail=f["counterfactual"]["detail"],
+                    ),
+                )
+                for f in data["findings"]
+            ),
+        )
+
 
 def _counterfactual(
     estate: Estate, finding: AdvisorFinding, patcher: TemplatePatcher

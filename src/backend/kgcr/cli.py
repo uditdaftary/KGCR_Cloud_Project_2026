@@ -13,6 +13,8 @@ Working today:
   into every run record — the fastest way to confirm an environment is pinned.
 * ``kgcr review`` runs review mode end to end, locally: harvest stand-in, graph,
   intent reconstruction, recommendation, advisor loop, explanation, stored run.
+* ``kgcr history`` lists stored runs; ``kgcr explain`` re-renders one for an audience.
+* ``kgcr dashboard`` serves the local dashboard that drives all of the above.
 """
 
 from __future__ import annotations
@@ -36,10 +38,8 @@ EXIT_NOT_IMPLEMENTED = 3
 # subcommand -> (help text, phase it lands in)
 _PLANNED: dict[str, tuple[str, str]] = {
     "design": ("Recommend a configuration from a stated intent", "P6/P7"),
-    "explain": ("Explain a run as a reasoning subgraph", "P9"),
     "plan": ("Produce a terraform plan for a spec", "P3/P10"),
     "apply": ("Apply a previously produced plan", "P10"),
-    "history": ("Show run history for an account", "P10"),
 }
 
 
@@ -101,6 +101,25 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
     review.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
     review.set_defaults(func=_cmd_review)
+
+    history = sub.add_parser("history", help="List review runs in the local artifact store")
+    history.add_argument("--out", default="runs-local", help="Artifact store root")
+    history.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
+    history.set_defaults(func=_cmd_history)
+
+    explain = sub.add_parser("explain", help="Re-render a stored run for an audience")
+    explain.add_argument("--run", required=True, help="Run id or unique prefix (see history)")
+    explain.add_argument(
+        "--audience", choices=("architect", "auditor", "learner"), default="architect"
+    )
+    explain.add_argument("--out", default="runs-local", help="Artifact store root")
+    explain.set_defaults(func=_cmd_explain)
+
+    dashboard = sub.add_parser("dashboard", help="Serve the local dashboard on 127.0.0.1")
+    dashboard.add_argument("--port", type=int, default=8765, help="Port (default 8765)")
+    dashboard.add_argument("--out", default="runs-local", help="Artifact store root")
+    dashboard.add_argument("--open", action="store_true", help="Open the browser on start")
+    dashboard.set_defaults(func=_cmd_dashboard)
 
     for name, (help_text, phase) in _PLANNED.items():
         p = sub.add_parser(name, help=f"{help_text} (planned, {phase})")
@@ -166,6 +185,48 @@ def _cmd_corpus(args: argparse.Namespace) -> int:
     if args.out is not None:
         print(f"written to:          {args.out}")
     return 0
+
+
+def _cmd_history(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from kgcr.orchestration.runstore import list_runs
+
+    runs = list_runs(Path(args.out))
+    if args.json:
+        print(json.dumps(runs, indent=2, sort_keys=True))
+        return 0
+    if not runs:
+        print(f"no stored runs under {args.out}; try `kgcr review`")
+        return 0
+    for r in runs:
+        print(
+            f"{r['prefix']}  {r['created_at'][:19]}  {r['loop_status']:<9}  "
+            f"{len(r['severities'])} finding(s)  {r['variant'] or '-'}"
+        )
+    return 0
+
+
+def _cmd_explain(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from kgcr.orchestration.runstore import RunNotFound, load_run
+
+    try:
+        run = load_run(Path(args.out), args.run)
+    except RunNotFound as exc:
+        print(f"kgcr explain: {exc}", file=sys.stderr)
+        return 2
+    print(run["explanations"][args.audience])
+    return 0
+
+
+def _cmd_dashboard(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from kgcr.dashboard.server import serve
+
+    return serve(port=args.port, store_root=Path(args.out), open_browser=args.open)
 
 
 def _cmd_review(args: argparse.Namespace) -> int:

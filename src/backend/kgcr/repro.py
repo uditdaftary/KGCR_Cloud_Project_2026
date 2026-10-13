@@ -17,9 +17,11 @@ import os
 import random
 from dataclasses import dataclass
 
-__all__ = ["DEFAULT_SEED", "seed_everything", "hash_seed_is_fixed", "SeedReport"]
+__all__ = ["DEFAULT_COUNT", "DEFAULT_SEED", "seed_everything", "hash_seed_is_fixed", "SeedReport"]
 
 DEFAULT_SEED = 1729
+# Corpus size the recorded model responses were made at (see results/llm_fixtures/).
+DEFAULT_COUNT = 180
 
 
 @dataclass(frozen=True)
