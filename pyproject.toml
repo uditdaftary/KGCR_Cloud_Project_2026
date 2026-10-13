@@ -64,7 +64,7 @@ include = ["kgcr*"]
 
 # The draft L1 control slice ships with the advisor package.
 [tool.setuptools.package-data]
-kgcr = ["advisor/*.json"]
+kgcr = ["advisor/*.json", "plan/*.json"]
 
 [tool.ruff]
 line-length = 100
