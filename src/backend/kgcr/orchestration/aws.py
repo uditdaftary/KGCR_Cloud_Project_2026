@@ -11,6 +11,7 @@ in-process AWS mock; nothing in this repository has been deployed.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -50,7 +51,11 @@ class LocalArtifactStore:
         if not path.resolve().is_relative_to(self.root.resolve()):
             raise ValueError(f"artifact key must stay inside the store: {key!r}")
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(body, encoding="utf-8")
+        # Write beside, then swap in: a reader (the dashboard) or a killed run never sees a
+        # truncated file, and a re-run replaces a complete run only with a complete one.
+        partial = path.with_name(path.name + ".partial")
+        partial.write_text(body, encoding="utf-8")
+        os.replace(partial, path)
         return path.as_posix()
 
 

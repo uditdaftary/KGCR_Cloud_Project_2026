@@ -8,6 +8,7 @@ summary and timings are simply absent.
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,8 @@ from typing import Any
 from kgcr.explainer.explainer import AUDIENCES, ExplanationBundle, extract_claims, render
 
 __all__ = ["RunNotFound", "list_runs", "load_run", "resolve_run"]
+
+logger = logging.getLogger(__name__)
 
 # A run directory is the first 16 hex characters of its run_id.
 _PREFIX = re.compile(r"^[0-9a-f]{4,64}$")
@@ -32,25 +35,29 @@ def list_runs(root: Path) -> list[dict[str, Any]]:
     """One row per stored run, newest first."""
     rows = []
     for run_dir in (root / "runs").glob("*/"):
-        record, bundle = _read(run_dir / "run_record.json"), _read(run_dir / "bundle.json")
-        if record is None or bundle is None:
-            continue
-        summary = _read(run_dir / "summary.json") or {}
-        rows.append(
-            {
-                "prefix": run_dir.name,
-                "run_id": record["run_id"],
-                "created_at": record["created_at"],
-                "seed": record["seed"],
-                "model_version": record["model_version"],
-                "estate_id": bundle["estate_id"],
-                "loop_status": bundle["loop_status"],
-                "loop_reason": bundle["loop_reason"],
-                "severities": [f["severity"] for f in bundle["findings"]],
-                "variant": summary.get("variant"),
-                "llm_mode": summary.get("llm_mode"),
-            }
-        )
+        try:
+            record, bundle = _read(run_dir / "run_record.json"), _read(run_dir / "bundle.json")
+            if record is None or bundle is None:
+                continue
+            summary = _read(run_dir / "summary.json") or {}
+            rows.append(
+                {
+                    "prefix": run_dir.name,
+                    "run_id": record["run_id"],
+                    "created_at": record["created_at"],
+                    "seed": record["seed"],
+                    "model_version": record["model_version"],
+                    "estate_id": bundle["estate_id"],
+                    "loop_status": bundle["loop_status"],
+                    "loop_reason": bundle["loop_reason"],
+                    "severities": [f["severity"] for f in bundle["findings"]],
+                    "variant": summary.get("variant"),
+                    "llm_mode": summary.get("llm_mode"),
+                }
+            )
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            # One damaged run (killed mid-write, hand-edited) must not hide the others.
+            logger.warning("skipping unreadable run %s: %s", run_dir.name, exc)
     return sorted(rows, key=lambda r: r["created_at"], reverse=True)
 
 
@@ -72,8 +79,13 @@ def resolve_run(root: Path, run: str) -> Path:
 def load_run(root: Path, run: str) -> dict[str, Any]:
     """Everything stored for one run, explanations re-rendered from its bundle."""
     run_dir = resolve_run(root, run)
-    bundle_dict = _read(run_dir / "bundle.json")
-    bundle = ExplanationBundle.from_dict(bundle_dict)
+    try:
+        bundle_dict = _read(run_dir / "bundle.json")
+        if bundle_dict is None:
+            raise ValueError("bundle.json is missing")
+        bundle = ExplanationBundle.from_dict(bundle_dict)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise RunNotFound(f"run {run_dir.name} is damaged: {exc}") from exc
     explanations = {a: render(bundle, a) for a in AUDIENCES}
     return {
         "prefix": run_dir.name,
