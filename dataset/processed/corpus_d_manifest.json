@@ -1,0 +1,36 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "cloudgoat",
+      "defect_classes": [
+        "DF-1",
+        "DF-3",
+        "DF-7"
+      ],
+      "licence": "BSD-3-Clause",
+      "notes": "commit dated 2026-03-20; retrieved 2026-10-13; licence read from the repository's own LICENSE file; parsed only, never executed",
+      "provenance_ref": "abf1ba8f5e47d7ced750fdfa025d51c99f1a43ed",
+      "provenance_url": "https://github.com/RhinoSecurityLabs/cloudgoat.git",
+      "source": "https://github.com/RhinoSecurityLabs/cloudgoat"
+    },
+    {
+      "artifact_id": "terragoat",
+      "defect_classes": [
+        "DF-1",
+        "DF-2",
+        "DF-3",
+        "DF-4"
+      ],
+      "licence": "Apache-2.0",
+      "notes": "commit dated 2023-04-27; retrieved 2026-10-13; licence read from the repository's own LICENSE file; parsed only, never executed",
+      "provenance_ref": "729f8da62c6a85ce4af5ad3d123de97776d954c4",
+      "provenance_url": "https://github.com/bridgecrewio/terragoat.git",
+      "source": "https://github.com/bridgecrewio/terragoat"
+    }
+  ],
+  "count": 2,
+  "licences": [
+    "Apache-2.0",
+    "BSD-3-Clause"
+  ]
+}

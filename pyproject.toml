@@ -33,6 +33,13 @@ reconstruction = [
 labelling = [
   "checkov==3.3.8",
 ]
+# Corpus D (FD-05 4D): parses the HCL of third-party repositories. This is Checkov's own
+# parser fork (imported as ``hcl2``), pinned to the version Checkov 3.3.8 resolves to. Not in
+# ``dev``: CI has neither the parser nor the cloned repositories.
+adversarial = [
+  "bc-python-hcl2==0.4.3",
+  "checkov==3.3.8",
+]
 # P6 advisor's live Gemini calls. Not in ``dev``: CI replays committed fixtures.
 advisor = [
   "google-genai==2.20.0",
@@ -100,5 +107,5 @@ warn_unused_configs = true
 # google-genai (advisor extra) is absent in CI; ignoring it keeps mypy identical
 # locally and in CI.
 [[tool.mypy.overrides]]
-module = ["numpy", "torch", "sklearn.*", "google.*", "boto3", "boto3.*", "moto", "moto.*"]
+module = ["numpy", "torch", "sklearn.*", "google.*", "boto3", "boto3.*", "moto", "moto.*", "hcl2"]
 ignore_missing_imports = true
