@@ -57,9 +57,7 @@ def _invariant(bundle: ExplanationBundle) -> bool:
 
 def _counterfactual_agreement(case: EvalCase) -> list[bool]:
     """For each single-resource counterfactual: did the loop's own repair agree with it?"""
-    final = {
-        (f.affected_elements, f.assertion) for f in case.loop.final_findings
-    }
+    final = {(f.affected_elements, f.assertion) for f in case.loop.final_findings}
     outcomes: list[bool] = []
     for f in case.bundle.findings:
         cf = f.counterfactual

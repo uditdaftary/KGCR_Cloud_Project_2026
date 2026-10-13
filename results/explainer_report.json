@@ -1,0 +1,51 @@
+{
+  "bundles": 12,
+  "cases": [
+    "open_security_group",
+    "unencrypted_database",
+    "wildcard_iam_policy",
+    "cloudtrail_no_log_validation",
+    "no_database_backup",
+    "unattached_volume",
+    "indirect_internet_reachability",
+    "transitive_trust_chain",
+    "privilege_escalation_passrole",
+    "design:payments_api",
+    "design:customer_data_platform",
+    "design:internal_reporting"
+  ],
+  "counterfactual_validity": {
+    "measured_against": "the outcome the advisor loop observed after applying the repair",
+    "n": 4,
+    "not_checked": "relational counterfactuals (the loop cannot apply them)",
+    "rate": 1.0
+  },
+  "cross_audience_invariance": {
+    "n": 12,
+    "rate": 1.0
+  },
+  "fidelity_minus": {
+    "n": 1,
+    "rate": 1.0,
+    "scope": "relational findings only"
+  },
+  "fidelity_plus": {
+    "n": 1,
+    "rate": 1.0,
+    "scope": "relational findings only"
+  },
+  "findings": {
+    "relational": 1,
+    "single_resource": 6,
+    "with_a_counterfactual": 5
+  },
+  "read_this_as": "Automated FD-06 section 9.1 and 9.2 results over the stored bundles. The samples are small and every figure carries its n. The human study (9.3) is not run: it needs ethics approval and participants.",
+  "sparsity": {
+    "definition": "evidence elements over resources in the estate",
+    "max": 0.2,
+    "mean": 0.078,
+    "median": 0.059,
+    "n": 7
+  },
+  "verbalisation_fidelity": "not applicable: explanations are templates, not model text"
+}
