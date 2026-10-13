@@ -105,6 +105,8 @@ class OptionRecommender:
         self._model: Any = None  # sklearn ships no stubs
         self._categories: dict[str, list[str]] = {}
         self.candidates: tuple[Option, ...] = ()
+        # The typed value behind each option, for applying a recommended option to a spec.
+        self.raw_values: dict[Option, Any] = {}
         self._findings: dict[Option, tuple[Finding, ...]] = {}
         # One finding-free resource per type; the patcher aligns defects to these.
         self.templates: dict[str, Resource] = {}
@@ -123,6 +125,7 @@ class OptionRecommender:
                 if res.type not in templates and not resource_findings(res):
                     templates[res.type] = res
         self.templates = templates
+        self.raw_values = dict(raw)
         self.candidates = tuple(sorted(raw))
         self._findings = {
             option: self._option_findings(option, raw[option], templates)

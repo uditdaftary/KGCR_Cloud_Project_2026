@@ -37,7 +37,6 @@ EXIT_NOT_IMPLEMENTED = 3
 
 # subcommand -> (help text, phase it lands in)
 _PLANNED: dict[str, tuple[str, str]] = {
-    "design": ("Recommend a configuration from a stated intent", "P6/P7"),
     "plan": ("Produce a terraform plan for a spec", "P3/P10"),
     "apply": ("Apply a previously produced plan", "P10"),
 }
@@ -101,6 +100,29 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
     review.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
     review.set_defaults(func=_cmd_review)
+
+    design = sub.add_parser(
+        "design",
+        help="Design a configuration from a stated workload intent, locally (every axis required)",
+    )
+    from kgcr.design.intake import AXES, axis_choices
+
+    for axis, allowed in axis_choices().items():
+        design.add_argument(
+            f"--{axis.replace('_', '-')}",
+            dest=axis,
+            default=None,
+            metavar="{" + "|".join(allowed) + "}",
+            help=f"{axis} (required)",
+        )
+    design.add_argument(
+        "--audience", choices=("architect", "auditor", "learner"), default="architect"
+    )
+    design.add_argument("--out", default="runs-local", help="Artifact store root (S3 stand-in)")
+    design.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
+    design.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
+    design.set_defaults(func=_cmd_design)
+    assert set(AXES) == set(axis_choices())  # the flags above cover every intent axis
 
     history = sub.add_parser("history", help="List review runs in the local artifact store")
     history.add_argument("--out", default="runs-local", help="Artifact store root")
@@ -227,6 +249,61 @@ def _cmd_dashboard(args: argparse.Namespace) -> int:
     from kgcr.dashboard.server import serve
 
     return serve(port=args.port, store_root=Path(args.out), open_browser=args.open)
+
+
+def _cmd_design(args: argparse.Namespace) -> int:
+    import logging
+    from pathlib import Path
+
+    from kgcr.advisor.llm import default_llm
+    from kgcr.design.intake import AXES, IntakeError, axis_choices, build_intent
+    from kgcr.explainer.explainer import render
+    from kgcr.orchestration.aws import LocalArtifactStore, LogNotifier
+    from kgcr.orchestration.design import run_design
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    try:
+        intent = build_intent({axis: getattr(args, axis) for axis in AXES})
+    except IntakeError as exc:
+        # No defaults: an unstated requirement must be stated, not assumed (FD-01 S1a).
+        print(f"kgcr design: {exc}", file=sys.stderr)
+        choices = axis_choices()
+        for axis in (*exc.missing, *exc.invalid):
+            if axis in choices:
+                print(f"  {axis}: one of {', '.join(choices[axis])}", file=sys.stderr)
+        return 2
+    run = run_design(
+        intent=intent,
+        store=LocalArtifactStore(Path(args.out)),
+        notifier=LogNotifier(),
+        llm=default_llm(),
+        count=args.count,
+        seed=args.seed,
+    )
+    estate = run.candidate.estate
+    print(f"[1/5] intake      stated intent, {len(AXES)} axes, none defaulted")
+    print(f"[2/5] synthesize  estate {estate.estate_id}, {len(estate.resources)} resources")
+    print(
+        f"      recommender audit: {len(run.candidate.applied)} option(s) applied, "
+        f"{len(run.candidate.reported_missing)} recommended but not added, "
+        f"{len(run.candidate.reported_unexpected)} in spec but not recommended"
+    )
+    print(f"[3/5] graph       {run.graph_nodes} nodes, {run.graph_edges} dependency edges")
+    print(
+        f"[4/5] advise      LLM: {run.llm_mode}; loop {run.loop.status} ({run.loop.reason}) "
+        f"after {len(run.loop.passes)} pass(es)"
+    )
+    if run.llm_mode != "ok":
+        print("      rule floor only on at least one pass: relational (DF-7) and resilience")
+        print("      (DF-5) findings need the LLM advisor, so they are not reported on every pass")
+    for f in run.reviewed_findings:
+        print(f"      [{f.severity.value}] {f.control_node} on {', '.join(f.affected_elements)}")
+    print(f"[5/5] explain     audience={args.audience}; run {run.record.run_id[:16]}")
+    for name, uri in run.artifacts.items():
+        print(f"      stored {name}: {uri}")
+    print()
+    print(render(run.bundle, args.audience))
+    return 0
 
 
 def _cmd_review(args: argparse.Namespace) -> int:
