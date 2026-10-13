@@ -22,8 +22,10 @@ ponytail: this is not the roadmap's GNN. The synthetic generator is a
 deterministic function of intent, and a RandomForest on intent already scores
 0.958 exact-set recovery and 1.000 R-precision on the held-out split
 (results/recommender_report.json),
-so a GNN has no headroom to show. Revisit when the corpus carries options that
-depend on graph structure rather than intent alone.
+so a GNN has little headroom to show. An ablation (results/gnn_ablation.json) found a
+small exact-set gain for a graph network that its edge-free control nearly matched, so the
+graph structure is not shown to help. Revisit when the corpus carries options that depend on
+graph structure rather than intent alone.
 """
 
 from __future__ import annotations

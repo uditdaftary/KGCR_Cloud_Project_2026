@@ -355,8 +355,8 @@ DEFERRED: list[dict[str, str]] = [
     },
     {
         "item": "Weak-supervision label model (P4)",
-        "why": "Checkov and Trivy now both run, but they agree with the rule floor on two of four "
-        "defect families and the family mapping is this project's own.",
+        "why": "Checkov and Trivy now both run. Checkov agrees with the rule floor on three of "
+        "four defect families and Trivy on two, and the family mapping is this project's own.",
         "unblocks": "A decision that a label model is worth building on two engines, or a third "
         "engine (Prowler needs a live account).",
     },

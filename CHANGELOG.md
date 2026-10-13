@@ -12,7 +12,7 @@ Last updated: 2026-10-14.
 
 ## LOOP_STATE (updated in place, never stacked)
 
-Updated 2026-10-14. Branch `feature/udit`, 24 local commits ahead of `origin/feature/udit`, **not
+Updated 2026-10-14. Branch `feature/udit`, local commits ahead of `origin/feature/udit`, **not
 pushed, no pull request opened** for this pass (spec decision D4: one local commit per slice). PRs
 #6, #8 and #9 are merged. The account for what ran and what did not is in section 0b below.
 
@@ -46,8 +46,9 @@ pushed, no pull request opened** for this pass (spec decision D4: one local comm
   - **Live harvest, real-AWS apply:** no AWS credentials on this machine. Both are authored and
     tested against fakes (botocore stubs, moto for S3) and have never touched an account.
   - **Recorded Gemini reviews for seven variants:** the free tier allows 20 requests a day and the
-    day's quota was used verifying free-text intake. A retry on 2026-10-14 got a 429 on the first
-    call. Re-run `python src/ml_model/record_variants.py` after the quota resets.
+    day's quota was used verifying free-text intake. A retry at 23:36 local on 2026-10-13 got a 429 on
+    the first call. The quota resets at midnight Pacific (12:30 local on 2026-10-14); re-run
+    `python src/ml_model/record_variants.py` after that.
   - **Human study (P11):** needs ethics approval and participants. Not simulated.
   - **Instructor sign-off of controls and gold set:** the tools exist; sign-off is a human act.
   - **Weak-supervision label model (P4):** not built.
@@ -154,8 +155,8 @@ downloads; one local commit per slice on `feature/udit`, no push, no pull reques
 - **Live Gemini, free-text intake.** Three extractions ran and are recorded
   (`results/llm_fixtures/intent-v1-*.json`) and replay. The first attempts met 503 (transient), so
   `GeminiClient` now retries twice and extraction failures are reported as unavailable. Later
-  attempts met 429, the free tier's 20 requests a day. A retry of the variant recorder on
-  2026-10-14 got 429 on its first call.
+  attempts met 429, the free tier's 20 requests a day. A retry of the variant recorder at
+  23:36 local on 2026-10-13 got 429 on its first call.
 - **Corpus D.** CloudGoat 740 AWS resources, TerraGoat 63. The rule floor's families cover 31 of
   787 Checkov failures in CloudGoat (4%) and 5 of 215 in TerraGoat (2%). Agreement where values are
   readable: database encryption and CloudTrail validation. It misses where an argument is an
@@ -175,8 +176,8 @@ downloads; one local commit per slice on `feature/udit`, no push, no pull reques
   variants, so most bundles are rule floor only. The human study (§9.3) is not run.
 - **GNN ablation.** Expectation recorded before running: no gain. Over 99 test estates in four
   corpus seeds, exact-set recovery: forest 0.941, two-layer network over the resource-type graph
-  0.991, the same network with edges removed 0.984. R-precision and NDCG are saturated for the
-  forest. So the expectation was partly wrong: a neural ranker is a little better at exact-set
+  0.991, the same network with edges removed 0.984. R-precision and NDCG are 1.0 for the
+  forest and at least 0.9945 and 0.9996 for the networks. So the expectation was partly wrong: a neural ranker is a little better at exact-set
   recovery, and the edge-free control says the graph is not why. torch 2.14.1 has a cp314 wheel,
   so this was not blocked by the environment; it ran in a throwaway venv.
 
@@ -389,7 +390,7 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
 - **Corpus D, TerraGoat and CloudGoat:** the rule floor's families cover 31 of 787 Checkov failures (CloudGoat, 740 AWS resources) and 5 of 215 (TerraGoat, 63). Agreement with Checkov where values are readable; misses where an argument is an unresolved expression. No per-resource labels: agreement and coverage only.
 - **Three-engine agreement (6 seeded estates per family):** Checkov on plan JSON recalls DF-2, DF-3, DF-4 (6 of 6 each) and not DF-1; Trivy recalls DF-2 and DF-4 and neither DF-1 nor DF-3; no false positives on clean parents. DF-1 is a world-open port 443, which neither engine treats as a defect. Checkov on `.tf.json` recalled 0 of 24.
 - **Explainer evaluation (12 bundles):** invariance 12 of 12, counterfactual validity 4 of 4, sparsity mean 0.078 (7 findings), relational Fidelity+ and Fidelity- 1 of 1 each. Small n; most bundles are rule floor only.
-- **GNN ablation (99 test estates, four corpus seeds):** exact-set recovery forest 0.941, graph network 0.991, same network without edges 0.984; R-precision and NDCG saturated.
+- **GNN ablation (99 test estates, four corpus seeds):** exact-set recovery forest 0.941, graph network 0.991, same network without edges 0.984; R-precision and NDCG at or near 1.0 (the lowest network value is 0.9945).
 - **Intent reconstruction (P8), 180-estate corpus:** structurally-encoded axes (archetype, network layout, logging, AZ spread) reconstruct at **~100%** and are well-calibrated (ECE ≤ 0.05). `iam_shape` — which the generator leaves no structural trace of — is both least accurate (**~0.42**) and most miscalibrated (**ECE ~0.28**, overconfident at ~0.70). That overconfidence-on-no-signal is the calibration story the reliability diagram exists to surface, and the reason confidence is reported, not just accuracy.
 
 ---
@@ -461,7 +462,7 @@ reference repo; numbers there do not correspond to numbers here.
 - PR #1 — `feature/student1` → `develop`, closed automatically by the branch rename
 - PR #2 — `feature/udit` → `develop`: Phase-I submission (governance, mandated tree, all report deliverables)
 - PRs #6, #8 and #9 are merged into the branch history (see `git log`).
-- 2026-10-13 and 14: 24 local commits on `feature/udit` (spec, plan, design, plan, apply, dashboard
+- 2026-10-13 and 14: local commits on `feature/udit` (spec, plan, design, plan, apply, dashboard
   pages, authoring, Corpus D, Trivy, FD-06 evaluation, harvest adapter, recorder, GNN ablation).
   Not pushed; no pull request opened yet.
 

@@ -208,7 +208,7 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
 10. **Graph network against the forest.** The expectation, recorded before running, was no gain.
     On 99 test estates across four corpus seeds the forest recovers the exact option set for 0.941
     of estates and a two-layer network over the resource-type graph for 0.991; the same network with
-    its edges removed scores 0.984. R-precision and NDCG are saturated for every model. So a neural
+    its edges removed scores 0.984. R-precision and NDCG are at or near 1.0 for every model (the lowest is 0.9945). So a neural
     ranker is a little better at exact-set recovery here, but the graph structure is not shown to
     be the reason.
 
