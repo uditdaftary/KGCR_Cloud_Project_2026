@@ -158,18 +158,32 @@ class Database:
         return _job_row(row) if row else None
 
     def jobs(self, session_id: str | None = None, limit: int = 200) -> list[dict[str, Any]]:
-        sql, args = "SELECT * FROM jobs", []
+        """Newest first, without the log (up to 200 KB a row; ``job()`` has it)."""
+        sql, args = f"SELECT {_LISTED_COLUMNS} FROM jobs", []
         if session_id is not None:
             sql, args = sql + " WHERE session_id = ?", [session_id]
         with self._conn() as c:
             rows = c.execute(sql + " ORDER BY id DESC LIMIT ?", (*args, limit)).fetchall()
-        return [_job_row(r, with_log=False) for r in rows]
+        return [_job_row(r) for r in rows]
+
+    def jobs_with_runs(self) -> list[dict[str, Any]]:
+        """Every job that stored a run, so run history can link back to its catalog entry."""
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT id, catalog_no, session_id, run_prefix FROM jobs "
+                "WHERE run_prefix IS NOT NULL ORDER BY id DESC"
+            ).fetchall()
+        return [dict(r) for r in rows]
 
 
-def _job_row(row: sqlite3.Row, *, with_log: bool = True) -> dict[str, Any]:
+_LISTED_COLUMNS = (
+    "id, catalog_no, session_id, kind, params, live, status, exit_code, created_at, "
+    "started_at, finished_at, output_dir, run_prefix, live_calls"
+)
+
+
+def _job_row(row: sqlite3.Row) -> dict[str, Any]:
     out = dict(row)
     out["params"] = json.loads(out["params"])
     out["live"] = bool(out["live"])
-    if not with_log:
-        out.pop("log")
     return out

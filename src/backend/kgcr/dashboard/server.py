@@ -26,8 +26,10 @@ from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from kgcr._version import __version__
+from kgcr.advisor.llm import DEFAULT_FIXTURE_DIR
 from kgcr.dashboard.db import Database
 from kgcr.dashboard.jobs import JOB_KINDS, ROOT, JobError, Runner, validate
+from kgcr.repro import DEFAULT_COUNT, DEFAULT_SEED
 
 __all__ = ["make_server", "serve"]
 
@@ -35,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 FRONTEND = ROOT / "src" / "frontend"
 RESULTS = ROOT / "results"
+FIXTURE_DIR = DEFAULT_FIXTURE_DIR
 # Read-only project files the dashboard may show, by directory and extension.
 REPO_FILES = {"architecture": {".png", ".svg"}, "docs": {".md"}, "dataset": {".md"}}
 MAX_BODY = 64 * 1024
@@ -52,8 +55,8 @@ class App:
     def __init__(self, store_root: Path) -> None:
         self.store_root = store_root
         self.db = Database(store_root / "dashboard.sqlite3")
-        self.runner = Runner(self.db, store_root)
         self.live_enabled = False  # in memory on purpose: every restart is back to replay
+        self.runner = Runner(self.db, store_root, live_allowed=lambda: self.live_enabled)
         self._lock = threading.Lock()
 
     def set_live(self, enabled: bool) -> None:
@@ -102,9 +105,7 @@ def variant_roster(count: int, seed: int) -> list[dict[str, Any]]:
                 "edges": [[e.source, e.target] for e in g.edges],
             }
             seeded = list(target.defect.evidence_path or target.defect.injection_site)
-        fixture = estate_id is not None and any(
-            (RESULTS / "llm_fixtures").glob(f"v1-{estate_id}-loop-p*.json")
-        )
+        fixture = estate_id is not None and any(FIXTURE_DIR.glob(f"v1-{estate_id}-loop-p*.json"))
         rows.append(
             {
                 "variant": inj.variant,
@@ -125,13 +126,12 @@ def meta(app: App) -> dict[str, Any]:
     from kgcr.advisor.llm import GEMINI_MODEL, LIVE_CALL_CAP
     from kgcr.cli import _PLANNED
     from kgcr.explainer.explainer import AUDIENCES
-    from kgcr.repro import DEFAULT_SEED
 
     return {
         "version": __version__,
         "audiences": list(AUDIENCES),
         "default_seed": DEFAULT_SEED,
-        "default_count": 180,
+        "default_count": DEFAULT_COUNT,
         "live_enabled": app.live_enabled,
         "live_call_cap": LIVE_CALL_CAP,
         "gemini_model": GEMINI_MODEL,
@@ -182,7 +182,7 @@ def job_view(app: App, job_id: int) -> dict[str, Any] | None:
 def environment() -> dict[str, Any]:
     from dataclasses import asdict
 
-    from kgcr.repro import DEFAULT_SEED, seed_everything
+    from kgcr.repro import seed_everything
     from kgcr.versions import tool_versions
 
     return {
@@ -213,7 +213,7 @@ def cloud(app: App) -> dict[str, Any]:
 
 def fixtures() -> list[dict[str, Any]]:
     rows = []
-    for path in sorted((RESULTS / "llm_fixtures").glob("*.json")):
+    for path in sorted(FIXTURE_DIR.glob("*.json")):
         data = _read_json(path)
         kind = path.stem.split("-")[1]
         rows.append(
@@ -282,7 +282,13 @@ class Handler(BaseHTTPRequestHandler):
         ):
             self._error(HTTPStatus.FORBIDDEN, "requests must come from the dashboard")
             return None
-        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = -1
+        if length < 0:
+            self._error(HTTPStatus.BAD_REQUEST, "bad Content-Length")
+            return None
         if length > MAX_BODY:
             self._error(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, "request body too large")
             return None
@@ -328,7 +334,7 @@ class Handler(BaseHTTPRequestHandler):
         if route == "meta":
             return self._json(meta(app))
         if route == "variants":
-            return self._json(variant_roster(180, meta(app)["default_seed"]))
+            return self._json(variant_roster(DEFAULT_COUNT, DEFAULT_SEED))
         if route == "sessions":
             return self._json(app.db.sessions())
         if route == "jobs":
@@ -344,15 +350,10 @@ class Handler(BaseHTTPRequestHandler):
             from kgcr.orchestration.runstore import list_runs
 
             jobs_by_prefix: dict[str, list[dict[str, Any]]] = {}
-            for j in app.db.jobs():
-                if j.get("run_prefix"):
-                    jobs_by_prefix.setdefault(j["run_prefix"], []).append(
-                        {
-                            "id": j["id"],
-                            "catalog_no": j["catalog_no"],
-                            "session_id": j["session_id"],
-                        }
-                    )
+            for j in app.db.jobs_with_runs():
+                jobs_by_prefix.setdefault(j["run_prefix"], []).append(
+                    {"id": j["id"], "catalog_no": j["catalog_no"], "session_id": j["session_id"]}
+                )
             runs = list_runs(app.store_root)
             for r in runs:
                 r["jobs"] = jobs_by_prefix.get(r["prefix"], [])
@@ -376,7 +377,7 @@ class Handler(BaseHTTPRequestHandler):
         if len(parts) == 2 and parts[0] == "fixtures":
             if not _FIXTURE_LABEL.match(parts[1]):
                 return self._error(HTTPStatus.BAD_REQUEST, "not a fixture label")
-            data = _read_json(RESULTS / "llm_fixtures" / f"{parts[1]}.json")
+            data = _read_json(FIXTURE_DIR / f"{parts[1]}.json")
             return (
                 self._json(data) if data else self._error(HTTPStatus.NOT_FOUND, "no such fixture")
             )
@@ -487,12 +488,14 @@ class Handler(BaseHTTPRequestHandler):
         self._file(target)
 
 
-def make_server(port: int, store_root: Path) -> ThreadingHTTPServer:
+def make_server(port: int, store_root: Path, app: App | None = None) -> ThreadingHTTPServer:
     mimetypes.add_type("application/javascript", ".js")
     mimetypes.add_type("font/woff2", ".woff2")
+    # Absolute, because job children run with cwd=ROOT and would resolve a relative path there.
+    shared = app or App(store_root.resolve())
 
     class BoundHandler(Handler):
-        app = App(store_root)
+        app = shared
 
     server = ThreadingHTTPServer(("127.0.0.1", port), BoundHandler)
     BoundHandler.port = server.server_address[1]  # port 0 binds an ephemeral port (tests)
@@ -503,16 +506,16 @@ def _warm_up() -> None:
     """Pay the first-request import and corpus cost before the operator opens the cover."""
     try:
         import kgcr.orchestration.runstore  # noqa: F401 (import for its side effect)
-        from kgcr.repro import DEFAULT_SEED
 
-        variant_roster(180, DEFAULT_SEED)
+        variant_roster(DEFAULT_COUNT, DEFAULT_SEED)
     except Exception:  # fail soft: the first request simply pays the cost instead
         logger.exception("dashboard warm-up failed")
 
 
 def serve(port: int, store_root: Path, open_browser: bool = False) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-    server = make_server(port, store_root)
+    app = App(store_root.resolve())
+    server = make_server(port, store_root, app)
     threading.Thread(target=_warm_up, name="kgcr-warm-up", daemon=True).start()
     url = f"http://127.0.0.1:{port}/"
     print(f"KGCR dashboard on {url}  (replay mode; Ctrl+C to stop)")
@@ -523,5 +526,6 @@ def serve(port: int, store_root: Path, open_browser: bool = False) -> int:
     except KeyboardInterrupt:
         pass
     finally:
+        app.runner.shutdown()  # a child must not outlive the server and overlap the next run
         server.server_close()
     return 0

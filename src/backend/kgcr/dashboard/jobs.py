@@ -24,7 +24,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from kgcr.advisor.llm import DEFAULT_FIXTURE_DIR
 from kgcr.dashboard.db import Database, now_iso
+from kgcr.repro import DEFAULT_COUNT, DEFAULT_SEED
 
 __all__ = ["JOB_KINDS", "JobError", "JobKind", "Param", "Runner", "validate"]
 
@@ -32,9 +34,15 @@ logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[4]
 ML = ROOT / "src" / "ml_model"
-FIXTURES = ROOT / "results" / "llm_fixtures"
+FIXTURES = DEFAULT_FIXTURE_DIR  # honours KGCR_LLM_FIXTURE_DIR, like the child processes do
 MAX_LOG_CHARS = 200_000
 
+_SECRET_NAMES = (
+    "GEMINI_API_KEY",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_SESSION_TOKEN",
+)
 _S3_BUCKET = re.compile(r"^[a-z0-9][a-z0-9.\-]{1,61}[a-z0-9]$")
 _SNS_ARN = re.compile(r"^arn:aws[a-z\-]*:sns:[a-z0-9\-]+:\d{12}:[A-Za-z0-9_\-]{1,256}$")
 
@@ -75,7 +83,7 @@ class Param:
         if value in (None, ""):
             return None
         pattern = _S3_BUCKET if self.kind == "s3_bucket" else _SNS_ARN
-        if not isinstance(value, str) or not pattern.match(value):
+        if not isinstance(value, str) or not pattern.fullmatch(value):  # `$` accepts a trailing \n
             raise JobError(f"{name} is not a valid {self.label or self.kind}")
         return value
 
@@ -124,8 +132,8 @@ def _variants() -> tuple[str, ...]:
     return tuple(i.variant for i in INJECTORS)
 
 
-_COUNT = Param("int", 180, 20, 2000, label="Corpus size")
-_SEED = Param("int", 1729, 0, 2**31 - 1, label="Seed")
+_COUNT = Param("int", DEFAULT_COUNT, 20, 2000, label="Corpus size")
+_SEED = Param("int", DEFAULT_SEED, 0, 2**31 - 1, label="Corpus seed")
 _LIVE = Param("bool", False, admin_only=True, label="Live Gemini calls")
 
 JOB_KINDS: dict[str, JobKind] = {
@@ -184,7 +192,8 @@ JOB_KINDS: dict[str, JobKind] = {
             + ["--model-out", str(out / "model.pkl")]
             + ["--report-out", str(out / "reconstruction_report.json")]
         ],
-        params={"count": _COUNT, "seed": Param("int", 0, 0, 2**31 - 1, label="Seed")},
+        # --seed is the corpus seed; the forest's random_state keeps train.py's own default.
+        params={"count": _COUNT, "seed": _SEED},
     ),
     "recommender_eval": JobKind(
         label="Evaluate the recommender",
@@ -250,16 +259,34 @@ def validate(
 class Runner:
     """A single worker thread that executes queued jobs in order."""
 
-    def __init__(self, db: Database, store_root: Path) -> None:
+    def __init__(
+        self,
+        db: Database,
+        store_root: Path,
+        live_allowed: Callable[[], bool] = lambda: False,
+    ) -> None:
         self.db = db
         self.store_root = store_root
+        # Asked again when a live job reaches the front, so switching live off stops queued spend.
+        self._live_allowed = live_allowed
         self._queue: queue.Queue[int] = queue.Queue()
         self._lock = threading.Lock()
         self._logs: dict[int, list[str]] = {}
         self._procs: dict[int, subprocess.Popen[str]] = {}
         self._cancelled: set[int] = set()
         self._pending: list[int] = []
+        self._active: set[int] = set()
+        self._stopping = False
         threading.Thread(target=self._work, name="kgcr-jobs", daemon=True).start()
+
+    def shutdown(self) -> None:
+        """Stop the running child and start nothing further, so no job outlives the server."""
+        with self._lock:
+            self._stopping = True
+            self._cancelled.update(self._active)
+            procs = list(self._procs.values())
+        for proc in procs:
+            proc.terminate()
 
     def submit(self, job_id: int) -> None:
         with self._lock:
@@ -278,21 +305,30 @@ class Runner:
 
     def cancel(self, job_id: int) -> bool:
         with self._lock:
-            self._cancelled.add(job_id)
-            proc = self._procs.get(job_id)
             queued = job_id in self._pending
+            active = job_id in self._active
+            if queued or active:
+                self._cancelled.add(job_id)
+            proc = self._procs.get(job_id)
         if proc is not None:
             proc.terminate()
             return True
         if queued:
             self.db.update_job(job_id, status="cancelled", finished_at=now_iso())
             return True
-        return False
+        return active  # picked up but not spawned yet: _run sees the flag before it launches
 
-    def _env(self, live: bool) -> dict[str, str]:
-        env = {k: v for k, v in os.environ.items() if not k.startswith(("AWS_", "GEMINI_"))}
-        if live:  # the admin cleared this job; pass credentials through
-            env.update({k: v for k, v in os.environ.items() if k.startswith(("AWS_", "GEMINI_"))})
+    def _env(self, live: bool, cloud: bool = False) -> dict[str, str]:
+        """Child environment. ``live`` grants the Gemini key, ``cloud`` the AWS credentials.
+
+        Withheld names are blanked, not deleted: the child's ``load_dotenv(override=False)``
+        refills a missing name from ``.env`` but leaves an existing (empty) one alone.
+        """
+        granted = (("GEMINI_",) if live else ()) + (("AWS_",) if cloud else ())
+        env = dict(os.environ)
+        for name in {*os.environ, *_SECRET_NAMES}:  # names a .env could add even if unset here
+            if name.startswith(("AWS_", "GEMINI_")) and not name.startswith(granted):
+                env[name] = ""
         env.update(
             KGCR_LLM_LIVE="1" if live else "0",
             PYTHONHASHSEED="0",
@@ -307,21 +343,42 @@ class Runner:
             with self._lock:
                 if job_id in self._pending:
                     self._pending.remove(job_id)
+                if self._stopping:
+                    return
                 skip = job_id in self._cancelled
-            if not skip:
-                try:
-                    self._run(job_id)
-                except Exception as exc:  # the worker must outlive any one job
-                    logger.exception("job %s crashed the runner", job_id)
-                    self.db.update_job(
-                        job_id, status="failed", finished_at=now_iso(), log=f"[dashboard] {exc}\n"
-                    )
+                if not skip:
+                    self._active.add(job_id)
+            if skip:
+                continue
+            try:
+                self._run(job_id)
+            except Exception as exc:  # the worker must outlive any one job
+                logger.exception("job %s crashed the runner", job_id)
+                self.db.update_job(
+                    job_id, status="failed", finished_at=now_iso(), log=f"[dashboard] {exc}\n"
+                )
+            finally:
+                with self._lock:
+                    self._active.discard(job_id)
+                    self._logs.pop(job_id, None)
+                    self._procs.pop(job_id, None)
 
     def _run(self, job_id: int) -> None:
         job = self.db.job(job_id)
         if job is None:
             return
+        if job["live"] and not self._live_allowed():
+            self.db.update_job(
+                job_id,
+                status="cancelled",
+                finished_at=now_iso(),
+                log="[dashboard] live mode was switched off before this job started\n",
+            )
+            return
         spec = JOB_KINDS[job["kind"]]
+        params = job["params"]
+        live = bool(params.get("live"))
+        cloud = bool(params.get("s3_bucket") or params.get("sns_topic_arn"))
         out = self.store_root / "jobs" / f"KG{job['catalog_no']}"
         out.mkdir(parents=True, exist_ok=True)
         before = set(FIXTURES.glob("*.json")) if job["live"] else set()
@@ -329,19 +386,25 @@ class Runner:
         with self._lock:
             self._logs[job_id] = []
         code = 0
-        for argv in spec.argv(job["params"], out, self.store_root):
+        stopped_early = False
+        for argv in spec.argv(params, out, self.store_root):
             self._append(job_id, "$ python " + " ".join(argv[1:]) + "\n")
-            proc = subprocess.Popen(
-                argv,
-                cwd=ROOT,
-                env=self._env(job["live"]),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-            )
+            # Check and spawn under one lock so a cancel lands either before the check or
+            # after the process is registered, never in between.
             with self._lock:
+                if job_id in self._cancelled or self._stopping:
+                    stopped_early = True
+                    break
+                proc = subprocess.Popen(
+                    argv,
+                    cwd=ROOT,
+                    env=self._env(live, cloud),
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
                 self._procs[job_id] = proc
             assert proc.stdout is not None
             for line in proc.stdout:
@@ -354,7 +417,12 @@ class Runner:
         with self._lock:
             log = "".join(self._logs.pop(job_id, []))[-MAX_LOG_CHARS:]
             cancelled = job_id in self._cancelled
-        status = "cancelled" if cancelled else "done" if code == 0 else "failed"
+        # A cancel that arrived after the last step finished cleanly does not undo the result.
+        status = (
+            "cancelled"
+            if cancelled and (stopped_early or code != 0)
+            else ("done" if code == 0 else "failed")
+        )
         self.db.update_job(
             job_id,
             status=status,
