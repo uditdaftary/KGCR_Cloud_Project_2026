@@ -41,7 +41,7 @@ Updated 2026-10-13. Branch `feature/udit`; PRs #6 and #8 are merged into `develo
   - **Spend gate:** dashboard jobs force `KGCR_LLM_LIVE=0` and withhold `GEMINI_*`/`AWS_*` unless an
     admin enables live mode (in memory, off on restart). Jobs write to `runs-local/jobs/KG<no>/`,
     never to `results/` or `dataset/processed/`.
-  - **Gates:** 200 tests pass.
+  - **Gates:** 206 tests pass.
 - **Ready to run, not yet run: the sycophancy gate is NOT RUN.** `.env` holds the key and
   `KGCR_LLM_LIVE=1`; the model id resolves. `run_advisor.py` and `kgcr review` load `.env`.
   Steps (1 is already done):

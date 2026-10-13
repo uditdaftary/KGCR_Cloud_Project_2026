@@ -46,7 +46,7 @@ Scripts directory is on PATH, or keep using `python -m kgcr.cli`.
 ## 3. Quality gates
 
 These are what CI runs. Last run: ruff clean, ruff format clean (96 files), mypy clean (51 files),
-**200 passed in ~3 min**.
+**206 passed in ~3 min**.
 
 ```powershell
 python -m ruff check .
