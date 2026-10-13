@@ -1,0 +1,246 @@
+{
+  "corpora": [
+    {
+      "corpus_seed": 1729,
+      "gnn": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        }
+      },
+      "n_fit": 156,
+      "n_options": 43,
+      "n_test": 24,
+      "n_type_edges": 11,
+      "n_type_nodes": 15,
+      "random_forest": {
+        "exact_set": 0.9583,
+        "ndcg": 1.0,
+        "p_at_10": 1.0,
+        "r_precision": 1.0
+      },
+      "same_network_without_edges": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 0.975,
+          "min": 0.9583
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        }
+      }
+    },
+    {
+      "corpus_seed": 11,
+      "gnn": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 0.9913,
+          "min": 0.9565
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        }
+      },
+      "n_fit": 157,
+      "n_options": 43,
+      "n_test": 23,
+      "n_type_edges": 11,
+      "n_type_nodes": 15,
+      "random_forest": {
+        "exact_set": 1.0,
+        "ndcg": 1.0,
+        "p_at_10": 1.0,
+        "r_precision": 1.0
+      },
+      "same_network_without_edges": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 0.9913,
+          "min": 0.9565
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        }
+      }
+    },
+    {
+      "corpus_seed": 22,
+      "gnn": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        }
+      },
+      "n_fit": 156,
+      "n_options": 43,
+      "n_test": 24,
+      "n_type_edges": 11,
+      "n_type_nodes": 15,
+      "random_forest": {
+        "exact_set": 0.875,
+        "ndcg": 1.0,
+        "p_at_10": 1.0,
+        "r_precision": 1.0
+      },
+      "same_network_without_edges": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 0.975,
+          "min": 0.9583
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 0.9998
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 0.9994,
+          "min": 0.9972
+        }
+      }
+    },
+    {
+      "corpus_seed": 33,
+      "gnn": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 0.9714,
+          "min": 0.9643
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 0.9997,
+          "min": 0.9996
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 0.9967,
+          "min": 0.9945
+        }
+      },
+      "n_fit": 152,
+      "n_options": 43,
+      "n_test": 28,
+      "n_type_edges": 11,
+      "n_type_nodes": 15,
+      "random_forest": {
+        "exact_set": 0.9286,
+        "ndcg": 1.0,
+        "p_at_10": 1.0,
+        "r_precision": 1.0
+      },
+      "same_network_without_edges": {
+        "exact_set": {
+          "max": 1.0,
+          "mean": 0.9929,
+          "min": 0.9643
+        },
+        "ndcg": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 0.9999
+        },
+        "p_at_10": {
+          "max": 1.0,
+          "mean": 1.0,
+          "min": 1.0
+        },
+        "r_precision": {
+          "max": 1.0,
+          "mean": 0.9995,
+          "min": 0.9973
+        }
+      }
+    }
+  ],
+  "epochs": 400,
+  "exact_set_pooled_over_corpora": {
+    "gnn": 0.9907,
+    "random_forest": 0.9405,
+    "same_network_without_edges": 0.9836
+  },
+  "expectation_before_running": "no gain",
+  "question": "does message passing over the resource-type graph beat the random forest?",
+  "test_estates_in_all": 99,
+  "training_seeds_per_corpus": 5
+}

@@ -40,6 +40,10 @@ adversarial = [
   "bc-python-hcl2==0.4.3",
   "checkov==3.3.8",
 ]
+# The GNN ablation (src/ml_model/gnn_ablation.py). Not in ``dev``: CI never trains a network.
+gnn = [
+  "torch==2.14.1",
+]
 # P6 advisor's live Gemini calls. Not in ``dev``: CI replays committed fixtures.
 advisor = [
   "google-genai==2.20.0",
