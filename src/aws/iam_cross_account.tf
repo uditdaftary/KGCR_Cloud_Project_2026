@@ -93,7 +93,7 @@ data "aws_iam_policy_document" "provision_permissions" {
 
   statement {
     effect    = "Allow"
-    actions   = ["ec2:*", "s3:*", "iam:PassRole"]
+    actions   = concat([for service in var.provision_services : "${service}:*"], ["iam:PassRole"])
     resources = var.provision_resource_types
   }
 }

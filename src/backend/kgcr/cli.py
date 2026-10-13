@@ -37,9 +37,7 @@ from kgcr.versions import tool_versions
 EXIT_NOT_IMPLEMENTED = 3
 
 # subcommand -> (help text, phase it lands in)
-_PLANNED: dict[str, tuple[str, str]] = {
-    "apply": ("Apply a previously produced plan", "P10"),
-}
+_PLANNED: dict[str, tuple[str, str]] = {}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -148,6 +146,22 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument("--out", default="runs-local", help="Artifact store root")
     plan.add_argument("--json", action="store_true", help="Emit the plan as JSON")
     plan.set_defaults(func=_cmd_plan)
+
+    apply = sub.add_parser(
+        "apply",
+        help="Apply a stored plan: a local simulation by default; --backend terraform is gated",
+    )
+    apply.add_argument("--plan", required=True, help="Plan id (see `kgcr plan`)")
+    apply.add_argument("--backend", choices=("local", "terraform"), default="local")
+    apply.add_argument("--confirm", default="", help="terraform: type the plan id again")
+    apply.add_argument(
+        "--budgets-applied",
+        action="store_true",
+        help="terraform: confirm the budget alarms in src/aws/budgets.tf are applied",
+    )
+    apply.add_argument("--out", default="runs-local", help="Artifact store root")
+    apply.add_argument("--json", action="store_true", help="Emit the apply record as JSON")
+    apply.set_defaults(func=_cmd_apply)
 
     history = sub.add_parser("history", help="List review runs in the local artifact store")
     history.add_argument("--out", default="runs-local", help="Artifact store root")
@@ -320,6 +334,48 @@ def _format_plan(plan: dict[str, Any]) -> str:
         lines += [f"    added to make it valid: {item}" for item in tf["overlay"]]
         lines += [f"    may still fail to apply: {item}" for item in tf["caveats"]]
     return "\n".join(lines)
+
+
+def _cmd_apply(args: argparse.Namespace) -> int:
+    import os
+    from pathlib import Path
+
+    from kgcr.apply import ApplyRefused
+
+    store = Path(args.out)
+    try:
+        if args.backend == "local":
+            from kgcr.apply.local import apply_local
+
+            record = apply_local(store, args.plan)
+        else:
+            from kgcr.apply.provision import apply_terraform
+
+            record = apply_terraform(
+                store,
+                args.plan,
+                confirm=args.confirm,
+                budgets_acknowledged=args.budgets_applied,
+                env=os.environ,
+            )
+    except ApplyRefused as exc:
+        print(f"kgcr apply: refused: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(record, indent=2, sort_keys=True))
+    else:
+        kind = "simulated" if record["simulated"] else "real"
+        print(
+            f"apply of plan {record['plan_id']}: {record['status']} ({record['backend']}, {kind})"
+        )
+        for step in record.get("steps", []):
+            print(f"  {step['status']:<8} {step['action']:<8} {step['address']}")
+        if record.get("error"):
+            print(f"  error: {record['error']}")
+        if record.get("state_path"):
+            print(f"  state: {record['state_path']}")
+            print(f"  teardown (not run): {record['teardown_command']}")
+    return 0 if record["status"] == "applied" else 1
 
 
 def _cmd_plan(args: argparse.Namespace) -> int:

@@ -7,7 +7,7 @@ import json
 import pytest
 
 from kgcr._version import __version__
-from kgcr.cli import EXIT_NOT_IMPLEMENTED, main
+from kgcr.cli import main
 
 
 def test_version_flag(capsys: pytest.CaptureFixture[str]) -> None:
@@ -20,14 +20,6 @@ def test_version_flag(capsys: pytest.CaptureFixture[str]) -> None:
 def test_no_command_prints_help_and_succeeds(capsys: pytest.CaptureFixture[str]) -> None:
     assert main([]) == 0
     assert "usage" in capsys.readouterr().out.lower()
-
-
-@pytest.mark.parametrize("command", ["apply"])
-def test_planned_commands_exit_not_implemented(
-    command: str, capsys: pytest.CaptureFixture[str]
-) -> None:
-    assert main([command]) == EXIT_NOT_IMPLEMENTED
-    assert "not implemented" in capsys.readouterr().err.lower()
 
 
 def test_repro_info_text_output(capsys: pytest.CaptureFixture[str]) -> None:

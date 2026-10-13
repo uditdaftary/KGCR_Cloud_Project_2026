@@ -22,6 +22,12 @@ provision_external_id = "REPLACE_WITH_RANDOM_STRING"
 enable_provision_role    = false
 provision_resource_types = []
 
+# The write role's services. The default is the minimal grant (ec2, s3). A generated
+# estate also needs rds, kms, elasticloadbalancing, iam, cloudtrail and glue; widening
+# the role is your decision, and `kgcr apply` refuses a plan needing a service not named
+# here. Leave this alone unless you mean it.
+# provision_services = ["ec2", "s3"]
+
 tags = {
   project = "kgcr"
   phase   = "P0"
