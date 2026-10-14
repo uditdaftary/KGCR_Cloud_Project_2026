@@ -51,7 +51,7 @@ agreement.
   evaluation scripts for advisor, recommender, reconstruction; intent prediction. The authoring
   tools (controls review, gold register) are human-only: the model may read, never write.
 - Not built, listed on the Commands page with what would unblock each: live harvest, apply to a
-  real account, recorded model reviews for seven variants, instructor sign-off, the human study.
+  real account, recorded model reviews for four variants, instructor sign-off, the human study.
 - Spend gate: every dashboard run replays recorded LLM fixtures by default. Live Gemini calls and
   real S3/SNS targets unlock only from the admin side behind a confirmation.
 - Terminology: estate, variant, finding, control, evidence path, counterfactual, loop status

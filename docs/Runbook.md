@@ -172,8 +172,10 @@ It is never zeroed. The apply lists each create as `done`.
   `results/llm_fixtures/`. A variant without one prints `WARNING ... no usable recorded LLM response`,
   runs on the rule floor only, and reports a clean result for relational defects. Example:
   `--variant indirect_internet_reachability` currently returns **"No findings"** (LLM: missing_fixture).
-  Only `transitive_trust_chain` and `no_database_backup` have recordings; the other seven are
-  waiting on the Gemini quota (section 6). Designs also run rule floor only, for the same reason.
+  Five variants have recordings (`transitive_trust_chain`, `no_database_backup`,
+  `privilege_escalation_passrole`, `unencrypted_database`, `open_security_group`) and
+  `wildcard_iam_policy` has pass 1 only (`LLM: partial`); the other three are waiting on the Gemini
+  quota (section 6). Designs also run rule floor only, for the same reason.
 - The `INFO`/`WARNING` log lines go to stderr. In Windows PowerShell 5.1 this surfaces as a
   `NativeCommandError` banner even on success. Check the exit code, not the banner.
 - Run IDs are deterministic. Re-running writes into the same `runs/<id>/` directory.

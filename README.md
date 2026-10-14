@@ -41,7 +41,7 @@ pass, 4 skip. CI runs the gates on Python 3.11 and 3.12 for every push. What is 
   under Terraform v1.16.5 and is not applied.
 - The advisor's live run happened once: sycophancy gate PASS on 3 valid trials (1 invalid), 2 of 4
   relational or resilience variants found, 1 false CRITICAL on 4 clean estates. Recorded responses
-  replay offline from `results/llm_fixtures/`; the other seven variants have no recording because
+  replay offline from `results/llm_fixtures/`; the other four variants have no recording because
   the free-tier quota was spent (`src/ml_model/record_variants.py` is ready).
 - The L1 control slice is a draft awaiting Udit's review; the dashboard has the review tools, and
   no control has been signed off.
@@ -189,7 +189,7 @@ found even when PATH predates its install.
 Live Gemini calls (`gemini-3.7-flash`) need `pip install -e ".[advisor]"`, `GEMINI_API_KEY`, and
 `KGCR_LLM_LIVE=1`. They are capped at 24 per run and recorded under `results/llm_fixtures/`, so
 tests and later runs replay them offline. The free tier allows about 20 requests a day;
-`python src/ml_model/record_variants.py` records the seven variants that have no recording yet and
+`python src/ml_model/record_variants.py` records the four variants that have no recording yet and
 stops at the first quota refusal. Put both in a git-ignored `.env` (copy `.env.example`) or export them; the key is never written.
 
 The tree follows the BCSE355L Phase-I guidelines (`docs/`, `architecture/`,

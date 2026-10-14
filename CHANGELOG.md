@@ -49,10 +49,14 @@ pushed, no pull request opened** for this pass (spec decision D4: one local comm
 - **Not done, and why** (the dashboard's Commands page lists the same six):
   - **Live harvest, real-AWS apply:** no AWS credentials on this machine. Both are authored and
     tested against fakes (botocore stubs, moto for S3) and have never touched an account.
-  - **Recorded Gemini reviews for seven variants:** the free tier allows 20 requests a day and the
-    day's quota was used verifying free-text intake. A retry at 23:36 local on 2026-10-13 got a 429 on
-    the first call. The quota resets at midnight Pacific (12:30 local on 2026-10-14); re-run
-    `python src/ml_model/record_variants.py` after that.
+  - **Recorded Gemini reviews for four variants:** a recording run on 2026-10-14 recorded
+    `unencrypted_database`, `open_security_group` and `privilege_escalation_passrole` completely,
+    and `wildcard_iam_policy` through pass 1 only (nine live calls; pass 2 met a 503, so a replay
+    reports `LLM: partial`). It also met a 503 on `indirect_internet_reachability` and a 429 on
+    `cloudtrail_no_log_validation`; a retry got a 429 on its first call, and `unattached_volume` was
+    never reached. Still to record: those four. The dashboard roster counts a variant as replaying
+    when any pass is recorded, so it shows 6 of 9. Re-run `python src/ml_model/record_variants.py`
+    after the quota resets (midnight Pacific, 12:30 local).
   - **Human study (P11):** needs ethics approval and participants. Not simulated.
   - **Instructor sign-off of controls and gold set:** the tools exist; sign-off is a human act.
   - **Weak-supervision label model (P4):** not built.
@@ -74,8 +78,10 @@ pushed, no pull request opened** for this pass (spec decision D4: one local comm
     The new pages were driven through the API and the DOM; screenshots were not captured because
     the browser pane was hidden, and the pages use components from the approved system rather than
     a new scheme.
-  - Replay covers two variants at seed 1729, size 180 (DF-5 `no_database_backup`, DF-7
-    `transitive_trust_chain`); the roster labels the other seven as rule floor only.
+  - Replay covers five variants at seed 1729, size 180 (DF-5 `no_database_backup`, DF-7
+    `transitive_trust_chain`, DF-7 `privilege_escalation_passrole`, DF-2 `unencrypted_database`,
+    DF-1 `open_security_group`), plus DF-3 `wildcard_iam_policy` through pass 1 only; the roster
+    labels the other three as rule floor only.
   - An offline planfile cannot be applied: the Terraform-backed apply re-plans against the live
     provider and refuses unless the creates equal the reviewed plan.
 - **Awaiting Udit's review:**
@@ -197,8 +203,9 @@ downloads; one local commit per slice on `feature/udit`, no push, no pull reques
 **Not run, and why**
 
 - Live harvest and any real apply: no AWS credentials on this machine.
-- Recorded reviews for seven variants: the daily free-tier quota is spent. `record_variants.py` is
-  ready; the first call on 2026-10-14 was refused.
+- Recorded reviews for four variants (`indirect_internet_reachability`, `wildcard_iam_policy`,
+  `cloudtrail_no_log_validation`, `unattached_volume`): the daily free-tier quota is spent again.
+  `record_variants.py` is ready.
 - Human study (P11): needs ethics approval and participants. Not simulated.
 - Controls and gold-set sign-off: the tools exist; sign-off is a human act.
 - Browser screenshots of the new pages: the browser pane was hidden, so they were driven through

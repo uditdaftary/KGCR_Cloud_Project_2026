@@ -197,7 +197,7 @@ plan and implementation is stated rather than concealed, and Diagram 1 carries t
    counterfactual validity, checked against the outcome the advisor loop observed after applying
    the repair rather than recomputed, is 4 of 4; sparsity is a mean of 0.078 of the estate's
    resources (n = 7 findings); Fidelity+ and Fidelity- hold for the one relational finding. The
-   samples are small because recorded model responses exist for only two variants, so most
+   samples are small because recorded model responses exist for only five of the nine variants, so most
    bundles carry rule-floor findings only. The human study (§9.3) is not run.
 9. **Cost delta.** A plan prices the resources it creates from AWS list prices (45 items, three
    regions, retrieved 2026-10-13), at 730 hours a month, and lists what it cannot price (data

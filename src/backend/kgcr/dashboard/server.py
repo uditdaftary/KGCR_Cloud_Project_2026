@@ -334,9 +334,10 @@ DEFERRED: list[dict[str, str]] = [
         "KGCR_APPLY_ENABLED set, and a real image id in place of the placeholder.",
     },
     {
-        "item": "Recorded Gemini reviews for seven variants",
-        "why": "Replay covers two variants. The free tier allows 20 requests a day and the day's "
-        "quota was spent verifying free-text intake.",
+        "item": "Recorded Gemini reviews for four variants",
+        "why": "Replay covers five variants completely and wildcard_iam_policy through pass 1 "
+        "only. The free tier's daily quota was spent on 2026-10-14 after three complete "
+        "recordings, and two calls met a 503 from the service.",
         "unblocks": "Run src/ml_model/record_variants.py once the quota resets; it is idempotent "
         "and stops at the first refusal.",
     },
