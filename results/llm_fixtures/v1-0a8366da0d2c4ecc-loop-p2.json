@@ -1,0 +1,6 @@
+{
+  "label": "v1-0a8366da0d2c4ecc-loop-p2",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "53a979aef36437b8eaa813ffa73a974ed9e4ab22784edb039e566f4e6d1146cf",
+  "response": "[\n {\n  \"control_node\": \"kg://control/aws-war/reliability-multi-az\",\n  \"affected_elements\": [\n   \"aws_db_instance.cardholder\"\n  ],\n  \"evidence_path\": [],\n  \"assertion\": \"aws_db_instance.cardholder does not have multi_az enabled to survive the loss of an availability zone.\"\n }\n]"
+}
