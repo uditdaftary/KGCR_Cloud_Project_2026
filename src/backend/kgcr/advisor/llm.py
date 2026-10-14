@@ -15,6 +15,7 @@ import hashlib
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Protocol
 
@@ -26,6 +27,7 @@ __all__ = [
     "LIVE_CALL_CAP",
     "LLMClient",
     "GeminiClient",
+    "RETRY_DELAYS_SECONDS",
     "FixtureClient",
     "MissingFixtureError",
     "StaleFixtureError",
@@ -63,6 +65,12 @@ class StaleFixtureError(ValueError):
     """A recorded response answers a different prompt than the one now rendered."""
 
 
+# Transient server-side trouble (rate limit, "high demand", gateway) is worth a short wait; an
+# authentication or request error is not, and is raised at once. Two retries, then give up.
+RETRY_DELAYS_SECONDS = (5.0, 15.0)
+_RETRYABLE_CODES = frozenset({429, 500, 503, 504})
+
+
 class GeminiClient:
     """Live Gemini calls through the ``google-genai`` SDK (the ``advisor`` extra)."""
 
@@ -72,9 +80,20 @@ class GeminiClient:
     def complete(self, prompt: str, label: str) -> str:
         # Imported here so the package imports and type-checks without the extra.
         from google import genai
+        from google.genai import errors
 
         client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-        response = client.models.generate_content(model=self.model, contents=prompt)
+        for delay in (*RETRY_DELAYS_SECONDS, None):
+            try:
+                response = client.models.generate_content(model=self.model, contents=prompt)
+                break
+            except errors.APIError as exc:
+                if delay is None or exc.code not in _RETRYABLE_CODES:
+                    raise
+                logger.warning(
+                    "Gemini answered %s for %s; retrying in %.0f s", exc.code, label, delay
+                )
+                time.sleep(delay)
         text = response.text
         if not isinstance(text, str) or not text:
             raise RuntimeError(f"empty Gemini response for {label}")

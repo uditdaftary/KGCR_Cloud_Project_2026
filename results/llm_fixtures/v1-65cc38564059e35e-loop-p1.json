@@ -1,0 +1,6 @@
+{
+  "label": "v1-65cc38564059e35e-loop-p1",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "9ab9093c621dd697dd4a8295636dc921028028777b560c1236a05069fdb31b62",
+  "response": "[\n {\n  \"control_node\": \"kg://control/pci-dss-v4/7.2\",\n  \"affected_elements\": [\n   \"aws_iam_role_policy.app\"\n  ],\n  \"evidence_path\": [],\n  \"assertion\": \"aws_iam_role_policy.app grants wildcard administrative privileges ('Action': '*', 'Resource': '*') rather than restricting permissions to least privilege based on need.\"\n },\n {\n  \"control_node\": \"kg://control/aws-war/reliability-multi-az\",\n  \"affected_elements\": [\n   \"aws_db_instance.cardholder\"\n  ],\n  \"evidence_path\": [],\n  \"assertion\": \"aws_db_instance.cardholder does not configure Multi-AZ deployment to survive the loss of an availability zone.\"\n }\n]"
+}

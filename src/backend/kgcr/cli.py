@@ -1,10 +1,7 @@
 """``kgcr`` command-line surface.
 
-The subcommands mirror the planned interface in the README
-(``design``/``review``/``explain``/``plan``/``apply``/``history``). At Phase 0
-they are declared but not implemented: each exits with a clear "planned for
-Phase N" message so the interface shape is real and testable while the
-subsystems behind it are built.
+The subcommands are the interface in the README
+(``design``/``review``/``explain``/``plan``/``apply``/``history``), all built.
 
 Working today:
 
@@ -22,25 +19,14 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import asdict
+from typing import Any
 
 from kgcr._version import __version__
 from kgcr.advisor.llm import load_local_env
 from kgcr.repro import DEFAULT_SEED, seed_everything
 from kgcr.versions import tool_versions
-
-# Exit code used for a command that exists in the interface but is not yet
-# implemented. Distinct from argparse's usage error (2) so scripts can tell the
-# difference between "you typed it wrong" and "not built yet".
-EXIT_NOT_IMPLEMENTED = 3
-
-# subcommand -> (help text, phase it lands in)
-_PLANNED: dict[str, tuple[str, str]] = {
-    "design": ("Recommend a configuration from a stated intent", "P6/P7"),
-    "plan": ("Produce a terraform plan for a spec", "P3/P10"),
-    "apply": ("Apply a previously produced plan", "P10"),
-}
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -102,6 +88,70 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
     review.set_defaults(func=_cmd_review)
 
+    design = sub.add_parser(
+        "design",
+        help="Design a configuration from a stated workload intent, locally (every axis required)",
+    )
+    from kgcr.design.intake import AXES, axis_choices
+
+    for axis, allowed in axis_choices().items():
+        design.add_argument(
+            f"--{axis.replace('_', '-')}",
+            dest=axis,
+            default=None,
+            metavar="{" + "|".join(allowed) + "}",
+            help=f"{axis} (required)",
+        )
+    design.add_argument(
+        "--audience", choices=("architect", "auditor", "learner"), default="architect"
+    )
+    design.add_argument(
+        "--statement",
+        default=None,
+        help="Describe the workload in words; the model fills only axes it can quote from the "
+        "text, and flags you give win. Any axis left unstated is refused, never defaulted",
+    )
+    design.add_argument(
+        "--extract-only",
+        action="store_true",
+        help="With --statement: print the grounded extraction as JSON and stop",
+    )
+    design.add_argument("--out", default="runs-local", help="Artifact store root (S3 stand-in)")
+    design.add_argument("--count", type=int, default=180, help="Corpus size (default 180)")
+    design.add_argument("--seed", type=int, default=DEFAULT_SEED, help="Corpus seed")
+    design.set_defaults(func=_cmd_design)
+    assert set(AXES) == set(axis_choices())  # the flags above cover every intent axis
+
+    plan = sub.add_parser(
+        "plan", help="Plan a stored run's spec: a dry-run diff, nothing is changed"
+    )
+    plan.add_argument("--spec", required=True, help="Run id or unique prefix (see history)")
+    plan.add_argument(
+        "--backend",
+        choices=("local", "terraform"),
+        default="local",
+        help="local diff (default), or the real terraform binary, offline, for design runs",
+    )
+    plan.add_argument("--out", default="runs-local", help="Artifact store root")
+    plan.add_argument("--json", action="store_true", help="Emit the plan as JSON")
+    plan.set_defaults(func=_cmd_plan)
+
+    apply = sub.add_parser(
+        "apply",
+        help="Apply a stored plan: a local simulation by default; --backend terraform is gated",
+    )
+    apply.add_argument("--plan", required=True, help="Plan id (see `kgcr plan`)")
+    apply.add_argument("--backend", choices=("local", "terraform"), default="local")
+    apply.add_argument("--confirm", default="", help="terraform: type the plan id again")
+    apply.add_argument(
+        "--budgets-applied",
+        action="store_true",
+        help="terraform: confirm the budget alarms in src/aws/budgets.tf are applied",
+    )
+    apply.add_argument("--out", default="runs-local", help="Artifact store root")
+    apply.add_argument("--json", action="store_true", help="Emit the apply record as JSON")
+    apply.set_defaults(func=_cmd_apply)
+
     history = sub.add_parser("history", help="List review runs in the local artifact store")
     history.add_argument("--out", default="runs-local", help="Artifact store root")
     history.add_argument("--json", action="store_true", help="Emit machine-readable JSON")
@@ -121,22 +171,7 @@ def build_parser() -> argparse.ArgumentParser:
     dashboard.add_argument("--open", action="store_true", help="Open the browser on start")
     dashboard.set_defaults(func=_cmd_dashboard)
 
-    for name, (help_text, phase) in _PLANNED.items():
-        p = sub.add_parser(name, help=f"{help_text} (planned, {phase})")
-        p.set_defaults(func=_make_not_implemented(name, phase))
-
     return parser
-
-
-def _make_not_implemented(name: str, phase: str) -> Callable[[argparse.Namespace], int]:
-    def _run(_args: argparse.Namespace) -> int:
-        print(
-            f"kgcr {name}: not implemented yet — planned for Phase {phase}.",
-            file=sys.stderr,
-        )
-        return EXIT_NOT_IMPLEMENTED
-
-    return _run
 
 
 def _cmd_repro_info(args: argparse.Namespace) -> int:
@@ -227,6 +262,196 @@ def _cmd_dashboard(args: argparse.Namespace) -> int:
     from kgcr.dashboard.server import serve
 
     return serve(port=args.port, store_root=Path(args.out), open_browser=args.open)
+
+
+def _format_plan(plan: dict[str, Any]) -> str:
+    """The plan as an operator reads it; every figure comes from the stored plan."""
+    cov, cost, tf = plan["coverage"], plan["cost"], plan["terraform"]
+    lines = [
+        f"plan {plan['plan_id']}  run {plan['run_prefix']}  backend {plan['backend']}  "
+        f"baseline {plan['baseline_kind']}",
+        f"  create {len(plan['creates'])}  modify {len(plan['modifies'])}  "
+        f"destroy {len(plan['destroys'])}",
+    ]
+    lines += [f"  + {address}" for address in plan["creates"]]
+    for change in plan["modifies"]:
+        lines.append(f"  ~ {change['address']}")
+        for item in change["changes"]:
+            lines.append(f"      {item['attribute']}: {item['before']!r} -> {item['after']!r}")
+    lines += [f"  - {address}" for address in plan["destroys"]]
+
+    def tally(counts: dict[str, int]) -> str:
+        return ", ".join(f"{n} {s.lower()}" for s, n in counts.items() if n) or "none"
+
+    lines.append(f"  findings before: {tally(cov['before'])}; after: {tally(cov['after'])}")
+    for address, dependents in plan["blast_radius"].items():
+        lines.append(
+            f"  blast radius of {address}: {', '.join(dependents) or 'nothing depends on it'}"
+        )
+    if cost["available"]:
+        lines.append(
+            f"  cost delta: {cost['delta_usd']:+.2f} USD a month (list price, priced items only)"
+        )
+        grouped: dict[str, list[str]] = {}
+        for note in (*cost["spec"]["not_priced"], *cost["spec"]["excluded"]):
+            address, _, reason = note.partition(": ")
+            grouped.setdefault(reason, []).append(address)
+        for reason, addresses in grouped.items():
+            lines.append(f"    not in the figure: {reason} ({', '.join(addresses)})")
+    else:
+        lines.append(f"  cost delta: not available ({cost['reason']})")
+    if tf:
+        lines.append(
+            f"  terraform {tf['version']} validated and planned offline: "
+            f"{len(tf['creates'])} creates"
+        )
+        lines += [f"    added to make it valid: {item}" for item in tf["overlay"]]
+        lines += [f"    may still fail to apply: {item}" for item in tf["caveats"]]
+    return "\n".join(lines)
+
+
+def _cmd_apply(args: argparse.Namespace) -> int:
+    import os
+    from pathlib import Path
+
+    from kgcr.apply import ApplyRefused
+
+    store = Path(args.out)
+    try:
+        if args.backend == "local":
+            from kgcr.apply.local import apply_local
+
+            record = apply_local(store, args.plan)
+        else:
+            from kgcr.apply.provision import apply_terraform
+
+            record = apply_terraform(
+                store,
+                args.plan,
+                confirm=args.confirm,
+                budgets_acknowledged=args.budgets_applied,
+                env=os.environ,
+            )
+    except ApplyRefused as exc:
+        print(f"kgcr apply: refused: {exc}", file=sys.stderr)
+        return 1
+    if args.json:
+        print(json.dumps(record, indent=2, sort_keys=True))
+    else:
+        kind = "simulated" if record["simulated"] else "real"
+        print(
+            f"apply of plan {record['plan_id']}: {record['status']} ({record['backend']}, {kind})"
+        )
+        print(f"  run {record['run_prefix']}")
+        for step in record.get("steps", []):
+            print(f"  {step['status']:<8} {step['action']:<8} {step['address']}")
+        if record.get("error"):
+            print(f"  error: {record['error']}")
+        if record.get("state_path"):
+            print(f"  state: {record['state_path']}")
+            print(f"  teardown (not run): {record['teardown_command']}")
+    return 0 if record["status"] == "applied" else 1
+
+
+def _cmd_plan(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from kgcr.orchestration.runstore import RunNotFound
+    from kgcr.plan.local import PlanRefused, make_plan
+
+    try:
+        plan = make_plan(Path(args.out), args.spec, backend=args.backend)
+    except RunNotFound as exc:
+        print(f"kgcr plan: {exc}", file=sys.stderr)
+        return 2
+    except PlanRefused as exc:
+        print(f"kgcr plan: refused: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(plan, indent=2, sort_keys=True) if args.json else _format_plan(plan))
+    return 0
+
+
+def _cmd_design(args: argparse.Namespace) -> int:
+    import logging
+    from pathlib import Path
+
+    from kgcr.advisor.llm import default_llm
+    from kgcr.design.intake import AXES, IntakeError, axis_choices, build_intent
+    from kgcr.explainer.explainer import render
+    from kgcr.orchestration.aws import LocalArtifactStore, LogNotifier
+    from kgcr.orchestration.design import run_design
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    stated = {axis: getattr(args, axis) for axis in AXES}
+    if args.extract_only and not args.statement:
+        print("kgcr design: --extract-only needs --statement", file=sys.stderr)
+        return 2
+    if args.statement:
+        from kgcr.design.extract import ExtractionUnavailable, extract_intent
+
+        try:
+            extraction = extract_intent(args.statement, default_llm())
+        except ValueError as exc:
+            print(f"kgcr design: {exc}", file=sys.stderr)
+            return 2
+        except ExtractionUnavailable as exc:
+            print(f"kgcr design: {exc}", file=sys.stderr)
+            return 1
+        if args.extract_only:
+            print(json.dumps(extraction.to_dict(), indent=2, sort_keys=True))
+            return 0
+        print(f"[0/5] extract     model status: {extraction.llm_status}")
+        for axis in AXES:
+            got = extraction.fields[axis]
+            if got.value is None:
+                why = extraction.rejected.get(axis, "not stated")
+                print(f"      {axis:<15} none ({why})")
+            else:
+                print(f'      {axis:<15} {got.value}  <- "{got.evidence}"')
+            if stated[axis] is None:  # a flag you gave always wins over the statement
+                stated[axis] = got.value
+    try:
+        intent = build_intent(stated)
+    except IntakeError as exc:
+        # No defaults: an unstated requirement must be stated, not assumed (FD-01 S1a).
+        print(f"kgcr design: {exc}", file=sys.stderr)
+        choices = axis_choices()
+        for axis in (*exc.missing, *exc.invalid):
+            if axis in choices:
+                print(f"  {axis}: one of {', '.join(choices[axis])}", file=sys.stderr)
+        return 2
+    run = run_design(
+        intent=intent,
+        store=LocalArtifactStore(Path(args.out)),
+        notifier=LogNotifier(),
+        llm=default_llm(),
+        count=args.count,
+        seed=args.seed,
+    )
+    estate = run.candidate.estate
+    print(f"[1/5] intake      stated intent, {len(AXES)} axes, none defaulted")
+    print(f"[2/5] synthesize  estate {estate.estate_id}, {len(estate.resources)} resources")
+    print(
+        f"      recommender audit: {len(run.candidate.applied)} option(s) applied, "
+        f"{len(run.candidate.reported_missing)} recommended but not added, "
+        f"{len(run.candidate.reported_unexpected)} in spec but not recommended"
+    )
+    print(f"[3/5] graph       {run.graph_nodes} nodes, {run.graph_edges} dependency edges")
+    print(
+        f"[4/5] advise      LLM: {run.llm_mode}; loop {run.loop.status} ({run.loop.reason}) "
+        f"after {len(run.loop.passes)} pass(es)"
+    )
+    if run.llm_mode != "ok":
+        print("      rule floor only on at least one pass: relational (DF-7) and resilience")
+        print("      (DF-5) findings need the LLM advisor, so they are not reported on every pass")
+    for f in run.reviewed_findings:
+        print(f"      [{f.severity.value}] {f.control_node} on {', '.join(f.affected_elements)}")
+    print(f"[5/5] explain     audience={args.audience}; run {run.record.run_id[:16]}")
+    for name, uri in run.artifacts.items():
+        print(f"      stored {name}: {uri}")
+    print()
+    print(render(run.bundle, args.audience))
+    return 0
 
 
 def _cmd_review(args: argparse.Namespace) -> int:

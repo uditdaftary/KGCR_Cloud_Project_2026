@@ -1,0 +1,142 @@
+{
+  "checkov_input": "tfjson",
+  "engines": {
+    "checkov": "3.3.8",
+    "trivy": "Version: 0.75.0"
+  },
+  "families": [
+    {
+      "clean_resources": 6,
+      "false_positives_on_clean": {
+        "checkov": 0,
+        "rule_floor": 0,
+        "trivy": 0
+      },
+      "family": "open_security_group",
+      "label": "DF-1 security group open to the world",
+      "pairwise": {
+        "checkov_vs_trivy": {
+          "kappa": null,
+          "n": 12,
+          "percent_agreement": 1.0
+        },
+        "rule_floor_vs_checkov": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        },
+        "rule_floor_vs_trivy": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        }
+      },
+      "seeded_defects": 6,
+      "seeded_recall": {
+        "checkov": 0.0,
+        "rule_floor": 1.0,
+        "trivy": 0.0
+      }
+    },
+    {
+      "clean_resources": 6,
+      "false_positives_on_clean": {
+        "checkov": 0,
+        "rule_floor": 0,
+        "trivy": 0
+      },
+      "family": "unencrypted_database",
+      "label": "DF-2 database storage not encrypted",
+      "pairwise": {
+        "checkov_vs_trivy": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        },
+        "rule_floor_vs_checkov": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        },
+        "rule_floor_vs_trivy": {
+          "kappa": 1.0,
+          "n": 12,
+          "percent_agreement": 1.0
+        }
+      },
+      "seeded_defects": 6,
+      "seeded_recall": {
+        "checkov": 0.0,
+        "rule_floor": 1.0,
+        "trivy": 1.0
+      }
+    },
+    {
+      "clean_resources": 6,
+      "false_positives_on_clean": {
+        "checkov": 0,
+        "rule_floor": 0,
+        "trivy": 0
+      },
+      "family": "wildcard_iam_policy",
+      "label": "DF-3 IAM policy allows Action * on Resource *",
+      "pairwise": {
+        "checkov_vs_trivy": {
+          "kappa": null,
+          "n": 12,
+          "percent_agreement": 1.0
+        },
+        "rule_floor_vs_checkov": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        },
+        "rule_floor_vs_trivy": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        }
+      },
+      "seeded_defects": 6,
+      "seeded_recall": {
+        "checkov": 0.0,
+        "rule_floor": 1.0,
+        "trivy": 0.0
+      }
+    },
+    {
+      "clean_resources": 6,
+      "false_positives_on_clean": {
+        "checkov": 0,
+        "rule_floor": 0,
+        "trivy": 0
+      },
+      "family": "cloudtrail_no_log_validation",
+      "label": "DF-4 CloudTrail log-file validation off",
+      "pairwise": {
+        "checkov_vs_trivy": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        },
+        "rule_floor_vs_checkov": {
+          "kappa": 0.0,
+          "n": 12,
+          "percent_agreement": 0.5
+        },
+        "rule_floor_vs_trivy": {
+          "kappa": 1.0,
+          "n": 12,
+          "percent_agreement": 1.0
+        }
+      },
+      "seeded_defects": 6,
+      "seeded_recall": {
+        "checkov": 0.0,
+        "rule_floor": 1.0,
+        "trivy": 1.0
+      }
+    }
+  ],
+  "read_this_as": "Per family and per engine: how often the engine flags the seeded defect, how often it flags the same resource in the clean parent, and how the engines agree with each other. Where an engine defines the defect differently from the injector (for example a security group open on port 443), a disagreement is a finding about the definition, not an error in the engine. Checkov reads .tf.json inconsistently for single-resource checks on interpolated configurations (see the CHANGELOG)."
+}

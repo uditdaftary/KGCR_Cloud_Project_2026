@@ -164,7 +164,7 @@ DASH = {"Content-Type": "application/json", "X-KGCR": "1"}
 def test_meta_and_static_page_are_served(base: str) -> None:
     status, meta = call(f"{base}/api/meta")
     assert status == 200 and meta["live_enabled"] is False and meta["live_call_cap"] == 24
-    assert {p["command"] for p in meta["planned"]} == {"design", "plan", "apply"}
+    assert "planned" not in meta  # every command is built; what is not is listed under deferred
     status, page = call(f"{base}/")
     assert status == 200 and b"app.js" in page
 

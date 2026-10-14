@@ -1,0 +1,6 @@
+{
+  "label": "v1-fd6f7a9427c6ffa4-loop-p1",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "cfc3b6076aa954ef5916c1f1783ba416d85157a006a52d688aa3a2ea4ba083ea",
+  "response": "[\n {\n  \"control_node\": \"kg://control/pci-dss-v4/3.5.1\",\n  \"affected_elements\": [\n   \"aws_db_instance.cardholder\"\n  ],\n  \"evidence_path\": [],\n  \"assertion\": \"aws_db_instance.cardholder has storage_encrypted set to false, storing cardholder data without encryption at rest.\"\n }\n]"
+}

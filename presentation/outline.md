@@ -1,11 +1,11 @@
-# Review 2 presentation — outline
+# Final review presentation: outline
 
-**Project:** KGCR — Knowledge Graph-Based Cloud Configuration Recommendation
-**Course:** BCSE355L, Dr. Priya V · **Team:** Udit (lead), Manya, Tanmoy
+**Project:** KGCR, Knowledge Graph-Based Cloud Configuration Recommendation
+**Course:** BCSE355L, Dr. Priya V. **Team:** Udit (lead), Manya, Tanmoy
 
-The deck is `KGCR_Review2.pptx`, built by `make_deck.js` (pptxgenjs). Every number on a slide is read
-from a committed results file when the deck is built, so the deck cannot drift from the results. Each
-slide's speaker notes name its source.
+`KGCR_Final.pptx` is the final-review deck, written in the first person plural. It is built by
+`make_deck.js` (pptxgenjs). `KGCR_Review2.pptx` is the earlier Review 2 deck, kept as it was and
+never touched by the build.
 
 ```bash
 cd presentation && npm install
@@ -13,32 +13,39 @@ NODE_PATH="$PWD/node_modules" PPTX_SKILL_DIR=<pptx skill dir> node make_deck.js
 ```
 
 `PPTX_SKILL_DIR` supplies the theme writer. Without it the deck still builds, with a warning, but
-uses Office's default colours.
+uses Office's default colours. Every number on a results slide is read from a committed results
+file when the deck is built, and the build refuses to run if the sycophancy gate stops reading
+PASS. The speaker notes name each slide's source and carry the caveats the slides leave out.
 
-Fourteen slides, roughly 15 minutes plus questions.
+## Slides (57)
 
 | # | Slide | Source |
 |---|---|---|
-| 1 | Title | — |
-| 2 | Per-resource checks miss defects in the connections (the DF-7 chain) | `docs/Project_Report.md` §1, FD-05 §5 |
-| 3 | Fifteen papers agree on what is missing | `docs/Literature_Survey.md`, research-gap documents |
-| 4 | Six objectives, each with a measure and a status | `docs/Objectives.md` |
-| 5 | Diagram 1: AWS cloud architecture (planned) | `architecture/AWS_Architecture.png` |
-| 6 | Diagram 2: complete system flow | `architecture/System_Architecture.png` |
-| 7 | The dataset is synthetic, and generated intent-first | `dataset/dataset_description.md` |
-| 8 | One command runs review mode end to end | `src/backend/kgcr/orchestration/` |
-| 9 | Recommender result versus baselines | `results/recommender_report.json` |
-| 10 | Advisor: rules catch properties, the graph catches paths; sycophancy gate status | `results/advisor_report.json`, `results/p4_df7_checkov_evidence.json` |
-| 11 | Intent reconstruction per field; explainer INV-2 | `results/reconstruction_report.json`, `tests/explainer/` |
-| 12 | Demo: a cardholder database without encryption | `kgcr review --variant unencrypted_database` |
-| 13 | AWS services: planned versus running | `docs/Project_Report.md` §8 |
-| 14 | Limits, and what comes next | `CHANGELOG.md` LOOP_STATE |
+| 1 | Title | none |
+| 2 to 4 | The defect scanners miss (DF-7), fifteen papers and the gap, six objectives with status | `docs/Project_Report.md`, `docs/Literature_Survey.md`, `docs/Objectives.md` |
+| 5 | What we built, in numbers | `CHANGELOG.md`, `git log`, `docs/` |
+| 6 to 8 | AWS architecture, system flow, AWS services (runs, written, planned) | `architecture/*.png`, `docs/Project_Report.md` section 8 |
+| 9 to 10 | Synthetic dataset and Corpus D, the one-command pipeline | `dataset/dataset_description.md`, `results/corpus_d_report.json` |
+| 11 to 15 | Graph versus Checkov, recommender, sycophancy gate, intent reconstruction, explainer | `results/*.json` |
+| 16 to 17 | Outside validation, engineering and guardrails | `results/labeller_agreement.json`, `CHANGELOG.md` |
+| 18 to 34 | Terminal: seventeen slides of empty frames for CLI screenshots | `CLI_RUNBOOK.md` |
+| 35 to 55 | Dashboard tour: every page, 21 screenshots | `screenshots/tiles/` |
+| 56 | Live demo (empty on purpose) | none |
+| 57 | What we ship next | `CHANGELOG.md` |
+
+## Screenshots
+
+- `screenshots/*.png` are full-page captures of the live dashboard (1600 px wide at 1.5x), taken
+  with headless Chrome against `python -m kgcr.cli dashboard`.
+- `screenshots/tiles/*.png` are 2400x1350 crops of those pages; the deck embeds the tiles.
+- The terminal frames are empty on purpose. `CLI_RUNBOOK.md` lists the commands in run order, with
+  the expected output and the frame size for each.
 
 ## Preparation notes
 
-- Say "synthetic" on slide 7 before anyone asks.
-- Slide 10: the sycophancy gate reads **passed** (3 valid trials, 1 invalid). Say the caveats out loud:
-  the model missed 2 of 4 variants and raised 1 false CRITICAL on clean estates.
-- Slide 12 can be run live; `kgcr review` takes about 15 seconds.
+- Say "synthetic" on slide 9 before anyone asks.
+- Slide 13: the gate passed on 3 valid trials of 4 (one invalid). Beyond the rule floor the model
+  found 2 of 4 variants and raised 1 false CRITICAL on 4 clean estates. The notes say so.
+- Slide 8 is the planned-versus-running split; nothing has touched a real AWS account.
 - Each member explains their own five papers and their own commits. Code in this repository is
   Udit's, written with Claude's assistance.

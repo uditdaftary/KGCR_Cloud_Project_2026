@@ -51,3 +51,6 @@ node_modules/
 
 # Impeccable design-tool working state (the surface brief is PRODUCT.md / DESIGN.md at root)
 .impeccable/
+
+# Corpus D clones (FD-05 4D): third-party repos, parsed and never executed; the manifest records provenance
+dataset/raw/corpus_d/

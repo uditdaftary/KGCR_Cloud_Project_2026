@@ -22,8 +22,10 @@ ponytail: this is not the roadmap's GNN. The synthetic generator is a
 deterministic function of intent, and a RandomForest on intent already scores
 0.958 exact-set recovery and 1.000 R-precision on the held-out split
 (results/recommender_report.json),
-so a GNN has no headroom to show. Revisit when the corpus carries options that
-depend on graph structure rather than intent alone.
+so a GNN has little headroom to show. An ablation (results/gnn_ablation.json) found a
+small exact-set gain for a graph network that its edge-free control nearly matched, so the
+graph structure is not shown to help. Revisit when the corpus carries options that depend on
+graph structure rather than intent alone.
 """
 
 from __future__ import annotations
@@ -48,6 +50,7 @@ __all__ = [
     "INTENT_FIELDS",
     "IDENTITY_ATTRIBUTES",
     "estate_options",
+    "resource_options",
     "intent_from_reconstruction",
     "OptionRecommender",
 ]
@@ -70,18 +73,23 @@ class RankedOption:
     score: float
 
 
+def resource_options(res: Resource) -> Iterable[tuple[Option, Any]]:
+    """Each option one resource exhibits, with the raw attribute value behind it."""
+    yield (res.type, "present", "true"), True
+    for key, value in res.attributes.items():
+        # Nested values (ingress blocks, policy documents) are not scalar
+        # choices; DF-1/DF-3 live there and are covered by the advisor.
+        if key in IDENTITY_ATTRIBUTES or key.startswith("__ref__"):
+            continue
+        if isinstance(value, dict | list) or key in {"policy", "assume_role_policy"}:
+            continue
+        yield (res.type, key, str(value)), value
+
+
 def _option_values(estate: Estate) -> Iterable[tuple[Option, Any]]:
     """Each option in ``estate`` with the raw attribute value behind it."""
     for res in estate.resources:
-        yield (res.type, "present", "true"), True
-        for key, value in res.attributes.items():
-            # Nested values (ingress blocks, policy documents) are not scalar
-            # choices; DF-1/DF-3 live there and are covered by the advisor.
-            if key in IDENTITY_ATTRIBUTES or key.startswith("__ref__"):
-                continue
-            if isinstance(value, dict | list) or key in {"policy", "assume_role_policy"}:
-                continue
-            yield (res.type, key, str(value)), value
+        yield from resource_options(res)
 
 
 def estate_options(estate: Estate) -> frozenset[Option]:
@@ -105,6 +113,8 @@ class OptionRecommender:
         self._model: Any = None  # sklearn ships no stubs
         self._categories: dict[str, list[str]] = {}
         self.candidates: tuple[Option, ...] = ()
+        # The typed value behind each option, for applying a recommended option to a spec.
+        self.raw_values: dict[Option, Any] = {}
         self._findings: dict[Option, tuple[Finding, ...]] = {}
         # One finding-free resource per type; the patcher aligns defects to these.
         self.templates: dict[str, Resource] = {}
@@ -123,6 +133,7 @@ class OptionRecommender:
                 if res.type not in templates and not resource_findings(res):
                     templates[res.type] = res
         self.templates = templates
+        self.raw_values = dict(raw)
         self.candidates = tuple(sorted(raw))
         self._findings = {
             option: self._option_findings(option, raw[option], templates)

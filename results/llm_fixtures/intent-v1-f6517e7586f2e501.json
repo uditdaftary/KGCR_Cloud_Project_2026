@@ -1,0 +1,6 @@
+{
+  "label": "intent-v1-f6517e7586f2e501",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "c0e2ac3dcea1aceb0cb472b0a25fa8e149c8646a82221800d6b9467fef96fade",
+  "response": "{\"archetype\": {\"value\": \"payments_api\", \"evidence\": \"payments API\"}, \"region\": {\"value\": \"eu-west-1\", \"evidence\": \"eu-west-1\"}, \"az_spread\": {\"value\": \"three_az\", \"evidence\": \"three availability zones\"}, \"network_layout\": {\"value\": \"public_private\", \"evidence\": \"public load balancer in front of private application subnets\"}, \"logging\": {\"value\": \"full\", \"evidence\": \"full audit logging\"}, \"iam_shape\": {\"value\": \"least_privilege\", \"evidence\": \"least-privilege IAM roles\"}, \"tagging\": {\"value\": \"strict\", \"evidence\": \"strict tagging\"}, \"scale\": {\"value\": \"small\", \"evidence\": \"small\"}}"
+}

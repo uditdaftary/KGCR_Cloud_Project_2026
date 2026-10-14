@@ -40,6 +40,33 @@ def test_review_stores_summary_and_timings(store: Path) -> None:
     assert stages == ["harvest", "graph", "intent", "recommend", "advise", "explain"]
 
 
+def test_review_stores_mode_and_the_observed_spec(store: Path) -> None:
+    run_dir = next((store / "runs").iterdir())
+    summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
+    observed = json.loads((run_dir / "observed_spec.tf.json").read_text(encoding="utf-8"))
+    patched = json.loads((run_dir / "patched_spec.tf.json").read_text(encoding="utf-8"))
+    assert summary["mode"] == "review"
+    # The observed estate is the defected one; the patched spec is what the loop settled on.
+    assert observed["resource"] != patched["resource"]
+    assert list_runs(store)[0]["mode"] == "review"
+
+
+def test_a_run_stored_without_a_mode_still_lists_as_a_review(store: Path, tmp_path: Path) -> None:
+    import shutil
+
+    old = tmp_path / "old"
+    shutil.copytree(store, old)
+    for summary_path in (old / "runs").glob("*/summary.json"):
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        del summary["mode"]
+        summary_path.write_text(json.dumps(summary), encoding="utf-8")
+    for observed_path in (old / "runs").glob("*/observed_spec.tf.json"):
+        observed_path.unlink()
+    rows = list_runs(old)
+    assert rows and rows[0]["mode"] == "review"
+    assert load_run(old, rows[0]["prefix"])["summary"] is not None
+
+
 def test_bundle_round_trips_through_from_dict(store: Path) -> None:
     text = next((store / "runs").glob("*/bundle.json")).read_text(encoding="utf-8")
     assert bundle_json(ExplanationBundle.from_dict(json.loads(text))) == text

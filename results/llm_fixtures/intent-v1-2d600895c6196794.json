@@ -1,0 +1,6 @@
+{
+  "label": "intent-v1-2d600895c6196794",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "3d60096129c65352d451292150d753958041b936251ebd6a16d28d4d3f51a190",
+  "response": "{\"archetype\": {\"value\": \"payments_api\", \"evidence\": \"payments API\"}, \"region\": {\"value\": \"eu-west-1\", \"evidence\": \"eu-west-1\"}, \"az_spread\": {\"value\": null, \"evidence\": null}, \"network_layout\": {\"value\": null, \"evidence\": null}, \"logging\": {\"value\": null, \"evidence\": null}, \"iam_shape\": {\"value\": null, \"evidence\": null}, \"tagging\": {\"value\": null, \"evidence\": null}, \"scale\": {\"value\": null, \"evidence\": null}}"
+}

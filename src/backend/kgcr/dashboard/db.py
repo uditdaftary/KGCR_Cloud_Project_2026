@@ -11,7 +11,7 @@ import json
 import sqlite3
 import uuid
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -52,6 +52,32 @@ CREATE TABLE IF NOT EXISTS jobs (
     live_calls INTEGER
 );
 CREATE INDEX IF NOT EXISTS jobs_session ON jobs(session_id);
+-- Human decisions only, append-only: the code has no UPDATE or DELETE for this table.
+CREATE TABLE IF NOT EXISTS control_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    control_node TEXT NOT NULL,
+    decision TEXT NOT NULL CHECK (decision IN ('verified', 'needs_change', 'rejected')),
+    proposed_summary TEXT,
+    note TEXT NOT NULL DEFAULT '',
+    reviewer TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS gold_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    framework TEXT NOT NULL,
+    source_ref TEXT NOT NULL,
+    config_json TEXT NOT NULL,
+    controls_json TEXT NOT NULL,
+    author TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('draft', 'authored', 'reviewed')),
+    reviewer TEXT,
+    review_note TEXT,
+    review_check_json TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    reviewed_at TEXT
+);
 """
 
 
@@ -79,6 +105,10 @@ class Database:
                 "WHERE status IN ('queued', 'running')",
                 (now_iso(),),
             )
+
+    def connection(self) -> AbstractContextManager[sqlite3.Connection]:
+        """A short-lived connection for the stores that share this file (authoring)."""
+        return self._conn()
 
     @contextmanager
     def _conn(self) -> Iterator[sqlite3.Connection]:

@@ -164,3 +164,37 @@ export function drawRidges(svg, perField, accent) {
     t.textContent = c.toFixed(1);
   }
 }
+
+// Intent ring: one spoke per intent axis. A chosen option sits at a radius set by its place in
+// that axis's list (an order, not a score); an axis not yet stated stays on the outer ring and
+// dim, so the gaps are visible. `axes` is [[name, options]], `values` maps name to the choice.
+export function drawIntent(svg, axes, values) {
+  svg.replaceChildren();
+  svg.setAttribute("viewBox", "-70 -10 540 420");
+  const cx = 200, cy = 200, R = 150, inner = 46;
+  for (const r of [inner, inner + (R - inner) / 2, R]) svgEl("circle", { cx, cy, r, class: "grid" }, svg);
+  const set = [];
+  axes.forEach(([name, options], i) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / axes.length;
+    svgEl("line", { x1: cx, y1: cy, x2: cx + (R + 12) * Math.cos(a), y2: cy + (R + 12) * Math.sin(a), class: "grid faint" }, svg);
+    const index = options.indexOf(values[name]);
+    const stated = index > -1;
+    const r = stated ? inner + ((R - inner) * index) / Math.max(1, options.length - 1) : R;
+    const tick = svgEl("line", {
+      x1: cx + (r - 7) * Math.cos(a), y1: cy + (r - 7) * Math.sin(a),
+      x2: cx + (r + 7) * Math.cos(a), y2: cy + (r + 7) * Math.sin(a), class: stated ? "tick hot" : "tick dim",
+    }, svg);
+    svgEl("title", {}, tick).textContent = stated ? `${name}: ${values[name]}` : `${name}: not stated`;
+    if (stated) set.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+    const lx = cx + (R + 24) * Math.cos(a), ly = cy + (R + 24) * Math.sin(a) + 3;
+    const anchor = Math.cos(a) > 0.2 ? "start" : Math.cos(a) < -0.2 ? "end" : "middle";
+    const text = svgEl("text", { x: lx, y: ly, class: stated ? "node-label hot" : "node-label dim", "text-anchor": anchor }, svg);
+    text.textContent = name.replace(/_/g, " ");
+  });
+  if (set.length === axes.length) {
+    const d = set.map((p, i) => `${i ? "L" : "M"}${p.x},${p.y}`).join("") + "Z";
+    svgEl("path", { d, class: "edge hot" }, svg);
+  }
+  svgEl("circle", { cx, cy, r: 13, class: "core" }, svg);
+  return { stated: set.length };
+}

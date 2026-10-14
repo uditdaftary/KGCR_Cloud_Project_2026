@@ -1,0 +1,6 @@
+{
+  "label": "intent-v1-699651374a74a1f2",
+  "model": "gemini-3.7-flash",
+  "prompt_sha256": "9a90a75f95c10ca0211de86c837766411c3f24137300f6d52d0eb82b592f0088",
+  "response": "{\"archetype\": {\"value\": \"internal_reporting\", \"evidence\": \"internal reporting\"}, \"region\": {\"value\": \"us-east-1\", \"evidence\": \"us-east-1\"}, \"az_spread\": {\"value\": null, \"evidence\": null}, \"network_layout\": {\"value\": null, \"evidence\": null}, \"logging\": {\"value\": null, \"evidence\": null}, \"iam_shape\": {\"value\": null, \"evidence\": null}, \"tagging\": {\"value\": null, \"evidence\": null}, \"scale\": {\"value\": null, \"evidence\": null}}"
+}

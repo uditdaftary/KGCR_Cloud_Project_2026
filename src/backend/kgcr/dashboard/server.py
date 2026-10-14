@@ -16,7 +16,6 @@ import logging
 import mimetypes
 import os
 import re
-import shutil
 import subprocess
 import sys
 import threading
@@ -41,7 +40,7 @@ RESULTS = ROOT / "results"
 # Read-only project files the dashboard may show, by directory and extension.
 REPO_FILES = {"architecture": {".png", ".svg"}, "docs": {".md"}, "dataset": {".md"}}
 MAX_BODY = 64 * 1024
-_FIXTURE_LABEL = re.compile(r"^v1(-[a-z0-9]{1,32}){1,4}$")
+_FIXTURE_LABEL = re.compile(r"^(intent-)?v1(-[a-z0-9]{1,32}){1,4}$")
 _VARIANT_NAMES = {
     "cloudtrail_no_log_validation": "CloudTrail without log validation",
     "wildcard_iam_policy": "Wildcard IAM policy",
@@ -125,19 +124,20 @@ def variant_roster(count: int, seed: int) -> list[dict[str, Any]]:
 
 def meta(app: App) -> dict[str, Any]:
     from kgcr.advisor.llm import GEMINI_MODEL, LIVE_CALL_CAP
-    from kgcr.cli import _PLANNED
+    from kgcr.design.intake import axis_choices
     from kgcr.explainer.explainer import AUDIENCES
 
     return {
         "version": __version__,
         "audiences": list(AUDIENCES),
+        "design_axes": {axis: list(values) for axis, values in axis_choices().items()},
         "default_seed": DEFAULT_SEED,
         "default_count": DEFAULT_COUNT,
         "live_enabled": app.live_enabled,
         "live_call_cap": LIVE_CALL_CAP,
         "gemini_model": GEMINI_MODEL,
         "gemini_key_present": bool(os.environ.get("GEMINI_API_KEY")),
-        "planned": [{"command": k, "help": h, "phase": p} for k, (h, p) in _PLANNED.items()],
+        "deferred": DEFERRED,
         "jobs": {
             k: {
                 "label": s.label,
@@ -153,6 +153,7 @@ def meta(app: App) -> dict[str, Any]:
                         "high": p.high,
                         "choices": list(p.choices),
                         "admin_only": p.admin_only,
+                        "admin_values": list(p.admin_values),
                         "label": p.label or n,
                     }
                     for n, p in s.params.items()
@@ -224,13 +225,38 @@ def cloud(app: App) -> dict[str, Any]:
             r'^resource\s+"([^"]+)"\s+"([^"]+)"', tf.read_text("utf-8"), re.M
         ):
             resources.append({"file": tf.name, "type": kind, "name": name})
+    from kgcr.apply.preflight import allowed_services
+    from kgcr.plan.terraform_backend import terraform_binary
+
+    binary = terraform_binary()
+    version = None
+    if binary:
+        try:
+            done = subprocess.run(
+                [binary, "version", "-json"],
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=True,
+            )
+            version = json.loads(done.stdout).get("terraform_version")
+        except (OSError, subprocess.SubprocessError, ValueError) as exc:
+            logger.warning("terraform version failed: %s", exc)
     return {
         "terraform_files": sorted(p.name for p in (ROOT / "src" / "aws").glob("*.tf")),
         "resources": resources,
-        "terraform_installed": shutil.which("terraform") is not None,
+        "terraform_installed": binary is not None,
+        "terraform_version": version,
         "boto3_installed": importlib.util.find_spec("boto3") is not None,
         "live_enabled": app.live_enabled,
         "deployed": False,
+        # What a real apply would check, from the server's environment. Names and counts only:
+        # no account id, role or key is ever sent to the page.
+        "apply": {
+            "role_configured": bool(os.environ.get("KGCR_PROVISION_ROLE_ARN")),
+            "account_configured": bool(os.environ.get("KGCR_APPLY_ACCOUNT_ID")),
+            "granted_services": list(allowed_services(os.environ)),
+        },
     }
 
 
@@ -239,12 +265,16 @@ def fixtures() -> list[dict[str, Any]]:
     for path in sorted(FIXTURES.glob("*.json")):
         data = _read_json(path)
         kind = path.stem.split("-")[1]
+        if path.stem.startswith("intent-"):
+            kind_label = "intent extraction"
+        else:
+            kind_label = {"syc": "sycophancy trial", "clean": "clean estate"}.get(
+                kind, "review loop"
+            )
         rows.append(
             {
                 "label": path.stem,
-                "kind": {"syc": "sycophancy trial", "clean": "clean estate"}.get(
-                    kind, "review loop"
-                ),
+                "kind": kind_label,
                 "model": data.get("model"),
                 "prompt_sha256": data.get("prompt_sha256"),
                 "response_chars": len(data.get("response", "")),
@@ -267,6 +297,73 @@ def project() -> dict[str, Any]:
     }
 
 
+def preflight(plan: dict[str, Any]) -> dict[str, Any] | None:
+    """Does the write role's grant cover a Terraform plan? None for any other plan.
+
+    Computed here, from the same module the CLI uses, so the page never carries its own copy
+    of the service mapping.
+    """
+    from kgcr.apply import preflight as grant
+
+    section = plan.get("terraform")
+    if not section:
+        return None
+    granted = grant.allowed_services(os.environ)
+    types = {address.split(".", 1)[0] for address in section["creates"]}
+    return {"granted": list(granted), "offenders": grant.check(types, granted)}
+
+
+# Items the project lists as not built, with what would unblock each. One list, served to the
+# Commands page; kept short and kept true (CHANGELOG records the evidence).
+DEFERRED: list[dict[str, str]] = [
+    {
+        "item": "Harvest from a live account (kgcr review --account)",
+        "why": "The AWS Config adapter is built and tested against stubbed responses and moto. "
+        "It has never read a real account (no credentials here), reads five resource types and "
+        "no tags, and is not wired into review.",
+        "unblocks": "An account with AWS Config recording and the read-only role applied, then "
+        "wiring the adapter into review and adding networks and IAM so relational defects "
+        "can be evaluated.",
+    },
+    {
+        "item": "Apply to a real account",
+        "why": "The Terraform-backed apply and its refusal gates are built and tested against "
+        "fakes. It has never assumed a role or called AWS. The shipped write role (ec2, s3) "
+        "does not cover what generated estates create.",
+        "unblocks": "Credentials, the write role applied with provision_services widened, "
+        "KGCR_APPLY_ENABLED set, and a real image id in place of the placeholder.",
+    },
+    {
+        "item": "Recorded Gemini reviews for four variants",
+        "why": "Replay covers five variants completely and wildcard_iam_policy through pass 1 "
+        "only. The free tier's daily quota was spent on 2026-10-14 after three complete "
+        "recordings, and two calls met a 503 from the service.",
+        "unblocks": "Run src/ml_model/record_variants.py once the quota resets; it is idempotent "
+        "and stops at the first refusal.",
+    },
+    {
+        "item": "Instructor sign-off of controls and the gold set",
+        "why": "The review and sign-off tools are built. No control has been reviewed: sign-off "
+        "is a human act and the six draft controls are unverified.",
+        "unblocks": "A named reviewer and the instructor, working through the Controls and "
+        "Gold set pages.",
+    },
+    {
+        "item": "Human study (P11)",
+        "why": "It needs ethics approval and participants. The automated half of the evaluation "
+        "is in results/explainer_report.json.",
+        "unblocks": "Ethics approval and recruited participants.",
+    },
+    {
+        "item": "Weak-supervision label model (P4)",
+        "why": "Checkov and Trivy now both run. Checkov agrees with the rule floor on three of "
+        "four defect families and Trivy on two, and the family mapping is this project's own.",
+        "unblocks": "A decision that a label model is worth building on two engines, or a third "
+        "engine (Prowler needs a live account).",
+    },
+]
+
+
 # --- HTTP ----------------------------------------------------------------------------
 
 
@@ -280,9 +377,19 @@ class Handler(BaseHTTPRequestHandler):
 
     # responses
 
-    def _send(self, status: int, body: bytes, ctype: str, *, sandbox: bool = False) -> None:
+    def _send(
+        self,
+        status: int,
+        body: bytes,
+        ctype: str,
+        *,
+        sandbox: bool = False,
+        headers: dict[str, str] | None = None,
+    ) -> None:
         self.send_response(status)
         self.send_header("Content-Type", ctype)
+        for name, value in (headers or {}).items():
+            self.send_header(name, value)
         if sandbox:  # opened on its own, a repo file gets no scripts and no dashboard origin
             self.send_header("Content-Security-Policy", "sandbox")
         self.send_header("Content-Length", str(len(body)))
@@ -290,6 +397,16 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
+
+    def _download(self, payload: Any, filename: str) -> None:
+        """JSON as a file the browser saves: authoring exports are committed by a person."""
+        body = (json.dumps(payload, indent=2, sort_keys=True) + "\n").encode("utf-8")
+        self._send(
+            HTTPStatus.OK,
+            body,
+            "application/json",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
 
     def _json(self, payload: Any, status: int = 200) -> None:
         self._send(status, json.dumps(payload).encode("utf-8"), "application/json")
@@ -383,6 +500,42 @@ class Handler(BaseHTTPRequestHandler):
             for r in runs:
                 r["jobs"] = jobs_by_prefix.get(r["prefix"], [])
             return self._json(runs)
+        if route == "authoring/controls":
+            from kgcr.dashboard import authoring
+
+            return self._json(authoring.controls_view(app.db))
+        if route == "authoring/controls/export":
+            from kgcr.dashboard import authoring
+
+            return self._download(authoring.controls_export(app.db), "controls_review.json")
+        if route == "gold":
+            from kgcr.dashboard import authoring
+
+            return self._json(authoring.gold_list(app.db))
+        if route == "gold/export":
+            from kgcr.dashboard import authoring
+
+            return self._download(authoring.gold_export(app.db), "gold_set.json")
+        if len(parts) == 2 and parts[0] == "gold" and parts[1].isdigit():
+            from kgcr.dashboard import authoring
+
+            try:
+                return self._json(authoring.gold_get(app.db, int(parts[1])))
+            except authoring.AuthoringError as exc:
+                return self._error(HTTPStatus.NOT_FOUND, str(exc))
+        if len(parts) == 3 and parts[0] == "runs" and parts[2] == "plans":
+            return self._run_plans(parts[1])
+        if len(parts) == 2 and parts[0] == "plans":
+            from kgcr.plan.local import PlanRefused, load_plan
+
+            try:
+                plan = load_plan(app.store_root, parts[1])
+            except PlanRefused as exc:
+                return self._error(HTTPStatus.NOT_FOUND, str(exc))
+            applied = _read_json(
+                app.store_root / "runs" / plan["run_prefix"] / "applied" / parts[1] / "apply.json"
+            )
+            return self._json({"plan": plan, "apply": applied, "preflight": preflight(plan)})
         if len(parts) == 2 and parts[0] == "runs":
             from kgcr.orchestration.runstore import RunNotFound, load_run
 
@@ -472,6 +625,10 @@ class Handler(BaseHTTPRequestHandler):
                     HTTPStatus.FORBIDDEN, "only an admin can cancel another session's job"
                 )
             return self._json({"cancelled": app.runner.cancel(job["id"])})
+        if route == "/api/design/extract":
+            return self._extract(data, session)
+        if route.startswith(("/api/authoring/", "/api/gold")):
+            return self._authoring(route, data, session)
         if route == "/api/admin/live":
             if session["role"] != "admin":
                 return self._error(HTTPStatus.FORBIDDEN, "only an admin can change live mode")
@@ -482,6 +639,113 @@ class Handler(BaseHTTPRequestHandler):
             logger.warning("live calls and cloud targets %s", "ENABLED" if enabled else "disabled")
             return self._json({"live_enabled": app.live_enabled})
         return self._error(HTTPStatus.NOT_FOUND, f"no API route {route!r}")
+
+    def _run_plans(self, prefix: str) -> None:
+        """A run's plans, their apply records and its lifecycle, for the Plan and apply page."""
+        from kgcr.orchestration.lifecycle import read_events
+        from kgcr.orchestration.runstore import RunNotFound, resolve_run
+
+        try:
+            run_dir = resolve_run(self.app.store_root, prefix)
+        except RunNotFound as exc:
+            return self._error(HTTPStatus.NOT_FOUND, str(exc))
+        summary = _read_json(run_dir / "summary.json") or {}
+        plans = [
+            {
+                "plan": _read_json(path),
+                "apply": _read_json(run_dir / "applied" / path.parent.name / "apply.json"),
+                "preflight": preflight(_read_json(path) or {}),
+            }
+            for path in sorted((run_dir / "plans").glob("*/plan.json"))
+        ]
+        return self._json(
+            {
+                "run_prefix": run_dir.name,
+                "mode": summary.get("mode", "review"),
+                "events": read_events(run_dir),
+                "plans": plans,
+            }
+        )
+
+    def _authoring(self, route: str, data: dict[str, Any], session: dict[str, Any]) -> None:
+        """Controls review and the gold set register. Admin only, and every write is a human
+        act: a typed reviewer or author name, and where it signs something off, confirm."""
+        from kgcr.dashboard import authoring
+
+        if session["role"] != "admin":
+            return self._error(HTTPStatus.FORBIDDEN, "authoring is for admins")
+        db = self.app.db
+        parts = route.strip("/").split("/")  # api, then authoring/controls/decision or gold...
+        needs_confirm = route == "/api/authoring/controls/decision" or route.endswith("/review")
+        if needs_confirm and data.get("confirm") is not True:
+            return self._error(HTTPStatus.BAD_REQUEST, "this is your own decision: confirm: true")
+        try:
+            if route == "/api/authoring/controls/decision":
+                result = authoring.record_decision(
+                    db,
+                    data.get("control_node"),
+                    data.get("decision"),
+                    data.get("reviewer"),
+                    data.get("note", ""),
+                    data.get("proposed_summary"),
+                )
+                logger.warning("control decision recorded for %s", data.get("control_node"))
+                return self._json(result, HTTPStatus.CREATED)
+            if route == "/api/gold":
+                fields = {
+                    k: data.get(k)
+                    for k in ("title", "framework", "source_ref", "config", "controls", "author")
+                }
+                return self._json(authoring.gold_create(db, **fields), HTTPStatus.CREATED)
+            if len(parts) in (3, 4) and parts[1] == "gold" and parts[2].isdigit():
+                entry = int(parts[2])
+                action = parts[3] if len(parts) == 4 else ""
+                if action == "":
+                    edits = {
+                        k: data[k]
+                        for k in ("title", "framework", "source_ref", "config", "controls")
+                        if k in data
+                    }
+                    return self._json(authoring.gold_update(db, entry, **edits))
+                if action == "authored":
+                    return self._json(authoring.gold_mark_authored(db, entry))
+                if action == "check":
+                    return self._json(authoring.gold_check(db, entry))
+                if action == "review":
+                    result = authoring.gold_review(
+                        db, entry, data.get("reviewer"), data.get("note", "")
+                    )
+                    logger.warning("gold entry %s signed off", entry)
+                    return self._json(result)
+        except authoring.AuthoringError as exc:
+            return self._error(HTTPStatus.BAD_REQUEST, str(exc))
+        return self._error(HTTPStatus.NOT_FOUND, f"no API route {route!r}")
+
+    def _extract(self, data: dict[str, Any], session: dict[str, Any]) -> None:
+        """Ground a plain-English statement in the eight intent axes.
+
+        Replay only, unless an admin has switched live mode on: the same spend gate as every
+        job. The operator reads the evidence and confirms the form; nothing runs from here.
+        """
+        from kgcr.advisor.llm import DEFAULT_FIXTURE_DIR, FixtureClient, GeminiClient
+        from kgcr.design.extract import ExtractionUnavailable, extract_intent
+
+        statement = data.get("statement")
+        if not isinstance(statement, str):
+            return self._error(HTTPStatus.BAD_REQUEST, "statement must be text")
+        live = (
+            self.app.live_enabled
+            and session["role"] == "admin"
+            and bool(os.environ.get("GEMINI_API_KEY"))
+        )
+        llm = FixtureClient(DEFAULT_FIXTURE_DIR, GeminiClient() if live else None)
+        try:
+            result = extract_intent(statement, llm)
+        except ValueError as exc:
+            return self._error(HTTPStatus.BAD_REQUEST, str(exc))
+        except ExtractionUnavailable as exc:
+            return self._error(HTTPStatus.BAD_GATEWAY, str(exc))
+        return self._json({**result.to_dict(), "live": live})
 
     # files
 

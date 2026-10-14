@@ -1,0 +1,388 @@
+{
+  "artifacts": [
+    {
+      "artifact_id": "cloudgoat",
+      "defect_classes": [
+        "DF-1",
+        "DF-3",
+        "DF-7"
+      ],
+      "licence": "BSD-3-Clause",
+      "notes": "commit dated 2026-03-20; retrieved 2026-10-13; licence read from the repository's own LICENSE file; parsed only, never executed",
+      "provenance_ref": "abf1ba8f5e47d7ced750fdfa025d51c99f1a43ed",
+      "provenance_url": "https://github.com/RhinoSecurityLabs/cloudgoat.git",
+      "source": "https://github.com/RhinoSecurityLabs/cloudgoat"
+    },
+    {
+      "artifact_id": "terragoat",
+      "defect_classes": [
+        "DF-1",
+        "DF-2",
+        "DF-3",
+        "DF-4"
+      ],
+      "licence": "Apache-2.0",
+      "notes": "commit dated 2023-04-27; retrieved 2026-10-13; licence read from the repository's own LICENSE file; parsed only, never executed",
+      "provenance_ref": "729f8da62c6a85ce4af5ad3d123de97776d954c4",
+      "provenance_url": "https://github.com/bridgecrewio/terragoat.git",
+      "source": "https://github.com/bridgecrewio/terragoat"
+    }
+  ],
+  "corpus": "D: independently authored, deliberately vulnerable Terraform (FD-05 4D)",
+  "read_this_as": "Agreement between the rule floor and Checkov on configurations this project did not write, and how much of what Checkov fails lies outside the rule floor's seven rules. The repositories carry no per-resource labels, so this is not accuracy. The family map is this project's own. The rule floor reads literal values only.",
+  "repositories": {
+    "cloudgoat": {
+      "aws_resources": 740,
+      "coverage": {
+        "checkov_failed_checks": 787,
+        "in_rule_floor_families": 31,
+        "most_common_outside": [
+          {
+            "check_id": "CKV_AWS_355",
+            "count": 49
+          },
+          {
+            "check_id": "CKV_AWS_273",
+            "count": 40
+          },
+          {
+            "check_id": "CKV_AWS_23",
+            "count": 37
+          },
+          {
+            "check_id": "CKV_AWS_382",
+            "count": 32
+          },
+          {
+            "check_id": "CKV_AWS_290",
+            "count": 26
+          },
+          {
+            "check_id": "CKV_AWS_126",
+            "count": 23
+          },
+          {
+            "check_id": "CKV_AWS_135",
+            "count": 23
+          },
+          {
+            "check_id": "CKV2_AWS_11",
+            "count": 22
+          },
+          {
+            "check_id": "CKV2_AWS_12",
+            "count": 22
+          },
+          {
+            "check_id": "CKV_AWS_79",
+            "count": 20
+          },
+          {
+            "check_id": "CKV_AWS_145",
+            "count": 19
+          },
+          {
+            "check_id": "CKV_AWS_144",
+            "count": 19
+          },
+          {
+            "check_id": "CKV2_AWS_61",
+            "count": 19
+          },
+          {
+            "check_id": "CKV_AWS_18",
+            "count": 19
+          },
+          {
+            "check_id": "CKV_AWS_88",
+            "count": 18
+          }
+        ],
+        "share": 0.039
+      },
+      "covered_types": {
+        "aws_cloudtrail": 2,
+        "aws_db_instance": 6,
+        "aws_iam_policy": 36,
+        "aws_iam_role_policy": 21,
+        "aws_s3_bucket": 19,
+        "aws_security_group": 36
+      },
+      "directories": 30,
+      "families": [
+        {
+          "both_flag": 0,
+          "family": "open_ingress",
+          "label": "DF-1 security group open to 0.0.0.0/0",
+          "missed_because_unresolved_expression": 16,
+          "missed_resources": [
+            "cloud_breach_s3/terraform/aws_security_group.cg-ec2-http-security-group",
+            "cloud_breach_s3/terraform/aws_security_group.cg-ec2-ssh-security-group",
+            "data_secrets/terraform/aws_security_group.sg",
+            "ec2_ssrf/terraform/aws_security_group.ec2_security_group",
+            "ecs_efs_attack/terraform/aws_security_group.cg-ec2-ssh-security-group",
+            "ecs_efs_attack/terraform/aws_security_group.cg-ecs-http-security-group",
+            "glue_privesc/terraform/aws_security_group.ec2",
+            "glue_privesc/terraform/aws_security_group.glue",
+            "iam_privesc_by_attachment/terraform/aws_security_group.ec2_server",
+            "rce_web_app/terraform/aws_security_group.ec2_ssh",
+            "rce_web_app/terraform/aws_security_group.lb_http",
+            "rds_snapshot/terraform/aws_security_group.cg-ec2-ssh-security-group",
+            "scenario_template/terraform/aws_security_group.sg",
+            "secrets_in_the_cloud/terraform/aws_security_group.web_app_sg",
+            "static/terraform/aws_security_group.sg",
+            "vpc_peering_overexposed/terraform/aws_security_group.dev_sg"
+          ],
+          "neither_flags": 17,
+          "only_checkov_flags": 16,
+          "only_rule_floor_flags": 3,
+          "recall_against_checkov": 0.0,
+          "resources_of_these_types": 36
+        },
+        {
+          "both_flag": 0,
+          "family": "public_database",
+          "label": "DF-1 database publicly accessible",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 6,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": null,
+          "resources_of_these_types": 6
+        },
+        {
+          "both_flag": 0,
+          "family": "public_bucket_acl",
+          "label": "DF-1 bucket with a public ACL",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 19,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": null,
+          "resources_of_these_types": 19
+        },
+        {
+          "both_flag": 4,
+          "family": "unencrypted_database",
+          "label": "DF-2 database storage not encrypted",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 2,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 1.0,
+          "resources_of_these_types": 6
+        },
+        {
+          "both_flag": 0,
+          "family": "unencrypted_volume",
+          "label": "DF-2 EBS volume not encrypted",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 0,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": null,
+          "resources_of_these_types": 0
+        },
+        {
+          "both_flag": 0,
+          "family": "wildcard_policy",
+          "label": "DF-3 IAM policy allows Action * on Resource *",
+          "missed_because_unresolved_expression": 2,
+          "missed_resources": [
+            "beanstalk_secrets/terraform/aws_iam_policy.admin_user_policy",
+            "iam_privesc_by_attachment/terraform/aws_iam_policy.ec2_mighty_policy"
+          ],
+          "neither_flags": 55,
+          "only_checkov_flags": 2,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 0.0,
+          "resources_of_these_types": 57
+        },
+        {
+          "both_flag": 2,
+          "family": "cloudtrail_validation",
+          "label": "DF-4 CloudTrail log-file validation off",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 0,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 1.0,
+          "resources_of_these_types": 2
+        }
+      ],
+      "files_parsed": 249,
+      "files_skipped": []
+    },
+    "terragoat": {
+      "aws_resources": 63,
+      "coverage": {
+        "checkov_failed_checks": 215,
+        "in_rule_floor_families": 5,
+        "most_common_outside": [
+          {
+            "check_id": "CKV_AWS_96",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_325",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_326",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_313",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_327",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_162",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_324",
+            "count": 9
+          },
+          {
+            "check_id": "CKV_AWS_139",
+            "count": 9
+          },
+          {
+            "check_id": "CKV2_AWS_8",
+            "count": 9
+          },
+          {
+            "check_id": "CKV2_AWS_62",
+            "count": 6
+          },
+          {
+            "check_id": "CKV2_AWS_6",
+            "count": 6
+          },
+          {
+            "check_id": "CKV_AWS_144",
+            "count": 6
+          },
+          {
+            "check_id": "CKV2_AWS_61",
+            "count": 6
+          },
+          {
+            "check_id": "CKV_AWS_18",
+            "count": 5
+          },
+          {
+            "check_id": "CKV_AWS_145",
+            "count": 5
+          }
+        ],
+        "share": 0.023
+      },
+      "covered_types": {
+        "aws_db_instance": 1,
+        "aws_ebs_volume": 1,
+        "aws_iam_role_policy": 1,
+        "aws_s3_bucket": 6,
+        "aws_security_group": 2
+      },
+      "directories": 1,
+      "families": [
+        {
+          "both_flag": 1,
+          "family": "open_ingress",
+          "label": "DF-1 security group open to 0.0.0.0/0",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 1,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 1.0,
+          "resources_of_these_types": 2
+        },
+        {
+          "both_flag": 1,
+          "family": "public_database",
+          "label": "DF-1 database publicly accessible",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 0,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 1.0,
+          "resources_of_these_types": 1
+        },
+        {
+          "both_flag": 0,
+          "family": "public_bucket_acl",
+          "label": "DF-1 bucket with a public ACL",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 6,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": null,
+          "resources_of_these_types": 6
+        },
+        {
+          "both_flag": 1,
+          "family": "unencrypted_database",
+          "label": "DF-2 database storage not encrypted",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 0,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 1.0,
+          "resources_of_these_types": 1
+        },
+        {
+          "both_flag": 1,
+          "family": "unencrypted_volume",
+          "label": "DF-2 EBS volume not encrypted",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 0,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": 1.0,
+          "resources_of_these_types": 1
+        },
+        {
+          "both_flag": 0,
+          "family": "wildcard_policy",
+          "label": "DF-3 IAM policy allows Action * on Resource *",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 1,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": null,
+          "resources_of_these_types": 1
+        },
+        {
+          "both_flag": 0,
+          "family": "cloudtrail_validation",
+          "label": "DF-4 CloudTrail log-file validation off",
+          "missed_because_unresolved_expression": 0,
+          "missed_resources": [],
+          "neither_flags": 0,
+          "only_checkov_flags": 0,
+          "only_rule_floor_flags": 0,
+          "recall_against_checkov": null,
+          "resources_of_these_types": 0
+        }
+      ],
+      "files_parsed": 14,
+      "files_skipped": []
+    }
+  }
+}

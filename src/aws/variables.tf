@@ -60,6 +60,21 @@ variable "provision_resource_types" {
   default     = []
 }
 
+variable "provision_services" {
+  description = <<-EOT
+    AWS service prefixes the KGCRProvisionApply role may use, each granted as
+    "<service>:*" on the resources in provision_resource_types, plus
+    iam:PassRole. The default is the original minimal grant. Generated estates
+    also contain RDS, KMS, load balancers, IAM, CloudTrail and Glue resources;
+    adding those services widens a write role, so it is a deliberate decision
+    and not made here. kgcr apply refuses a plan that needs a service this
+    list does not name, and a test keeps its default equal to
+    ALLOWED_SERVICES_DEFAULT in src/backend/kgcr/apply/preflight.py.
+  EOT
+  type        = list(string)
+  default     = ["ec2", "s3"]
+}
+
 variable "tags" {
   description = "Tags applied to every resource, for the weekly cost sweep (FD-08 §6)."
   type        = map(string)

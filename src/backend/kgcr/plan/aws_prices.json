@@ -1,0 +1,378 @@
+{
+  "currency": "USD",
+  "retrieved_at": "2026-10-13",
+  "source": "AWS Price List bulk files, https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/<service code>/current/<region>/index.{json,csv}",
+  "basis": {
+    "hours_per_month": 730,
+    "hours_note": "8,760 hours in a year divided by 12. This tool's own convention, not an AWS-published figure.",
+    "rds_storage": "gp2, the AWS provider default for aws_db_instance when storage_type is unset",
+    "pricing": "on-demand list price, Linux, shared tenancy, single-AZ PostgreSQL, no licence fee"
+  },
+  "verification": {
+    "collected_by": "a Haiku subagent, from the official files only",
+    "checked_by": "the main thread, 2026-10-13: every EC2, RDS instance, RDS gp2, ALB, KMS and S3 value re-derived from freshly downloaded official files by searching product attributes (not the agent's SKUs); CloudTrail and Glue re-read by SKU from fresh files",
+    "result": "all values matched exactly; the checking script is not committed"
+  },
+  "items": [
+    {
+      "key": "alb.hourly",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.0252,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/eu-west-1/index.json",
+      "rate_code": "T29JAP5UEZ7HXAM7.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "alb.hourly",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.02646,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/eu-west-2/index.json",
+      "rate_code": "6AP766DZF74JPTE2.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "alb.hourly",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.0225,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/us-east-1/index.json",
+      "rate_code": "37CUWUT8GSNQEPUV.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "alb.lcu_hourly",
+      "region": "eu-west-1",
+      "unit": "USD per LCU-hour",
+      "value": 0.008,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/eu-west-1/index.json",
+      "rate_code": "YE8QE7GMG9794PDX.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "alb.lcu_hourly",
+      "region": "eu-west-2",
+      "unit": "USD per LCU-hour",
+      "value": 0.0084,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/eu-west-2/index.json",
+      "rate_code": "D4JRRS3AFPHRV7RF.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "alb.lcu_hourly",
+      "region": "us-east-1",
+      "unit": "USD per LCU-hour",
+      "value": 0.008,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSELB/current/us-east-1/index.json",
+      "rate_code": "P2XGEJ8N3KU52WA8.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "cloudtrail.additional_copy_per_100k_events",
+      "region": "eu-west-1",
+      "unit": "USD per 100,000 events",
+      "value": 2.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSCloudTrail/current/eu-west-1/index.json",
+      "rate_code": "BG86MCCHJHU99MJU.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "cloudtrail.additional_copy_per_100k_events",
+      "region": "eu-west-2",
+      "unit": "USD per 100,000 events",
+      "value": 2.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSCloudTrail/current/eu-west-2/index.json",
+      "rate_code": "UWEGARXJMNGWWHT3.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "cloudtrail.additional_copy_per_100k_events",
+      "region": "us-east-1",
+      "unit": "USD per 100,000 events",
+      "value": 2.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSCloudTrail/current/us-east-1/index.json",
+      "rate_code": "HSTGM6MX75VC7UUF.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "cloudtrail.first_copy_management_events",
+      "region": "eu-west-1",
+      "unit": "USD per event",
+      "value": 0.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSCloudTrail/current/eu-west-1/index.json",
+      "rate_code": "HN3F9GNMYBHVA3NK.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "cloudtrail.first_copy_management_events",
+      "region": "eu-west-2",
+      "unit": "USD per event",
+      "value": 0.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSCloudTrail/current/eu-west-2/index.json",
+      "rate_code": "DC3B6SZ3M34J977D.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "cloudtrail.first_copy_management_events",
+      "region": "us-east-1",
+      "unit": "USD per event",
+      "value": 0.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSCloudTrail/current/us-east-1/index.json",
+      "rate_code": "BDZBXKSFAZDV2PPV.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.m5.2xlarge",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.428,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-1/index.csv",
+      "rate_code": "Z3S5HVHF6HYM2YZJ.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.m5.2xlarge",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.444,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-2/index.csv",
+      "rate_code": "3G8CZBD3DNZ5FABC.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.m5.2xlarge",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.384,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+      "rate_code": "ZH8KU2QB7FHAJJXW.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.m5.large",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.107,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-1/index.csv",
+      "rate_code": "FP7Z96TTU3VFSX2H.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.m5.large",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.111,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-2/index.csv",
+      "rate_code": "GHP9N4YDQPV2EMET.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.m5.large",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.096,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+      "rate_code": "6C86BEPQVG73ZGGR.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.t3.small",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.0228,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-1/index.csv",
+      "rate_code": "GW5JVTDTM4UUHXUX.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.t3.small",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.0236,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/eu-west-2/index.csv",
+      "rate_code": "7Z5W8DQKEW7UW4AK.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "ec2.hourly.t3.small",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.0208,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+      "rate_code": "QA3NBPZEQKZ2K9AR.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "glue.catalog.free_objects",
+      "region": "eu-west-1",
+      "unit": "objects",
+      "value": 1000000.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSGlue/current/eu-west-1/index.json",
+      "rate_code": "KQ8UDQCB4YC9MUEX.A429C66SYZ.SB2VSFF4TP"
+    },
+    {
+      "key": "glue.catalog.free_objects",
+      "region": "eu-west-2",
+      "unit": "objects",
+      "value": 1000000.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSGlue/current/eu-west-2/index.json",
+      "rate_code": "KQ8UDQCB4YC9MUEX.A429C66SYZ.SB2VSFF4TP"
+    },
+    {
+      "key": "glue.catalog.free_objects",
+      "region": "us-east-1",
+      "unit": "objects",
+      "value": 1000000.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSGlue/current/us-east-1/index.json",
+      "rate_code": "KQ8UDQCB4YC9MUEX.A429C66SYZ.SB2VSFF4TP"
+    },
+    {
+      "key": "glue.catalog.per_100k_objects_month",
+      "region": "eu-west-1",
+      "unit": "USD per 100,000 objects per month",
+      "value": 1.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSGlue/current/eu-west-1/index.json",
+      "rate_code": "ZATMMQC3NCNV2482.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "glue.catalog.per_100k_objects_month",
+      "region": "eu-west-2",
+      "unit": "USD per 100,000 objects per month",
+      "value": 1.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSGlue/current/eu-west-2/index.json",
+      "rate_code": "TF8EAYCTK3G6GS4Q.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "glue.catalog.per_100k_objects_month",
+      "region": "us-east-1",
+      "unit": "USD per 100,000 objects per month",
+      "value": 1.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AWSGlue/current/us-east-1/index.json",
+      "rate_code": "QKD9TPUADWXWA4F5.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "kms.key_month",
+      "region": "eu-west-1",
+      "unit": "USD per key per month",
+      "value": 1.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/awskms/current/eu-west-1/index.json",
+      "rate_code": "GD24Q3NRUQ5AFYNR.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "kms.key_month",
+      "region": "eu-west-2",
+      "unit": "USD per key per month",
+      "value": 1.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/awskms/current/eu-west-2/index.json",
+      "rate_code": "AEV6J33PEDP33ZNG.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "kms.key_month",
+      "region": "us-east-1",
+      "unit": "USD per key per month",
+      "value": 1.0,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/awskms/current/us-east-1/index.json",
+      "rate_code": "U553K98XGDXCYHWS.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.gp2.gb_month",
+      "region": "eu-west-1",
+      "unit": "USD per GB-month",
+      "value": 0.127,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-1/index.json",
+      "rate_code": "H35JZY6XTTK5S9ZT.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.gp2.gb_month",
+      "region": "eu-west-2",
+      "unit": "USD per GB-month",
+      "value": 0.133,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-2/index.json",
+      "rate_code": "TZ3NMVQHVWKUR3Y4.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.gp2.gb_month",
+      "region": "us-east-1",
+      "unit": "USD per GB-month",
+      "value": 0.115,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+      "rate_code": "G2TQUMAQNSQ7H65X.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.m5.2xlarge",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.788,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-1/index.json",
+      "rate_code": "FV3XTTSGU5PPGQCD.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.m5.2xlarge",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.824,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-2/index.json",
+      "rate_code": "Y6RYR7HPZHV4A2AK.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.m5.2xlarge",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.712,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+      "rate_code": "6JZB32TQSTNARE9X.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.m5.large",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.197,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-1/index.json",
+      "rate_code": "DQYXUS3RESNC7PXF.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.m5.large",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.206,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-2/index.json",
+      "rate_code": "NBZCHFYGBKE9X4MZ.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.m5.large",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.178,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+      "rate_code": "6XDRYDRT6JADXXFD.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.t3.small",
+      "region": "eu-west-1",
+      "unit": "USD per hour",
+      "value": 0.039,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-1/index.json",
+      "rate_code": "VZGN85VYE9TWGS7E.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.t3.small",
+      "region": "eu-west-2",
+      "unit": "USD per hour",
+      "value": 0.041,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/eu-west-2/index.json",
+      "rate_code": "ST2G3SJ3ZXWS8UX8.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "rds.postgres.single_az.hourly.db.t3.small",
+      "region": "us-east-1",
+      "unit": "USD per hour",
+      "value": 0.036,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json",
+      "rate_code": "CM2BHB5WGW9RDVZA.JRTCKXETXF.6YS6EN2CT7"
+    },
+    {
+      "key": "s3.standard.gb_month",
+      "region": "eu-west-1",
+      "unit": "USD per GB-month, first 50 TB",
+      "value": 0.023,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/eu-west-1/index.json",
+      "rate_code": "4AJHPB29ZPVFADXP.JRTCKXETXF.PGHJ3S3EYE"
+    },
+    {
+      "key": "s3.standard.gb_month",
+      "region": "eu-west-2",
+      "unit": "USD per GB-month, first 50 TB",
+      "value": 0.024,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/eu-west-2/index.json",
+      "rate_code": "DV3FSFEQ3QM4J6VP.JRTCKXETXF.PGHJ3S3EYE"
+    },
+    {
+      "key": "s3.standard.gb_month",
+      "region": "us-east-1",
+      "unit": "USD per GB-month, first 50 TB",
+      "value": 0.023,
+      "source_url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/us-east-1/index.json",
+      "rate_code": "WP9ANXZGBYYSGJEA.JRTCKXETXF.PGHJ3S3EYE"
+    }
+  ]
+}

@@ -6,79 +6,214 @@ and what is deliberately deferred. It is maintained alongside the roadmap
 ([docs/roadmap.html](docs/roadmap.html)) and the FD specification set in [docs/](docs/).
 Working rules for this repository live in [CLAUDE.md](CLAUDE.md).
 
-Last updated: 2026-10-13.
+Last updated: 2026-10-14.
 
 ---
 
-## LOOP_STATE (Review 2 push; updated in place, never stacked)
+## LOOP_STATE (updated in place, never stacked)
 
-Updated 2026-10-13. Branch `feature/udit`; PRs #6 and #8 are merged into `develop`; the dashboard goes up as a new PR.
+Updated 2026-10-14. Branch `feature/udit`, local commits ahead of `origin/feature/udit`, **not
+pushed, no pull request opened** for this pass (spec decision D4: one local commit per slice). PRs
+#6, #8 and #9 are merged. The account for what ran and what did not is in section 0b below.
 
-- **Done:**
-  - **P7 recommender:** a one-vs-rest random forest with a hard CRITICAL mask.
-  - **P6 advisor code:** rule floor, Gemini path behind an admission filter, A10 carry-forward, the
-    FD-02 loop, and the sycophancy protocol.
-  - **P9 explainer:** template-based; the INV-2 test passes.
-  - **P10 command:** `kgcr review` runs end to end. It defaults to DF-2, and the LLM client is
-    injected so tests never call Gemini.
-  - **AWS:** S3/SNS adapters tested on moto, plus Terraform for the run bucket, the topic and a
-    publish policy.
-  - **Deck:** `presentation/KGCR_Review2.pptx`, 14 slides. The gate state is read from the report.
-  - **Docs:** README, the report, the objectives and both diagrams updated.
-  - **Citation fix:** DF-2 now cites PCI-DSS v4.0 3.5.1.
-  - **Dashboard:** `python src/frontend/build_dashboard.py` writes `results/dashboard.html` from the
-    reports; gate state is read, so rebuild it after the live run.
-  - **Local dashboard (2026-10-13):** `kgcr dashboard` serves a single-page app on 127.0.0.1 that
-    drives every working command. Stdlib only: `http.server`, `sqlite3`
-    (`runs-local/dashboard.sqlite3` for sessions, jobs and the catalog sequence), allow-listed
-    subprocess jobs run one at a time. The design world, "catalog sleeve", was chosen on the
-    Impeccable decision page and the scheme approved before code; the result is recorded in
-    `DESIGN.md`, product truth in `PRODUCT.md`.
-  - **New CLI:** `kgcr history` and `kgcr explain` (re-renders from the stored bundle via
-    `ExplanationBundle.from_dict`; byte-equal to the stored renderings for every stored run).
-  - **Review artifacts:** each run also stores `summary.json` (graph, intent, recommendation, loop
-    passes) and `timings.json` (wall-clock per stage, kept apart so the summary stays deterministic).
-  - **Spend gate:** dashboard jobs force `KGCR_LLM_LIVE=0` and withhold `GEMINI_*`/`AWS_*` unless an
-    admin enables live mode (in memory, off on restart). Jobs write to `runs-local/jobs/KG<no>/`,
-    never to `results/` or `dataset/processed/`.
-  - **Gates:** 207 tests pass.
-- **Ready to run, not yet run: the sycophancy gate is NOT RUN.** `.env` holds the key and
-  `KGCR_LLM_LIVE=1`; the model id resolves. `run_advisor.py` and `kgcr review` load `.env`.
-  Steps (1 is already done):
-  1. Install the advisor extra and enable live calls: `pip install -e ".[advisor]"`, then set
-     `GEMINI_API_KEY` and `KGCR_LLM_LIVE=1` **for this shell only**.
-  2. `python src/ml_model/run_advisor.py`. That is 16 calls: 4 specs × 3 passes plus 4 clean
-     estates.
-  3. Record a fixture for each demo variant to be shown, for example
-     `kgcr review --variant indirect_internet_reachability`. Each is at most 3 calls (one per loop
-     pass), so DF-7 plus DF-5 adds at most 6. Every process is capped at 24 calls.
-  4. A rate limit (429) midway is safe: re-run the same command. Recorded calls replay, and only
-     the missing ones go live.
-  5. Unset `KGCR_LLM_LIVE`. Commit `results/llm_fixtures/` and `results/advisor_report.json`.
-     Rebuild the deck.
-  6. Then grep for `not run|NOT RUN|pending|rule floor only` and update every hit:
-     - deck slides 8, 10 and 14 (data-driven, rebuild only);
-     - Diagram 2's note in `make_diagrams.py`;
-     - the README status;
-     - report §8 Bedrock row, §9 advisor row and result 4, and §12;
-     - objective O2;
-     - `results/README.md`.
-
-  Gate scoring is strict: matching is by `(control_node, affected_elements)`. A finding re-scoped
-  between passes (`[hop]` becoming `[hop, sink]`) counts as withdrawn. This is stated now, before
-  any data exists.
+- **Built and run in this pass** (spec `docs/superpowers/specs/2026-10-13-design-plan-apply-authoring-design.md`,
+  plan beside it):
+  - **`kgcr design`:** a generator skeleton audited and patched by the option recommender, with a
+    per-choice justification taken from the findings of the alternatives it rejected. Structured
+    intake, and free-text intake through Gemini where a value is admitted only if its evidence is a
+    quotation of the statement; anything unresolved stays empty and the operator confirms the form.
+  - **`kgcr plan`:** immutable plans under `runs/<prefix>/plans/<plan_id>/` with a local diff,
+    coverage, blast radius and a monthly cost delta from AWS list prices. A Terraform backend runs
+    `init`, `validate` and an offline `plan` with mock credentials.
+  - **`kgcr apply`:** a local simulated apply (partial state kept on failure), and a Terraform-backed
+    path behind refusal gates. **That path was never run.**
+  - **Dashboard:** design, plan and apply pages, and authoring pages for the L1 controls review and
+    the gold register. Append-only, reviewer is never the author, a CRITICAL comment blocks
+    sign-off, and an AST test keeps `kgcr.gold` out of everything but the dashboard.
+  - **Corpus D:** TerraGoat and CloudGoat parsed (never executed), rule floor against Checkov.
+  - **Second labeller:** Trivy, with Cohen's kappa against the rule floor and Checkov.
+  - **FD-06 automated evaluation:** `results/explainer_report.json`.
+  - **GNN ablation:** `results/gnn_ablation.json`.
+  - **AWS Config harvest adapter:** `harvest/config.py`. **Never run against an account.**
+  - **Variant recorder:** `src/ml_model/record_variants.py`, ready, **waiting on the Gemini quota.**
+- **Verified by running:** Terraform v1.16.5 (installed with winget) validates `src/aws/`; nine
+  generated estates (three archetypes, three zone and layout pairs) validate and plan offline after
+  the overlay; free-text intake ran against live Gemini and three responses are recorded and replay
+  (`results/llm_fixtures/intent-v1-*.json`); every list price in `aws_prices.json` was re-derived
+  from freshly downloaded official files and matched.
+- **Gates:** on the build machine (Python 3.14.3, with Checkov, Trivy and Terraform) 474 tests
+  pass; ruff check, ruff format --check and mypy (82 source files) are clean. CI-parity check in a
+  fresh Python 3.12 venv with only `pip install -e ".[dev]"`: the same three static gates clean and
+  457 passed, 4 skipped (hcl2, google-genai and Checkov absent, as in CI). Python 3.11 and the CI
+  workflow itself were not run on these commits.
+- **Not done, and why** (the dashboard's Commands page lists the same six):
+  - **Live harvest, real-AWS apply:** no AWS credentials on this machine. Both are authored and
+    tested against fakes (botocore stubs, moto for S3) and have never touched an account.
+  - **Recorded Gemini reviews for four variants:** a recording run on 2026-10-14 recorded
+    `unencrypted_database`, `open_security_group` and `privilege_escalation_passrole` completely,
+    and `wildcard_iam_policy` through pass 1 only (nine live calls; pass 2 met a 503, so a replay
+    reports `LLM: partial`). It also met a 503 on `indirect_internet_reachability` and a 429 on
+    `cloudtrail_no_log_validation`; a retry got a 429 on its first call, and `unattached_volume` was
+    never reached. Still to record: those four. The dashboard roster counts a variant as replaying
+    when any pass is recorded, so it shows 6 of 9. Re-run `python src/ml_model/record_variants.py`
+    after the quota resets (midnight Pacific, 12:30 local).
+  - **Human study (P11):** needs ethics approval and participants. Not simulated.
+  - **Instructor sign-off of controls and gold set:** the tools exist; sign-off is a human act.
+  - **Weak-supervision label model (P4):** not built.
+- **Findings from this pass that change what the project can claim:**
+  - Generated estates **failed `terraform validate`** as rendered (no load balancer subnets, an
+    empty encryption rule, no database credentials). A render-time overlay now completes them and
+    reports every addition. That makes a plan validate; it does not make an apply succeed.
+  - The shipped write role (`ec2`, `s3`) blocks every generated estate at the permission preflight.
+    `provision_services` widens it; the default is unchanged.
+  - In independent repositories the rule floor's families cover 31 of the 787 checks Checkov fails
+    in CloudGoat (4%) and 5 of 215 in TerraGoat (2%). Where it can read the values it agrees with
+    Checkov (database and CloudTrail families); it misses where an argument is an unresolved
+    expression (16 CloudGoat security groups, 2 IAM policies). See section 0b.
+  - Checkov's `.tf.json` input recalled none of the 24 seeded defects; its plan-JSON input is the
+    fair one. Trivy and Checkov do not treat a world-open port 443 as a defect.
+  - The GNN expectation ("no gain") was only partly right. See section 0b.
 - **Also open:**
-  - Terraform has never been validated; `terraform validate` is not installed here.
-  - Dashboard JavaScript has no lint or test gate; it is verified by driving it in a browser
-    (headless Edge captures at 1440 and 390 wide, one review run end to end from the UI).
-  - Replay covers only two variants at seed 1729, size 180 (DF-5 no_database_backup, DF-7
-    transitive_trust_chain); the roster labels the other seven as rule floor only.
+  - Dashboard JavaScript has no lint or test gate; it is verified by driving it in a browser.
+    The new pages were driven through the API and the DOM; screenshots were not captured because
+    the browser pane was hidden, and the pages use components from the approved system rather than
+    a new scheme.
+  - Replay covers five variants at seed 1729, size 180 (DF-5 `no_database_backup`, DF-7
+    `transitive_trust_chain`, DF-7 `privilege_escalation_passrole`, DF-2 `unencrypted_database`,
+    DF-1 `open_security_group`), plus DF-3 `wildcard_iam_policy` through pass 1 only; the roster
+    labels the other three as rule floor only.
+  - An offline planfile cannot be applied: the Terraform-backed apply re-plans against the live
+    provider and refuses unless the creates equal the reviewed plan.
 - **Awaiting Udit's review:**
   - The six draft L1 controls, all unverified.
   - `docs/*.docx` were deleted from git on 2026-07-31. They are regenerated locally, not
     re-committed.
   - `make_docx.py` rewrote `dataset/dataset_description.docx`. The uncommitted pre-session version
     was overwritten; it is left uncommitted.
+
+---
+
+## 0b. 2026-10-13 and 14 — design, plan, apply, authoring, and the blocked items
+
+Asked for every unbuilt feature on the dashboard, in order, with a spec first; then to install
+Terraform, finish the blocked items, let live Gemini verify free-text intake, and have a Haiku
+subagent research the plan's cost data. The spec and plan are in `docs/superpowers/`. Scope
+decisions taken with the user: design, plan and apply only (later widened to the blocked items);
+apply also gets a Terraform-backed path; authoring tools for the controls and gold set live in the
+dashboard. Spec decisions D1 to D4: each design choice is justified from its rejected
+alternatives; the generator skeleton is audited by the recommender; exports are browser
+downloads; one local commit per slice on `feature/udit`, no push, no pull request.
+
+**What was built**
+
+- **Design (`kgcr design`).** A generator skeleton, audited and patched by `OptionRecommender`. A
+  masked option that reaches the skeleton raises `MaskViolation`. The explanation bundle gains a
+  `design` key only when it has content, so stored bundles stay byte-identical. Free-text intake:
+  Gemini extracts into the fixed eight-field schema, and a value is admitted only if it is in the
+  schema and its evidence is a quotation of the statement; otherwise the field is null and the
+  operator confirms the form.
+- **Run lifecycle.** Runs record `mode` (review or design), the observed spec, and events
+  (`planned`, `applied`, `apply_failed`). INV-1: no spec with an open CRITICAL reaches a plan.
+- **Plan (`kgcr plan`).** Immutable `runs/<prefix>/plans/<plan_id>/plan.json`; the id is the first
+  16 hex of the canonical hash of spec, baseline, backend and overlay. Local diff, coverage from
+  `resource_findings`, blast radius, and a cost delta. The Terraform backend runs `init`,
+  `validate` and an offline `plan` with mock credentials, for design runs only.
+- **Deployable overlay (`plan/deployable.py`).** Completes the arguments the provider requires and
+  reports every addition and every caveat (availability zones, the encryption rule, load balancer
+  subnets, database credentials via `manage_master_user_password`, a placeholder image id, security
+  group rule keys). It makes a plan validate. It does not make an apply succeed.
+- **Cost data.** A Haiku subagent collected AWS list prices from the official files; the main thread
+  then re-derived every EC2, RDS, load balancer, KMS and S3 value from freshly downloaded files and
+  read CloudTrail and Glue by SKU. All matched (the checking script is not committed). 45 items,
+  three regions, retrieved 2026-10-13, 730 hours a month (this tool's own convention, labelled).
+  What cannot be priced is listed, never zeroed.
+- **Apply (`kgcr apply`).** Local: a simulated deploy that keeps partial state on failure.
+  Terraform-backed: refuses in order unless real applies are switched on, the plan and spec hash
+  hold, the plan is a Terraform plan, the binary exists, the preflight passes against the write
+  role's grant, the plan id is typed, the budget alarms are acknowledged, the image is real, the
+  role, external id and account are set, the plan was not already applied, and the assumed account
+  matches. It then re-plans against the live provider and refuses unless the creates equal the
+  reviewed plan. **Authored and tested against fakes only. No apply was ever run and nothing
+  assumed a role or called AWS.** The write role gains an opt-in `provision_services` variable
+  (default unchanged); the preflight and the Terraform are kept equal by a drift test.
+- **Dashboard.** Design, plan and apply pages; the run sleeve shows design runs. Authoring pages
+  for the controls review and the gold register: append-only, reviewer is never the author, a
+  CRITICAL comment blocks sign-off, the register freezes on instructor sign-off, exports are
+  downloads. An AST test keeps `kgcr.gold` out of everything but the dashboard, so the advisor
+  can never read the gold register.
+- **Corpus D.** TerraGoat and CloudGoat cloned shallow into an untracked directory, licences read
+  from their own LICENSE files, commits pinned, parsed with `bc-python-hcl2` and never executed.
+- **Second labeller.** Trivy as a subprocess engine, with Cohen's kappa. The family mapping from
+  check ids to defect families is this project's own.
+- **FD-06 automated evaluation** (`explainer/evaluate.py`): invariance, counterfactual validity
+  checked against the loop's observed outcome, sparsity, and relational Fidelity+ and Fidelity-.
+- **AWS Config harvest adapter** (`harvest/config.py`): an injected client, `list_discovered_resources`
+  and `batch_get_resource_config`, field names from the AWS Config resource schema, five types.
+  Skipped and unprocessed resources are listed. It reads no tags (the batch API strips them) and
+  no networks or IAM.
+- **Variant recorder** (`record_variants.py`): idempotent, budgeted, stops at the first quota
+  refusal.
+- **GNN ablation** (`gnn_ablation.py`, optional `gnn` extra, outside CI).
+
+**What was run, and what came out**
+
+- **Terraform v1.16.5** installed with winget. `src/aws/` validates. Raw generated estates did
+  **not** validate; with the overlay nine of them (three archetypes, three zone and layout pairs)
+  validate and plan offline in 101 to 143 seconds each. A seeded open-security-group estate then
+  failed validation because the provider requires every key on a rule; the overlay now completes
+  them.
+- **Live Gemini, free-text intake.** Three extractions ran and are recorded
+  (`results/llm_fixtures/intent-v1-*.json`) and replay. The first attempts met 503 (transient), so
+  `GeminiClient` now retries twice and extraction failures are reported as unavailable. Later
+  attempts met 429, the free tier's 20 requests a day. A retry of the variant recorder at
+  23:36 local on 2026-10-13 got 429 on its first call.
+- **Corpus D.** CloudGoat 740 AWS resources, TerraGoat 63. The rule floor's families cover 31 of
+  787 Checkov failures in CloudGoat (4%) and 5 of 215 in TerraGoat (2%). Agreement where values are
+  readable: database encryption and CloudTrail validation. It misses where an argument is an
+  unresolved expression (16 security groups, 2 IAM policies). No per-resource labels exist, so
+  this is agreement and coverage, not accuracy.
+- **Three-engine agreement**, 6 seeded estates per family, 24 seeded and 24 clean units, Checkov
+  3.3.8 on plan JSON and Trivy 0.75.0 on `.tf.json`. Seeded recall: rule floor 1.0 everywhere (by
+  construction); Checkov 0 on DF-1 and 1.0 on DF-2, DF-3, DF-4; Trivy 1.0 on DF-2 and DF-4 and 0 on
+  DF-1 and DF-3. No false positives on any clean parent. Kappa between Checkov and Trivy: 1.0 on
+  DF-2 and DF-4, 0.0 on DF-3, undefined on DF-1. DF-1 is the injector's world-open port 443, which
+  neither tool treats as a defect: a disagreement about the definition, not an engine error. Checkov
+  reading `.tf.json` recalled 0 of 24 (`results/labeller_agreement_tfjson.json`), which is why plan
+  JSON is the input. Small n: indications, not rates.
+- **FD-06 evaluation**, 12 bundles (nine variants, three designs): invariance 12 of 12; counterfactual
+  validity 4 of 4; sparsity mean 0.078, median 0.059, max 0.2 over 7 findings; Fidelity+ and
+  Fidelity- 1 of 1 each. The samples are tiny because recorded model responses exist for only two
+  variants, so most bundles are rule floor only. The human study (§9.3) is not run.
+- **GNN ablation.** Expectation recorded before running: no gain. Over 99 test estates in four
+  corpus seeds, exact-set recovery: forest 0.941, two-layer network over the resource-type graph
+  0.991, the same network with edges removed 0.984. R-precision and NDCG are 1.0 for the
+  forest and at least 0.9945 and 0.9996 for the networks. So the expectation was partly wrong: a neural ranker is a little better at exact-set
+  recovery, and the edge-free control says the graph is not why. torch 2.14.1 has a cp314 wheel,
+  so this was not blocked by the environment; it ran in a throwaway venv.
+
+**Findings that change what the project can claim**
+
+- Generated estates were never deployable as rendered; they needed the overlay to validate.
+- The shipped write role (`ec2`, `s3`) blocks every generated estate at the preflight.
+- The rule floor is a small slice of real-world failures (2 to 4% in independent repositories).
+- Checkov's `.tf.json` input is not a usable recall baseline; its plan-JSON input is.
+- An offline planfile cannot be applied, so the spec's wording ("apply the saved planfile") was
+  corrected to what is built: re-plan live and compare.
+
+**Not run, and why**
+
+- Live harvest and any real apply: no AWS credentials on this machine.
+- Recorded reviews for four variants (`indirect_internet_reachability`, `wildcard_iam_policy`,
+  `cloudtrail_no_log_validation`, `unattached_volume`): the daily free-tier quota is spent again.
+  `record_variants.py` is ready.
+- Human study (P11): needs ethics approval and participants. Not simulated.
+- Controls and gold-set sign-off: the tools exist; sign-off is a human act.
+- Browser screenshots of the new pages: the browser pane was hidden, so they were driven through
+  the API and the DOM instead. The pages use components from the approved Catalog Sleeve system; no
+  new scheme was introduced and no pre-code render was made.
+
+**What would break first.** The overlay: it is the only thing between a generated estate and a
+provider that rejects it, and every real apply will find the next missing argument.
 
 ---
 
@@ -170,21 +305,21 @@ in them were updated to the new tree.
 | Phase | Title | Status | Where |
 |---|---|---|---|
 | **P0** | Foundation & reproducibility spine | **Done** | `src/backend/kgcr/{repro,hashing,runrecord,versions,cli}.py`, `src/aws/`, CI |
-| **P1** | Ontology encoding (L1) | **Not started** — normative content is human-authored by rule (FD-07 §2) | — |
-| **P2** | Gold set | **Not started** — hand-authored + instructor review | — |
+| **P1** | Ontology encoding (L1) | **Review tools built; no control signed off.** Six drafts, unverified; normative content is human-authored by rule (FD-07 §2) | `src/backend/kgcr/dashboard/authoring.py` |
+| **P2** | Gold set | **Register built, no sign-offs** — hand-authored + instructor review is a human act | `src/backend/kgcr/gold/` |
 | **P3** | Intent-first generator & Corpus A | **Done** | `src/backend/kgcr/corpus/` |
-| **P4** | Labelling (weak supervision) | **Partial** — Checkov slice + empirical DF-7 gate | `src/backend/kgcr/labelling/` |
+| **P4** | Labelling (weak supervision) | **Partial** — Checkov and Trivy engines, three-engine agreement, the empirical DF-7 gate, Corpus D coverage; no label model | `src/backend/kgcr/labelling/`, `src/backend/kgcr/adversarial/` |
 | **P5** | Defect taxonomy & DF-7 test set | **Done** | `src/backend/kgcr/defects/` |
-| **P6** | Advisor & iteration loop | **Code done; live gate NOT RUN** (needs `GEMINI_API_KEY`); L1 is a draft pending review | `src/backend/kgcr/advisor/` |
-| **P7** | Recommender | **Done (lite)**: RF ranker plus CRITICAL mask, not a GNN (no headroom on this corpus) | `src/backend/kgcr/recommender/` |
+| **P6** | Advisor & iteration loop | **Done; live run recorded once**: sycophancy gate PASS on 3 valid trials (1 invalid), 2 of 4 variants found, 1 false CRITICAL on 4 clean estates; L1 is a draft pending review; 7 variants unrecorded (quota) | `src/backend/kgcr/advisor/` |
+| **P7** | Recommender | **Done**: RF ranker plus CRITICAL mask. A GNN ablation (`results/gnn_ablation.json`) scored a little higher on exact-set recovery and its edge-free control nearly equalled it | `src/backend/kgcr/recommender/` |
 | **P8** | Intent reconstruction | **Done** (structural-feature baseline) | `src/backend/kgcr/reconstruction/` |
-| **P9** | Explainer | **Done (templates)**: exact paths, evaluated counterfactuals, INV-2 test | `src/backend/kgcr/explainer/` |
-| **P10** | Agents & end-to-end | **Local end to end done** (`kgcr review`); S3/SNS adapters on moto; live AWS not deployed | `src/backend/kgcr/orchestration/`, `src/aws/run_artifacts.tf` |
-| **P11** | Evaluation & human study | Blocked — needs everything + ethics approval | — |
+| **P9** | Explainer | **Done (templates)**: exact paths, evaluated counterfactuals, INV-2 test, design justifications, automated FD-06 evaluation | `src/backend/kgcr/explainer/` |
+| **P10** | Agents & end-to-end | **Local end to end done** (`kgcr review`, `design`, `plan`, `apply`); S3/SNS adapters on moto; Config harvest adapter and Terraform-backed apply built against fakes, **never run on AWS** | `src/backend/kgcr/{orchestration,design,plan,apply,harvest}/`, `src/aws/` |
+| **P11** | Evaluation & human study | Automated half done (`results/explainer_report.json`); the human study is blocked on ethics approval and participants | — |
 | **P12** | Write-up | Not started | — |
 
-Test suite: **155 tests passing**: corpus 45, defects 34, reconstruction 13,
-recommender 5, advisor 9, explainer 4, orchestration 8, labelling 8, spine (cli/hashing/repro/runrecord) 29.
+Test suite: **474 tests passing** on this machine (Python 3.14.3) as of 2026-10-14. The per-package
+counts that used to be listed here went stale as packages were added; `pytest --co -q` has them.
 
 ---
 
@@ -195,7 +330,7 @@ recommender 5, advisor 9, explainer 4, orchestration 8, labelling 8, spine (cli/
 - `hashing.py` — `canonical_json` / `canonical_hash` (sorted-key, byte-stable).
 - `runrecord.py` — `RunRecord`, identity = hash of `(spec_hash, graph_version, model_version, seed)`; timestamp excluded so identity is what determines the result.
 - `versions.py` — environment version fingerprint.
-- `cli.py` — `kgcr` command surface; `repro-info` and `--version` live, other subcommands stubbed to their phase.
+- `cli.py` — the `kgcr` command surface: `repro-info`, `review`, `design`, `plan`, `apply`, `history`, `explain`, `corpus`, `dashboard`.
 
 ### P3 — corpus (`src/backend/kgcr/corpus/`)
 Intent-**first** generation (FD-05 §4A): sample intent, then render a clean estate, so every estate carries its originating intent as free ground truth.
@@ -213,12 +348,20 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
 - `detectors.py` — a minimal single-resource oracle written from CIS/Checkov rule semantics (silent on the clean corpus) + a bounded graph traversal (`relational_path_exists`).
 - `inject.py` — DF-1…DF-6 single-resource property injectors + DF-7 relational path injectors: `indirect_internet_reachability`, `transitive_trust_chain`, `privilege_escalation_passrole`. DF-7 wires individually-compliant resources into a ≤3-hop path, gated on a sensitive sink (cardholder/PII).
 - `pipeline.py` — inject across a corpus, the DF-7 (Relational) split, manifest, and `verify_df7_gate` (by-construction invariant: DF-7 estates carry zero single-resource findings yet are graph-recoverable).
-- `adversarial.py` — licence-enforcing registry for corpus D (schema only; fetching is a separate step).
+- `adversarial.py` — licence-enforcing registry for corpus D. The repositories are now acquired and parsed (`kgcr.adversarial`, `src/ml_model/acquire_corpus_d.py`).
 
 ### P4 — labelling (`src/backend/kgcr/labelling/`)
 - `checkov_engine.py` — Checkov as a static labelling function, invoked as a subprocess over resource-only `.tf.json`; pure `parse_checkov_json`; `resource_verdict`.
 - `df7_contrast.py` — the empirical DF-7 gate: per DF-7 estate, **(a)** the graph recovers the path while **(b)** Checkov's verdict for the (pre-existing, unmutated) sink is byte-identical to the compliant parent. Labeller is injectable for stub-based tests.
-- Evidence: `results/p4_df7_checkov_evidence.json`.
+- `trivy_engine.py` — Trivy as a subprocess engine (`trivy config`), pure `parse_trivy_json`. `agreement.py` — seeded recall, false positives on the clean parent, percent agreement and Cohen's kappa across the rule floor, Checkov and Trivy. `checkov_engine.run_checkov_on_plan` reads `terraform show -json`, the input on which its single-resource checks are reliable.
+- Evidence: `results/p4_df7_checkov_evidence.json`, `results/labeller_agreement.json`.
+
+### Design, plan, apply (`src/backend/kgcr/{design,plan,apply}/`) and the Config harvest
+- `design/` — `intake.py` (the eight intent axes, `build_intent`), `extract.py` (grounded free-text extraction, `ExtractionUnavailable`), `synthesize.py` (skeleton from `render_estate`, audit and patch by `OptionRecommender`, `MaskViolation`).
+- `plan/` — `local.py` (diff, coverage, blast radius), `cost.py` and `aws_prices.json` (verified list prices, 730 h/month, unpriced items listed), `deployable.py` (the render-time overlay), `terraform_backend.py` (`init`, `validate`, offline `plan`).
+- `apply/` — `local.py` (simulated, partial state on failure), `preflight.py` (the plan's resource types against the write role's `provision_services`), `provision.py` (the gated Terraform-backed path, never run).
+- `harvest/config.py` — AWS Config adapter with an injected client. Never run against an account.
+- `corpus/tfjson.py` — Terraform JSON back into resources. `gold/` — the human-only gold register and the contamination check.
 
 ### P8 — intent reconstruction (`src/backend/kgcr/reconstruction/`)
 - `features.py` — purely structural feature extraction (reads resources, never the intent).
@@ -250,8 +393,15 @@ Intent-**first** generation (FD-05 §4A): sample intent, then render a clean est
   - Seeded recall is 0.000 for DF-5, DF-6 and DF-7 (n = 64, 180 and 302). These
     are outside the rule floor and are what the LLM path exists for.
   - Clean estates raise 0 CRITICAL findings.
-  - The LLM recall, false-positive and grounding numbers, and the sycophancy
-    gate, are **NOT RUN**.
+  - One live run (16 Gemini calls, recorded in `results/llm_fixtures/`): the sycophancy gate is
+    **PASS** on 3 valid trials (the fourth, `privilege_escalation_passrole`, is invalid: nothing
+    raised on pass 1); recall beyond the rule floor is 2 of 4 variants; 1 false CRITICAL on 4 clean
+    estates; all 6 proposals grounded. Four trials, one seed: it shows the protocol works, not a
+    rate.
+- **Corpus D, TerraGoat and CloudGoat:** the rule floor's families cover 31 of 787 Checkov failures (CloudGoat, 740 AWS resources) and 5 of 215 (TerraGoat, 63). Agreement with Checkov where values are readable; misses where an argument is an unresolved expression. No per-resource labels: agreement and coverage only.
+- **Three-engine agreement (6 seeded estates per family):** Checkov on plan JSON recalls DF-2, DF-3, DF-4 (6 of 6 each) and not DF-1; Trivy recalls DF-2 and DF-4 and neither DF-1 nor DF-3; no false positives on clean parents. DF-1 is a world-open port 443, which neither engine treats as a defect. Checkov on `.tf.json` recalled 0 of 24.
+- **Explainer evaluation (12 bundles):** invariance 12 of 12, counterfactual validity 4 of 4, sparsity mean 0.078 (7 findings), relational Fidelity+ and Fidelity- 1 of 1 each. Small n; most bundles are rule floor only.
+- **GNN ablation (99 test estates, four corpus seeds):** exact-set recovery forest 0.941, graph network 0.991, same network without edges 0.984; R-precision and NDCG at or near 1.0 (the lowest network value is 0.9945).
 - **Intent reconstruction (P8), 180-estate corpus:** structurally-encoded axes (archetype, network layout, logging, AZ spread) reconstruct at **~100%** and are well-calibrated (ECE ≤ 0.05). `iam_shape` — which the generator leaves no structural trace of — is both least accurate (**~0.42**) and most miscalibrated (**ECE ~0.28**, overconfident at ~0.70). That overconfidence-on-no-signal is the calibration story the reliability diagram exists to surface, and the reason confidence is reported, not just accuracy.
 
 ---
@@ -279,7 +429,8 @@ pytest
 - Base runtime: `PyYAML` only.
 - `dev` extra: pytest, ruff, mypy, types-PyYAML, **and `kgcr[reconstruction]`** (numpy + scikit-learn) so CI gates P8.
 - `reconstruction` extra: `numpy==2.4.2`, `scikit-learn==1.8.0`.
-- `labelling` extra: `checkov==3.3.8` — **deliberately not in CI**; it is slow and version-fragile, and its tests skip when it is absent.
+- `labelling` extra: `checkov==3.3.8` — **deliberately not in CI**; it is slow and version-fragile, and its tests skip when it is absent. Trivy and Terraform are binaries, installed with winget here, and their tests skip when absent.
+- `adversarial` extra: `bc-python-hcl2==0.4.3` (imported as `hcl2`). `advisor` extra: `google-genai`. `aws` extra: `boto3` (in `dev`, with moto). `gnn` extra: `torch==2.14.1`, outside CI.
 
 ### Reproducibility
 - Deterministic seeding; canonical hashing; run identity from `(spec_hash, graph_version, model_version, seed)`.
@@ -297,15 +448,17 @@ pytest
 - **DF-7 is gated on a genuinely sensitive sink** (cardholder/PII). The internal-reporting archetype gets no DF-7, keeping it the low-sensitivity contrast case (FD-05 §3) rather than accumulating spurious CRITICALs.
 - **DF-7 measurement is the sink-invariance contrast**, not a class→check_id recall map (which would have been circular). The sink is pre-existing and unmutated, so comparing its Checkov verdict sidesteps incidental nits on the added scaffolding resources.
 - **P1 normative content is not machine-authored** (FD-07 §2: a model may read L1, never write it). P5 defects cite control URIs as strings that will resolve once L1 is hand-authored.
-- **Deferred in P4:** tfsec (Go binary) and Prowler (needs AWS) → so inter-engine agreement and the weak-supervision label model wait for ≥2 engines; a fair DF-1…DF-4 recall baseline needs HCL or real plan JSON (Checkov's `.tf.json` path evaluates single-resource checks inconsistently on interpolated configs).
-- **P8 is a structural-feature baseline**, not the GNN (that is P7's machinery; torch is not installed). Calibration improvement (Platt/isotonic) is the noted upgrade path.
-- **Adversarial corpus D** is schema + licence-enforcement only; cloning repos, verifying each licence, and pinning commits is a separate data-acquisition step.
+- **Deferred in P4:** Prowler (needs AWS) and the weak-supervision label model. Trivy replaced tfsec as the second engine and inter-engine agreement is measured; the fair DF-1…DF-4 baseline uses plan JSON, because Checkov's `.tf.json` path evaluates single-resource checks inconsistently on interpolated configs.
+- **P8 is a structural-feature baseline**, not a GNN. Calibration improvement (Platt/isotonic) is the noted upgrade path. torch is only in the optional `gnn` extra.
+- **Corpus D is acquired:** shallow read-only clones under the git-ignored `dataset/raw/corpus_d/`, licences read from each repository, commits pinned in `dataset/processed/corpus_d_manifest.json`. flaws.cloud has no Terraform and is recorded as not applicable.
 
 ---
 
 ## 6. Environment gotchas (recorded in memory)
 
 - **mypy + StrEnum:** mypy 1.13.0 types `list(SomeStrEnum)` as `list[str]`, not `list[TheEnum]`. This broke `src/backend/kgcr/corpus/sampler.py` (6 errors). Fixed by drawing members via `Enum.__members__.values()`, which preserves the member type and definition order. Repo-wide mypy is now green.
+- **Windows shell:** `ruff` is not on the Bash PATH (use `python -m ruff`); Terraform and Trivy need `export PATH="$LOCALAPPDATA/Microsoft/WinGet/Links:$PATH"`. Checkov crashes on cp1252 decoding of some repositories unless run with `PYTHONUTF8=1` and `encoding="utf-8"`. Python written through a Bash heredoc loses backslashes and quotes: use a file-writing tool for any source containing them.
+- **Terraform plugin cache:** concurrent `terraform init` runs collide on one plugin cache directory on Windows. Run them one at a time, and seed the cache once.
 - **Checkov `.tf.json` is fragile:** its `terraform_json` parser rejects the `provider` block (feed it resource-only input), and single-resource `CKV_AWS_*` checks evaluate inconsistently on interpolated configs. Checkov is invoked as a subprocess (`python -m checkov.main -d <dir> -o json --compact --soft-fail`), not imported. The DF-7 result does not depend on any of this (it compares the sink verdict, which is robust to the quirks).
 
 ---
@@ -319,6 +472,10 @@ reference repo; numbers there do not correspond to numbers here.
 
 - PR #1 — `feature/student1` → `develop`, closed automatically by the branch rename
 - PR #2 — `feature/udit` → `develop`: Phase-I submission (governance, mandated tree, all report deliverables)
+- PRs #6, #8 and #9 are merged into the branch history (see `git log`).
+- 2026-10-13 and 14: local commits on `feature/udit` (spec, plan, design, plan, apply, dashboard
+  pages, authoring, Corpus D, Trivy, FD-06 evaluation, harvest adapter, recorder, GNN ablation).
+  Not pushed; no pull request opened yet.
 
 ### Archived reference repo — `uditdaftary/KGCR`
 

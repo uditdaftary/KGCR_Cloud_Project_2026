@@ -80,5 +80,5 @@ def test_cli_flags_route_artifacts_to_s3(capsys: pytest.CaptureFixture[str]) -> 
     args = ["review", "--variant", "unencrypted_database", "--count", "60"]
     assert main([*args, "--s3-bucket", "kgcr-cli", "--sns-topic-arn", _topic()]) == 0
     assert "stored bundle: s3://kgcr-cli/runs/" in capsys.readouterr().out
-    # run record, bundle, summary, timings, patched spec, three explanations
-    assert s3.list_objects_v2(Bucket="kgcr-cli")["KeyCount"] == 8
+    # run record, bundle, summary, timings, observed spec, patched spec, three explanations
+    assert s3.list_objects_v2(Bucket="kgcr-cli")["KeyCount"] == 9

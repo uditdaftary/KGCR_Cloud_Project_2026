@@ -16,14 +16,9 @@ seconds per stage, informational) for the dashboard to draw.
 
 from __future__ import annotations
 
-import hashlib
-import json
-import time
 from dataclasses import dataclass
-from typing import Any
 
 from kgcr.advisor.advisor import Advisor, AdvisorFinding
-from kgcr.advisor.controls import DRAFT_CONTROLS_PATH
 from kgcr.advisor.llm import GEMINI_MODEL, LLMClient, default_llm
 from kgcr.advisor.loop import LoopResult, TemplatePatcher, advisor_loop, spec_hash
 from kgcr.corpus.estate import Estate
@@ -35,6 +30,7 @@ from kgcr.defects.pipeline import inject_corpus
 from kgcr.defects.taxonomy import DEFAULT_SEVERITY, DETECTABILITY
 from kgcr.explainer.explainer import AUDIENCES, ExplanationBundle, build_bundle, bundle_json, render
 from kgcr.orchestration.aws import ArtifactStore, Notifier
+from kgcr.orchestration.common import StageClock, graph_version, to_json
 from kgcr.recommender.recommender import (
     OptionRecommender,
     RankedOption,
@@ -78,11 +74,6 @@ def select_target(test: list[Estate], variant: str) -> DefectedEstate:
     raise ValueError(f"no held-out estate admits variant {variant!r}")
 
 
-def _graph_version() -> str:
-    digest = hashlib.sha256(DRAFT_CONTROLS_PATH.read_bytes()).hexdigest()[:12]
-    return f"l1-draft-{digest}"
-
-
 def run_review(
     *,
     variant: str,
@@ -94,7 +85,7 @@ def run_review(
 ) -> ReviewRun:
     """Run review mode. ``llm`` is injected so callers (and tests) decide whether
     the advisor may reach a model; :func:`default_llm` is what the CLI passes."""
-    clock = _StageClock()
+    clock = StageClock()
     seed_everything(seed)
     corpus = generate_corpus(count, seed)
     split = split_estates(corpus)
@@ -155,7 +146,7 @@ def run_review(
     )
     record = RunRecord(
         spec_hash=spec_hash(estate),
-        graph_version=_graph_version(),
+        graph_version=graph_version(),
         model_version=model_version,
         seed=seed,
     )
@@ -163,6 +154,7 @@ def run_review(
     missing = tuple(sorted(wanted - observed))
     unexpected = tuple(sorted(observed - wanted))
     summary = {
+        "mode": "review",
         "estate_id": estate.estate_id,
         "variant": variant,
         "defect_class": target.defect.defect_class.value,
@@ -203,12 +195,15 @@ def run_review(
     }
     prefix = f"runs/{record.run_id[:16]}"
     artifacts = {
-        "summary": store.put(f"{prefix}/summary.json", _json(summary)),
-        "timings": store.put(f"{prefix}/timings.json", _json(clock.stages)),
-        "run_record": store.put(f"{prefix}/run_record.json", _json(record.to_dict())),
+        "summary": store.put(f"{prefix}/summary.json", to_json(summary)),
+        "timings": store.put(f"{prefix}/timings.json", to_json(clock.stages)),
+        "run_record": store.put(f"{prefix}/run_record.json", to_json(record.to_dict())),
         "bundle": store.put(f"{prefix}/bundle.json", bundle_json(bundle)),
+        "observed_spec": store.put(
+            f"{prefix}/observed_spec.tf.json", to_json(estate.to_terraform_json())
+        ),
         "patched_spec": store.put(
-            f"{prefix}/patched_spec.tf.json", _json(loop.estate.to_terraform_json())
+            f"{prefix}/patched_spec.tf.json", to_json(loop.estate.to_terraform_json())
         ),
         **{
             f"explanation_{a}": store.put(f"{prefix}/explanation_{a}.md", render(bundle, a))
@@ -237,20 +232,3 @@ def run_review(
         record=record,
         artifacts=artifacts,
     )
-
-
-class _StageClock:
-    """Wall-clock seconds per pipeline stage, measured between successive marks."""
-
-    def __init__(self) -> None:
-        self._last = time.perf_counter()
-        self.stages: list[dict[str, Any]] = []
-
-    def mark(self, stage: str) -> None:
-        now = time.perf_counter()
-        self.stages.append({"stage": stage, "seconds": round(now - self._last, 4)})
-        self._last = now
-
-
-def _json(payload: Any) -> str:
-    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
